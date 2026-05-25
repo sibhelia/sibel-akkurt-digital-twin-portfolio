@@ -12,6 +12,8 @@ import logging
 from src.config import settings
 from src.db.session import init_db, close_db
 from src.cache.redis_manager import redis_manager
+from src.api.schemas import ChatRequest, ChatResponse
+from src.rag.orchestration.graph import process_query
 
 
 # Configure logging
@@ -92,6 +94,21 @@ async def health_check():
         "environment": settings.ENVIRONMENT,
         "version": "1.0.0"
     }
+
+
+# Chat endpoint
+@app.post("/api/v1/chat", response_model=ChatResponse, tags=["chat"])
+async def chat(request: ChatRequest):
+    """Process a chat request through the RAG orchestration pipeline."""
+    result = await process_query(request.query, request.session_id, request.user_id)
+    return ChatResponse(
+        response=result.get("response", ""),
+        citations=result.get("citations", []),
+        query_type=result.get("query_type", "general_question"),
+        latencies=result.get("latencies", {}),
+        session_id=result.get("session_id", request.session_id),
+        tokens=result.get("tokens", []),
+    )
 
 
 # Root endpoint

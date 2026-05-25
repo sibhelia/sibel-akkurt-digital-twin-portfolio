@@ -36,7 +36,13 @@ class Settings(BaseSettings):
     EMBEDDING_DIMENSION: int = 1024
     
     # LLM
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "openai")
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq")
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_BASE_URL: str = os.getenv("GROQ_BASE_URL", "https://api.groq.com")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "groq-jumbo")
+    GROQ_EMBEDDING_MODEL: str = os.getenv("GROQ_EMBEDDING_MODEL", "groq-embed-large")
+    
+    # OpenAI fallback
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL: str = "gpt-4-turbo-preview"
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
