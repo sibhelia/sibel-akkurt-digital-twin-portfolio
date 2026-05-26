@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_BASE_URL: str = os.getenv("GROQ_BASE_URL", "https://api.groq.com")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "groq-jumbo")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     GROQ_EMBEDDING_MODEL: str = os.getenv("GROQ_EMBEDDING_MODEL", "groq-embed-large")
     
     # OpenAI fallback
@@ -83,5 +83,10 @@ settings = Settings()
 if settings.ENVIRONMENT == "production":
     assert settings.JWT_SECRET != "your-secret-key-change-in-production", \
         "JWT_SECRET must be changed in production"
-    assert settings.OPENAI_API_KEY, \
-        "OPENAI_API_KEY must be set in production"
+
+    if settings.LLM_PROVIDER == "groq":
+        assert settings.GROQ_API_KEY, \
+            "GROQ_API_KEY must be set in production when using Groq"
+    elif settings.LLM_PROVIDER == "openai":
+        assert settings.OPENAI_API_KEY, \
+            "OPENAI_API_KEY must be set in production when using OpenAI"
