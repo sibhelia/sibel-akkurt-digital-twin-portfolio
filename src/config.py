@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     
     # Admin
     ADMIN_USERS: list[str] = os.getenv("ADMIN_USERS", "").split(",") if os.getenv("ADMIN_USERS") else []
+    ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "")
     
     # Features
     ENABLE_DEBUG_ENDPOINT: bool = DEBUG

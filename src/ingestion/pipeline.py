@@ -17,7 +17,7 @@ from src.db import session as db_session
 from src.ingestion.chunking import chunk_text
 from src.ingestion.parsers import parse_document
 from src.rag.embeddings import embed_texts
-from src.rag.retrieval.vector_searcher import ensure_collection, upsert_points
+from src.rag.retrieval.vector_searcher import delete_points, ensure_collection, upsert_points
 
 
 @dataclass
@@ -34,9 +34,6 @@ class IngestionMetadata:
 
 async def ingest_file(file_path: str, metadata: IngestionMetadata | None = None) -> dict[str, Any]:
     """Parse, chunk, embed, and index a single file."""
-    if db_session.SessionLocal is None:
-        raise RuntimeError("Database not initialized. Call init_db() before ingestion.")
-
     metadata = metadata or IngestionMetadata()
     parsed = parse_document(file_path)
     raw_content = parsed["content"].strip()
@@ -44,17 +41,56 @@ async def ingest_file(file_path: str, metadata: IngestionMetadata | None = None)
         raise ValueError("Document content is empty after parsing.")
 
     path = Path(file_path)
+    return await ingest_text(
+        title=parsed["title"],
+        content=raw_content,
+        metadata=metadata,
+        source_type=parsed["source_type"],
+        file_name=path.name,
+        file_size_bytes=path.stat().st_size,
+    )
+
+async def ingest_text(
+    title: str,
+    content: str,
+    metadata: IngestionMetadata | None = None,
+    source_type: str = "text",
+    file_name: str | None = None,
+    file_size_bytes: int | None = None,
+) -> dict[str, Any]:
+    """Ingest admin/site-authored text directly into the knowledge base."""
+    if db_session.SessionLocal is None:
+        raise RuntimeError("Database not initialized. Call init_db() before ingestion.")
+
+    metadata = metadata or IngestionMetadata()
+    raw_content = content.strip()
+    if not raw_content:
+        raise ValueError("Document content is empty after parsing.")
+
     batch_id = uuid.uuid4()
-    file_size = path.stat().st_size
+    resolved_file_name = file_name or f"{title.lower().replace(' ', '-')}.md"
+    resolved_file_size = file_size_bytes if file_size_bytes is not None else len(raw_content.encode("utf-8"))
     content_hash = sha256(raw_content.encode("utf-8")).hexdigest()
     chunk_payloads = chunk_text(raw_content)
 
     async with db_session.SessionLocal() as session:
+        existing_document = await _find_existing_document(
+            session=session,
+            file_name=resolved_file_name,
+            source_type=source_type,
+            source_url=metadata.source_url,
+        )
+        if existing_document is not None:
+            existing_chunk_ids = [chunk.embedding_id for chunk in existing_document.chunks if chunk.embedding_id]
+            delete_points(existing_chunk_ids)
+            await session.delete(existing_document)
+            await session.flush()
+
         document = Document(
-            title=parsed["title"],
-            file_name=path.name,
-            file_size_bytes=file_size,
-            source_type=parsed["source_type"],
+            title=title,
+            file_name=resolved_file_name,
+            file_size_bytes=resolved_file_size,
+            source_type=source_type,
             source_url=metadata.source_url,
             raw_content=raw_content,
             processed_content=raw_content,
@@ -75,8 +111,8 @@ async def ingest_file(file_path: str, metadata: IngestionMetadata | None = None)
         log = IngestionLog(
             document_id=document.id,
             batch_id=batch_id,
-            file_name=path.name,
-            source_type=parsed["source_type"],
+            file_name=resolved_file_name,
+            source_type=source_type,
             status="processing",
             message=f"Chunking {len(chunk_payloads)} sections",
             created_by=metadata.ingested_by,
@@ -118,7 +154,7 @@ async def ingest_file(file_path: str, metadata: IngestionMetadata | None = None)
                     vector=embedding,
                     payload={
                         "text": chunk_model.content,
-                        "source": path.name,
+                        "source": resolved_file_name,
                         "document_id": str(document.id),
                         "chunk_id": str(chunk_id),
                         "project_name": metadata.project_name,
@@ -143,6 +179,30 @@ async def ingest_file(file_path: str, metadata: IngestionMetadata | None = None)
         "document_id": str(document.id),
         "ingestion_batch_id": str(batch_id),
         "chunks_indexed": len(chunk_payloads),
-        "file_name": path.name,
-        "source_type": parsed["source_type"],
+        "file_name": resolved_file_name,
+        "source_type": source_type,
     }
+
+
+async def _find_existing_document(
+    session: db_session.AsyncSession,
+    file_name: str,
+    source_type: str,
+    source_url: str | None,
+) -> Document | None:
+    """Find an existing document so admin/site updates replace old knowledge."""
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+
+    statement = (
+        select(Document)
+        .options(selectinload(Document.chunks))
+        .where(Document.source_type == source_type)
+    )
+    if source_url:
+        statement = statement.where(Document.source_url == source_url)
+    else:
+        statement = statement.where(Document.file_name == file_name)
+
+    result = await session.execute(statement)
+    return result.scalar_one_or_none()

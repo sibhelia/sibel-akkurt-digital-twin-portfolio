@@ -34,6 +34,17 @@ def upsert_points(points: List[qdrant_models.PointStruct]) -> None:
     )
 
 
+def delete_points(point_ids: List[str]) -> None:
+    """Delete vectors by their ids."""
+    if not point_ids:
+        return
+
+    client.delete(
+        collection_name=settings.QDRANT_COLLECTION_NAME,
+        points_selector=qdrant_models.PointIdsList(points=point_ids),
+    )
+
+
 def qdrant_search(
     query_embedding: List[float],
     top_k: int = 10,

@@ -77,6 +77,7 @@ services:
       GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
       GROQ_EMBEDDING_MODEL: ${GROQ_EMBEDDING_MODEL:-groq-embed-large}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-change-me-admin-key}
       ENVIRONMENT: development
       DEBUG: "true"
     depends_on:
