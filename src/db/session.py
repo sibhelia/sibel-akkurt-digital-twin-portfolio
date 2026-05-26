@@ -89,7 +89,4 @@ async def get_session() -> AsyncSession:
 
 
 # ORM Models will be defined in separate files and imported here
-# Example structure:
-# from src.db.models.document import Document
-# from src.db.models.conversation import Conversation
-# etc.
+import src.db.models as _models  # noqa: F401,E402
