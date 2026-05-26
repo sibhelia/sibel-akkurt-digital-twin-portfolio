@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     QDRANT_COLLECTION_NAME: str = "portfolio_chunks"
     
     # Embeddings
+    EMBEDDING_PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "local-hash")
     EMBEDDING_MODEL: str = "BAAI/bge-large-en"
     EMBEDDING_DIMENSION: int = 1024
     
