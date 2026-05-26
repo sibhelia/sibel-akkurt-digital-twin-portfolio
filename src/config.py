@@ -5,9 +5,11 @@ This module loads configuration from environment variables and validates
 the setup before the application starts.
 """
 
-from pydantic_settings import BaseSettings
-from typing import Optional
 import os
+from typing import Optional
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -39,7 +41,7 @@ class Settings(BaseSettings):
     # LLM
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_BASE_URL: str = os.getenv("GROQ_BASE_URL", "https://api.groq.com")
+    GROQ_BASE_URL: str = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     GROQ_EMBEDDING_MODEL: str = os.getenv("GROQ_EMBEDDING_MODEL", "groq-embed-large")
     
@@ -58,7 +60,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_DAY: int = 10000
     
     # Admin
-    ADMIN_USERS: list[str] = os.getenv("ADMIN_USERS", "").split(",") if os.getenv("ADMIN_USERS") else []
+    ADMIN_USERS: str = os.getenv("ADMIN_USERS", "")
     ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "")
     
     # Features
@@ -76,6 +78,20 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug(cls, value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "on", "debug"}:
+                return True
+            if normalized in {"0", "false", "no", "off", "release", "prod", "production"}:
+                return False
+        return bool(value)
+
 
 
 # Load settings

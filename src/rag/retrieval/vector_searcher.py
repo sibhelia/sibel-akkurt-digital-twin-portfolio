@@ -70,13 +70,14 @@ def qdrant_search(
         if conditions:
             qdrant_filter = qdrant_models.Filter(must=conditions)
 
-    results = client.search(
+    response = client.query_points(
         collection_name=settings.QDRANT_COLLECTION_NAME,
-        query_vector=query_embedding,
+        query=query_embedding,
         limit=top_k,
         with_payload=True,
         query_filter=qdrant_filter,
     )
+    results = getattr(response, "points", response)
 
     return [
         {

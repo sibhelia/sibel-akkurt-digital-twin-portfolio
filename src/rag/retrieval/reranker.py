@@ -14,4 +14,7 @@ def simple_rerank(
         candidate["rerank_score"] = float(candidate.get("score", 0.0))
 
     ranked = sorted(candidates, key=lambda item: item["rerank_score"], reverse=True)
-    return [item for item in ranked if item["rerank_score"] >= threshold][:top_k]
+    filtered = [item for item in ranked if item["rerank_score"] >= threshold]
+    if filtered:
+        return filtered[:top_k]
+    return ranked[:top_k]

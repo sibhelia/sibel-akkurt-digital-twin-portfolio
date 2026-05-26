@@ -1,5 +1,6 @@
 """Groq API client for text generation and embeddings."""
 
+import hashlib
 import httpx
 import logging
 from typing import Any, List
@@ -46,16 +47,29 @@ class GroqClient:
         if stop:
             payload["stop"] = stop
 
-        result = await self._request("/v1/complete", payload)
-        if "output" in result:
-            output = result["output"]
-            if isinstance(output, list):
-                return "".join(str(item) for item in output)
-            return str(output)
+        result = await self._request("/responses", payload)
+        if "output_text" in result:
+            return str(result["output_text"])
+
+        output = result.get("output")
+        if isinstance(output, list):
+            parts: list[str] = []
+            for item in output:
+                if not isinstance(item, dict):
+                    continue
+                for content_item in item.get("content", []):
+                    if isinstance(content_item, dict) and content_item.get("type") == "output_text":
+                        parts.append(str(content_item.get("text", "")))
+            if parts:
+                return "".join(parts)
 
         choices = result.get("choices", [])
         if choices and isinstance(choices, list):
-            return str(choices[0].get("text", ""))
+            choice = choices[0]
+            message = choice.get("message", {})
+            if isinstance(message, dict):
+                return str(message.get("content", ""))
+            return str(choice.get("text", ""))
 
         return ""
 
@@ -64,14 +78,40 @@ class GroqClient:
             "model": self.embedding_model,
             "input": texts,
         }
-        result = await self._request("/v1/embeddings", payload)
-        data = result.get("data", [])
-        embeddings = []
-        for item in data:
-            embedding = item.get("embedding")
-            if isinstance(embedding, list):
-                embeddings.append(embedding)
-        return embeddings
+        try:
+            result = await self._request("/embeddings", payload)
+            data = result.get("data", [])
+            embeddings = []
+            for item in data:
+                embedding = item.get("embedding")
+                if isinstance(embedding, list):
+                    embeddings.append(embedding)
+            if embeddings:
+                return embeddings
+        except Exception as exc:
+            logger.warning(f"Groq embeddings unavailable, using local fallback embeddings: {exc}")
+
+        return [self._fallback_embedding(text) for text in texts]
+
+    def _fallback_embedding(self, text: str) -> list[float]:
+        """Generate deterministic local embeddings when provider embeddings are unavailable."""
+        dimension = settings.EMBEDDING_DIMENSION
+        vector = [0.0] * dimension
+        tokens = text.lower().split()
+        if not tokens:
+            return vector
+
+        for token in tokens:
+            digest = hashlib.sha256(token.encode("utf-8")).digest()
+            for index in range(0, len(digest), 4):
+                chunk = digest[index:index + 4]
+                bucket = int.from_bytes(chunk, "big") % dimension
+                vector[bucket] += 1.0
+
+        norm = sum(value * value for value in vector) ** 0.5
+        if norm:
+            vector = [value / norm for value in vector]
+        return vector
 
 
 groq_client = GroqClient()

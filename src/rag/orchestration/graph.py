@@ -129,7 +129,7 @@ async def node_hybrid_retriever(state: OrchestrationState) -> OrchestrationState
 
 async def node_reranker(state: OrchestrationState) -> OrchestrationState:
     logger.info(f"[RERANKER] Reranking {len(state.retrieved_chunks)} candidates...")
-    state.ranked_chunks = simple_rerank(state.query, state.retrieved_chunks, threshold=0.2, top_k=7)
+    state.ranked_chunks = simple_rerank(state.query, state.retrieved_chunks, threshold=0.0, top_k=7)
     state.latencies["reranked_chunks"] = float(len(state.ranked_chunks))
     return state
 
@@ -231,11 +231,12 @@ async def process_query(query: str, session_id: str, user_id: str) -> Dict[str, 
         start_time=time.time(),
     )
     final_state = await orchestration_graph.ainvoke(initial_state)
+    state = final_state if isinstance(final_state, dict) else final_state.__dict__
     return {
-        "response": final_state.response,
-        "citations": final_state.citations,
-        "query_type": final_state.query_type,
-        "latencies": final_state.latencies,
+        "response": state.get("response", ""),
+        "citations": state.get("citations", []),
+        "query_type": state.get("query_type", "general_question"),
+        "latencies": state.get("latencies", {}),
         "session_id": session_id,
-        "tokens": final_state.tokens,
+        "tokens": state.get("tokens", []),
     }
