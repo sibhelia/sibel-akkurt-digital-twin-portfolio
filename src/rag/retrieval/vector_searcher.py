@@ -57,11 +57,25 @@ def qdrant_search(
     if not query_embedding:
         return []
 
+    qdrant_filter = None
+    if filter:
+        conditions = [
+            qdrant_models.FieldCondition(
+                key=key,
+                match=qdrant_models.MatchValue(value=value),
+            )
+            for key, value in filter.items()
+            if value is not None
+        ]
+        if conditions:
+            qdrant_filter = qdrant_models.Filter(must=conditions)
+
     results = client.search(
         collection_name=settings.QDRANT_COLLECTION_NAME,
         query_vector=query_embedding,
         limit=top_k,
         with_payload=True,
+        query_filter=qdrant_filter,
     )
 
     return [

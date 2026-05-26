@@ -15,9 +15,7 @@ from typing import Any, Dict, List
 from langgraph.graph import StateGraph, END
 from src.cache.redis_manager import redis_manager
 from src.llm.groq_client import groq_client
-from src.rag.embeddings import embed_texts
-from src.rag.retrieval.bm25_searcher import bm25_search
-from src.rag.retrieval.vector_searcher import qdrant_search
+from src.rag.retrieval.hybrid_retriever import hybrid_search
 from src.rag.retrieval.reranker import simple_rerank
 
 logger = logging.getLogger(__name__)
@@ -120,22 +118,19 @@ async def node_retrieval_strategy_selector(state: OrchestrationState) -> Orchest
 
 async def node_hybrid_retriever(state: OrchestrationState) -> OrchestrationState:
     logger.info(f"[RETRIEVER] Executing hybrid search strategy: {state.retrieval_strategy}...")
-    query_embedding = (await embed_texts([state.query]))[0]
-    vector_results = qdrant_search(query_embedding, top_k=15)
-    state.retrieved_chunks = [
-        {
-            "chunk_text": str(item.get("payload", {}).get("text", "")),
-            "score": item.get("score", 0.0),
-            "metadata": item.get("payload", {}),
-        }
-        for item in vector_results
-    ]
+    state.retrieved_chunks = await hybrid_search(
+        query=state.query,
+        query_variations=state.query_variations,
+        top_k=15,
+    )
+    state.latencies["retrieval_candidates"] = float(len(state.retrieved_chunks))
     return state
 
 
 async def node_reranker(state: OrchestrationState) -> OrchestrationState:
     logger.info(f"[RERANKER] Reranking {len(state.retrieved_chunks)} candidates...")
     state.ranked_chunks = simple_rerank(state.query, state.retrieved_chunks, threshold=0.2, top_k=7)
+    state.latencies["reranked_chunks"] = float(len(state.ranked_chunks))
     return state
 
 
@@ -145,7 +140,8 @@ async def node_context_optimizer(state: OrchestrationState) -> OrchestrationStat
     for index, chunk in enumerate(state.ranked_chunks, start=1):
         text = chunk.get("chunk_text", "")
         source = chunk.get("metadata", {}).get("source", f"chunk-{index}")
-        context_lines.append(f"[{source}] {text}")
+        retrieval_mode = chunk.get("metadata", {}).get("retrieval_mode", "hybrid")
+        context_lines.append(f"[{source} | {retrieval_mode}] {text}")
     state.context = "\n\n".join(context_lines)
     return state
 
