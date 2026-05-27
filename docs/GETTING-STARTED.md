@@ -39,8 +39,9 @@ nano .env  # or use your editor
 ```
 
 **Key variables to set**:
-- `OPENAI_API_KEY`: Your OpenAI API key
+- `GROQ_API_KEY`: Your free Groq API key (get it at https://console.groq.com)
 - `ENVIRONMENT`: Set to "development"
+- `ADMIN_API_KEY`: Set a secure key for admin endpoints
 - Other settings can use defaults for local development
 
 ### Step 3: Start Services
@@ -221,9 +222,10 @@ Response: "Based on my portfolio docs, [YOUR specific architecture]"
 
 | Component | Why |
 |-----------|-----|
-| **LangGraph** | Orchestrates the 12-step pipeline |
-| **Hybrid Search** | BM25 + vectors = better results |
-| **Reranking** | Cross-encoder dramatically improves quality |
+| **LangGraph 0.2.x** | Orchestrates the 12-step pipeline, TypedDict state |
+| **Groq LLM** | Fastest inference, generous free tier, `llama-3.3-70b-versatile` |
+| **Hybrid Search** | BM25 + vectors = better results than either alone |
+| **multilingual-e5-base** | Turkish + English embedding support, runs locally |
 | **Memory Layers** | Makes responses contextually intelligent |
 | **Streaming** | Better UX (feels faster) |
 

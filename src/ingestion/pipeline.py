@@ -141,7 +141,7 @@ async def ingest_text(
                 experience_level=metadata.experience_level,
                 custom_metadata=metadata.custom_metadata,
                 embedding_id=str(chunk_id),
-                embedding_model=settings.GROQ_EMBEDDING_MODEL,
+                embedding_model=settings.EMBEDDING_MODEL,
                 embedding_dimension=len(embedding),
                 embedding_generated_at=datetime.utcnow(),
                 token_count=int(chunk_payload["token_count"]),

@@ -57,7 +57,7 @@
 
 ### Why LangGraph?
 - **Agentic workflows**: Conditional routing, memory management
-- **Tool integration**: Easy to add new retrieval strategies
+- **TypedDict state**: langgraph 0.2.x uses immutable TypedDict nodes
 - **Observability**: Built-in execution tracing
 - **Future-proof**: Support for multi-agent systems later
 
@@ -65,7 +65,19 @@
 - **BM25**: Captures keyword relevance (recall)
 - **Semantic**: Captures meaning (precision)
 - **Combined**: ~30% better results than either alone
-- **Reranking**: Final precision layer with cross-encoders
+- **Reranking**: Final precision layer (cross-encoder upgrade planned)
+
+### Why Groq as LLM provider?
+- **Speed**: Fastest inference available (up to 800 tok/s)
+- **Free tier**: Generous limits for portfolio/demo use
+- **Model**: `llama-3.3-70b-versatile` — high quality, low cost
+- **OpenAI-compatible**: Easy to swap to OpenAI via env var
+
+### Why intfloat/multilingual-e5-base for embeddings?
+- **Multilingual**: Turkish + English support out of the box
+- **Local**: No API key or external call needed
+- **Quality**: State-of-the-art bi-encoder performance
+- **Prefixes**: Uses `"query: "` / `"passage: "` for best accuracy
 
 ### Why Three Memory Layers?
 - **Redis immediate**: Fast access to current conversation
@@ -374,27 +386,29 @@ Personal Brand:
 
 ### Small Scale (< 100 daily users)
 ```
-PostgreSQL (t3.micro): $15/month
-Redis (3GB): $20/month
-Qdrant (managed): $40/month
-API (2 instances): $50/month
-LLM API (GPT-4): ~$100/month
+PostgreSQL (t3.micro):     $15/month
+Redis (3GB):               $20/month
+Qdrant (managed):          $40/month
+API (2 instances):         $50/month
+LLM — Groq free tier:      $0/month  (up to generous daily limits)
+LLM — Groq paid fallback:  ~$10-30/month (if free tier exceeded)
+Embeddings — local model:  $0/month  (runs on the API server)
 
-Total: ~$225/month
-Cost per query: ~$0.08
+Total: ~$125-155/month
+Cost per query: ~$0.02-0.05
 ```
 
 ### Medium Scale (1000+ daily users)
 ```
 PostgreSQL (t3.medium + replicas): $100/month
-Redis (Cluster, 50GB): $150/month
-Qdrant (distributed): $200/month
-API (Kubernetes, 5 replicas): $300/month
-LLM API (Claude 3): ~$500/month
-Monitoring & logging: $100/month
+Redis (Cluster, 50GB):             $150/month
+Qdrant (distributed):              $200/month
+API (Kubernetes, 5 replicas):      $300/month
+LLM API (Groq paid):               ~$100-200/month
+Monitoring & logging:              $100/month
 
-Total: ~$1,350/month
-Cost per query: ~$0.03
+Total: ~$950-1,050/month
+Cost per query: ~$0.02
 ```
 
 ---

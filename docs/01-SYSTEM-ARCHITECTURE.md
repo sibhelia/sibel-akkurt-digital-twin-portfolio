@@ -1,7 +1,7 @@
 # Digital Twin Portfolio System Architecture
 
-**Version**: 1.0  
-**Status**: Draft design  
+**Version**: 1.1  
+**Status**: Partly implemented — core modules working  
 **Target**: Portfolio-focused RAG application
 
 ---
@@ -44,13 +44,24 @@ This keeps the system practical for both direct factual queries and broader ques
 
 The orchestration layer decides how a user query should be processed, which retrieval path to use, and how the final answer should be assembled. The repo already includes the basic module layout for this flow.
 
+### LLM & Embeddings
+
+- **LLM**: Groq (`llama-3.3-70b-versatile`) via official Groq Python SDK
+  - Uses Chat Completions API with system + user message format
+  - OpenAI (`gpt-4o-mini`) available as env-var fallback
+- **Embeddings**: `intfloat/multilingual-e5-base` via sentence-transformers
+  - Runs locally — no API key required
+  - Turkish + English support
+  - 768-dimensional vectors
+  - Uses `"query: "` prefix for search, `"passage: "` prefix for documents
+
 ### Storage
 
-The planned storage model uses:
+The storage model uses:
 
-- PostgreSQL for structured records
-- Redis for cache and short-lived session data
-- Qdrant for vector search
+- PostgreSQL for structured records (documents, chunks, conversations, citations)
+- Redis for cache and short-lived session data (also caches embeddings)
+- Qdrant for vector search (COSINE similarity, 768-dim collection)
 
 ---
 
@@ -77,4 +88,17 @@ The planned storage model uses:
 
 ## Current Reality
 
-This document describes the intended shape of the system, not a finished production setup. Some pieces exist as working code, while others are still scaffolding or planning material.
+The following modules are implemented and wired up:
+- `src/api/main.py` — FastAPI app with chat + admin ingestion endpoints
+- `src/llm/groq_client.py` — Groq SDK client (Chat Completions)
+- `src/rag/embeddings.py` — sentence-transformers with Redis caching
+- `src/rag/orchestration/graph.py` — langgraph 0.2.x TypedDict pipeline
+- `src/rag/retrieval/` — hybrid BM25 + Qdrant vector search with RRF fusion
+- `src/ingestion/pipeline.py` — parse, chunk, embed, and index pipeline
+- `src/db/models.py` — full SQLAlchemy ORM (Document, Chunk, Conversation, Message, Citation)
+
+What still needs work:
+- Alembic migration files (tables need `alembic upgrade head`)
+- Cross-encoder reranker (currently uses score-passthrough)
+- Streaming SSE/WebSocket responses
+- JWT authentication on public endpoints

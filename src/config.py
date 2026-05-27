@@ -34,21 +34,27 @@ class Settings(BaseSettings):
     QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
     QDRANT_COLLECTION_NAME: str = "portfolio_chunks"
     
-    # Embeddings
-    EMBEDDING_PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "local-hash")
-    EMBEDDING_MODEL: str = "BAAI/bge-large-en"
-    EMBEDDING_DIMENSION: int = 1024
-    
+    # Embeddings — uses local sentence-transformers model by default (no API key needed)
+    # "sentence-transformers" → free local model, best quality
+    # "local-hash"           → deterministic fallback, no ML, fast but low quality
+    EMBEDDING_PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "sentence-transformers")
+    # multilingual-e5-base supports Turkish + English out of the box
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-base")
+    EMBEDDING_DIMENSION: int = 768  # multilingual-e5-base output dimension
+
     # LLM
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_BASE_URL: str = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
-    GROQ_EMBEDDING_MODEL: str = os.getenv("GROQ_EMBEDDING_MODEL", "groq-embed-large")
-    
+    # Primary model: Llama 4 Maverick — smarter, cheaper, and multimodal (text + image)
+    # Alternatives:
+    #   "meta-llama/llama-4-scout-17b-16e-instruct" — faster, huge context window
+    #   "llama-3.3-70b-versatile"                   — reliable fallback, battle-tested
+    #   "llama-3.1-8b-instant"                      — fastest & cheapest, lower quality
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "meta-llama/llama-4-maverick-17b-128e-instruct")
+
     # OpenAI fallback
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    OPENAI_MODEL: str = "gpt-4-turbo-preview"
+    OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     
     # Security

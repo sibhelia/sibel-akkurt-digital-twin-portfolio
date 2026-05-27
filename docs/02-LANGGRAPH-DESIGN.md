@@ -1,8 +1,11 @@
 # LangGraph Orchestration Design
 
-**Version**: 1.0  
+**Version**: 1.1  
 **Scope**: Agentic RAG workflow orchestration  
-**Status**: Production Design
+**Status**: Implemented — `src/rag/orchestration/graph.py`
+
+> **Note**: langgraph 0.2.x requires TypedDict-based state (not dataclass or plain dict).
+> All nodes return `{**state, ...}` — state is immutable between nodes.
 
 ---
 
@@ -145,73 +148,34 @@ def process_user_input(state):
 
 **Purpose**: Determine query intent and domain
 
-**Classification Types**:
-1. **project_query**: "Tell me about your [project_name]"
-2. **skill_question**: "What are your [skill] abilities?"
-3. **architectural_decision**: "Why did you choose [tech]?"
-4. **learning_journey**: "How did you learn [domain]?"
-5. **comparison**: "Compare [X] vs [Y]"
-6. **experience_question**: "What was your experience with [domain]?"
-7. **general_introduction**: "Tell me about yourself"
-8. **technical_deep_dive**: "Explain your [system/architecture]"
-9. **interview_prep**: "How would you solve [problem]?"
-10. **methodology**: "How do you approach [problem_domain]?"
+**Classification Types** (current implementation):
+1. **project_summary**: project, portfolio, proje, yaptığım
+2. **skill_assessment**: skill, technology, bilgi, yetenek, teknoloji
+3. **architecture_question**: architecture, design, system, mimari
+4. **experience_question**: experience, worked, deneyim, çalıştım
+5. **comparison_question**: compare, vs, karşılaştır
+6. **technical_deep_dive**: why, how, neden, nasıl
+7. **general_question**: catch-all default
 
-**Processing**:
+> **Turkish support**: The classifier recognizes both English and Turkish keywords.
+
+**Processing** (from `src/rag/orchestration/graph.py`):
 ```python
-async def classify_query(state):
-    from langchain.chains import LLMChain
-    from langchain.prompts import PromptTemplate
-    
-    prompt = PromptTemplate(
-        input_variables=["query"],
-        template="""Classify this query into one category.
-        
-Query: {query}
-
-Categories:
-1. project_query - About a specific project
-2. skill_question - About technical skills
-3. architectural_decision - Why certain tech was chosen
-4. learning_journey - How learned a skill/domain
-5. comparison - Comparing two approaches
-6. experience_question - Professional experience
-7. general_introduction - About me in general
-8. technical_deep_dive - Deep technical explanation
-9. interview_prep - Interview-style questions
-10. methodology - How I approach problems
-
-Respond ONLY with:
-CATEGORY: [category_name]
-CONFIDENCE: [0.0-1.0]
-ENTITIES: [comma-separated entities found]
-DOMAIN: [primary domain: architecture, distributed-systems, ml, web, etc.]
-"""
-    )
-    
-    chain = LLMChain(llm=llm, prompt=prompt)
-    response = await chain.arun(query=state["query"])
-    
-    # Parse response
-    classification = parse_classification_response(response)
-    
-    return {
-        **state,
-        "query_type": classification["category"],
-        "confidence": classification["confidence"],
-        "entities": classification["entities"],
-        "domain": classification["domain"]
-    }
+async def node_classify_query(state: OrchestrationState) -> OrchestrationState:
+    lower = (state.get("query") or "").lower()
+    if any(k in lower for k in ("architecture", "design", "system", "mimari")):
+        query_type = "architecture_question"
+    elif any(k in lower for k in ("project", "portfolio", "proje")):
+        query_type = "project_summary"
+    # ... etc.
+    return {**state, "query_type": query_type, "confidence": 0.85}
 ```
 
 **Output**:
 ```python
 {
-    "query_type": str,           # Classification
-    "confidence": float,         # 0.0-1.0
-    "entities": list[str],       # Extracted entities
-    "domain": str,               # Primary domain
-    "classification_reasoning": str  # Why this classification
+    "query_type": str,   # Classification label
+    "confidence": float  # Fixed at 0.85 for keyword-based classification
 }
 ```
 
@@ -487,57 +451,29 @@ async def hybrid_retrieve(state):
 
 ### Node 7: Reranker Node
 
-**Purpose**: Cross-encoder reranking for final ranking
+**Purpose**: Score and re-order retrieval candidates by relevance
 
-**Model**: `bge-reranker-large` (state-of-the-art)
+**Current Implementation**: Score-based reranking using the existing hybrid fusion scores.
 
-**Processing**:
 ```python
-async def rerank(state):
-    from sentence_transformers import CrossEncoder
-    
-    reranker = CrossEncoder('BAAI/bge-reranker-large')
-    
-    query = state["query"]
-    chunks = state["retrieved_chunks"]
-    
-    # Prepare pairs for reranking
-    pairs = [(query, chunk["content"]) for chunk in chunks]
-    
-    # Batch scoring
-    scores = reranker.predict(pairs)
-    
-    # Score each chunk
-    scored_chunks = []
-    for chunk, score in zip(chunks, scores):
-        chunk["rerank_score"] = float(score)
-        scored_chunks.append(chunk)
-    
-    # Filter by threshold and sort
-    reranked = sorted(
-        scored_chunks,
-        key=lambda x: x["rerank_score"],
-        reverse=True
-    )
-    
-    # Apply confidence threshold
-    threshold = 0.6
-    final_chunks = [c for c in reranked if c["rerank_score"] >= threshold]
-    
-    # Take top 5-10
-    top_chunks = final_chunks[:7]
-    
-    return {
-        **state,
-        "reranked_chunks": top_chunks,
-        "reranker_threshold": threshold,
-        "chunks_after_rerank": len(top_chunks),
-        "rerank_distribution": {
-            "high_confidence": len([c for c in top_chunks if c["rerank_score"] > 0.8]),
-            "medium_confidence": len([c for c in top_chunks if 0.7 <= c["rerank_score"] <= 0.8]),
-            "low_confidence": len([c for c in top_chunks if c["rerank_score"] < 0.7])
-        }
-    }
+# src/rag/retrieval/reranker.py
+def simple_rerank(query, candidates, threshold=0.0, top_k=7):
+    for candidate in candidates:
+        candidate["rerank_score"] = float(candidate.get("score", 0.0))
+    ranked = sorted(candidates, key=lambda x: x["rerank_score"], reverse=True)
+    filtered = [x for x in ranked if x["rerank_score"] >= threshold]
+    return filtered[:top_k] if filtered else ranked[:top_k]
+```
+
+**Future upgrade** (Phase 3+): Replace with a cross-encoder model for significantly better precision:
+```python
+# To upgrade: add to requirements.txt
+# sentence-transformers already installed
+
+from sentence_transformers import CrossEncoder
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+pairs = [(query, chunk["chunk_text"]) for chunk in candidates]
+scores = reranker.predict(pairs)
 ```
 
 ---
@@ -639,77 +575,39 @@ async def inject_memory(state):
 
 ### Node 10: LLM Response Generator
 
-**Purpose**: Generate streaming response
+**Purpose**: Generate response using Groq LLM
 
-**Processing**:
+**LLM Provider**: Groq (`llama-3.3-70b-versatile` by default)
+
+**Processing** (from `src/rag/orchestration/graph.py`):
 ```python
-async def generate_response(state):
-    from langchain.callbacks import AsyncIteratorCallbackHandler
-    
-    query = state["query"]
-    context = state["final_context"]
-    query_type = state["query_type"]
-    
-    # Build system prompt
-    system_prompt = f"""You are an AI assistant representing an engineer.
-    
-You deeply understand their:
-- Technical projects and systems
-- Engineering decisions and trade-offs
-- Technical skills and expertise
-- Learning journey and experiences
-- Architecture and design patterns
-
-Query Type: {query_type}
-
-Guidelines:
-1. Answer based strictly on provided context
-2. Be specific and technical in your explanations
-3. Explain your reasoning and trade-offs
-4. Sound natural and conversational
-5. Admit uncertainty if context doesn't cover topic
-6. Reference specific technologies and decisions
-7. Avoid generic responses
-8. Be concise but thorough"""
-
-    # Build user message
-    user_message = f"""Context:
-{context}
-
-Question: {query}
-
-Answer thoughtfully and deeply."""
-
-    # Stream generation
-    callback = AsyncIteratorCallbackHandler()
-    
-    task = asyncio.create_task(
-        llm.agenerate(
-            messages=[
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_message)
-            ],
-            callbacks=[callback],
-            temperature=0.3,  # Lower for more consistency
-            max_tokens=2000
-        )
+async def node_llm_generator(state: OrchestrationState) -> OrchestrationState:
+    system_prompt = (
+        "You are a helpful assistant representing a software engineer's portfolio. "
+        "Answer questions using only the provided context. "
+        "Be concise and factual. "
+        "If the context does not contain enough information, say you don't have that information. "
+        "Do not invent projects, metrics, or technologies."
     )
-    
-    tokens = []
-    async for token in callback.aiter():
-        tokens.append(token)
-        yield token  # Yield for streaming
-    
-    full_response = "".join(tokens)
-    
-    return {
-        **state,
-        "response_text": full_response,
-        "response_tokens": tokens,
-        "token_count": len(tokens),
-        "temperature": 0.3
-    }
+    user_message = (
+        f"Context:\n{state.get('context', '')}\n\n"
+        f"Question:\n{state.get('query', '')}\n\nAnswer:"
+    )
+    response = await groq_client.generate_text(
+        prompt=user_message,
+        system_prompt=system_prompt,
+        max_tokens=1200,
+        temperature=0.1,
+    )
+    return {**state, "response": response}
 ```
+
+**Groq model options** (set via `GROQ_MODEL` env var):
+- `llama-3.3-70b-versatile` — default, best quality
+- `llama-3.1-8b-instant` — faster, lower cost
+- `gemma2-9b-it` — alternative
+
+**Fallback**: Set `LLM_PROVIDER=openai` and `OPENAI_API_KEY` in `.env` for OpenAI.
 
 ---
 

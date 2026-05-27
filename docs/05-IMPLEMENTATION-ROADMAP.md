@@ -180,58 +180,59 @@ requires = ["setuptools", "wheel"]
 **1.3 - Create requirements.txt**
 ```
 # Core
-fastapi==0.109.0
-uvicorn==0.27.0
-pydantic==2.5.2
-python-dotenv==1.0.0
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
 
 # LLM & RAG
-langchain==0.1.7
-langgraph==0.0.20
-langchain-openai==0.1.1
-langchain-anthropic==0.1.0
+langchain==0.3.14
+langgraph==0.2.62          # TypedDict-based state (0.2.x API)
+langchain-openai==0.2.14
+groq==0.13.1               # Official Groq SDK
 
-# Embeddings
-sentence-transformers==2.2.2
-numpy==1.26.2
+# Embeddings (local, no API key needed)
+sentence-transformers==3.3.1
+numpy==1.26.4
+torch==2.5.1
+transformers==4.47.1
 
-# Search
-qdrant-client==2.7.3
-pgvector==0.2.4
+# Search & Vector DB
+qdrant-client==1.12.1
+rank-bm25==0.2.2
 
 # Database
-sqlalchemy==2.0.23
-asyncpg==0.29.0
-alembic==1.13.1
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
 
 # Cache
-redis==5.0.1
-hiredis==2.2.3
+redis==5.2.1
+hiredis==3.0.0
 
 # Processing
-pdf2image==1.16.3
-pypdf==3.17.1
-markdown==3.5.1
-python-pptx==0.6.21
+pypdf==5.1.0
+markdown==3.7
+python-pptx==1.0.2
+python-multipart==0.0.20
 
 # Auth
-pyjwt==2.8.1
-passlib==1.7.4
-bcrypt==4.1.1
+pyjwt==2.10.1
+passlib[bcrypt]==1.7.4
+cryptography==44.0.0
+httpx==0.27.2
 
 # Observability
-structlog==24.1.0
-prometheus-client==0.19.0
-opentelemetry-api==1.21.0
-sentry-sdk==1.39.2
-
-# Security
-cryptography==41.0.7
-httpx==0.25.2
+structlog==24.4.0
+prometheus-client==0.21.1
+opentelemetry-api==1.29.0
+sentry-sdk[fastapi]==2.19.2
 
 # Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
 ```
 
 **1.4 - Create .env.example**
@@ -242,7 +243,7 @@ DEBUG=true
 LOG_LEVEL=DEBUG
 
 # Database
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/portfolio_db
+DATABASE_URL=postgresql+asyncpg://portfolio:portfolio@localhost:5432/portfolio_db
 REDIS_URL=redis://localhost:6379/0
 
 # Vector DB
@@ -250,15 +251,28 @@ QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=
 QDRANT_COLLECTION_NAME=portfolio_chunks
 
-# Embedding Model
-EMBEDDING_MODEL=BAAI/bge-large-en
-EMBEDDING_DIMENSION=1024
+# Embeddings
+# "sentence-transformers" = local ML model, best quality, no API key needed (default)
+# "local-hash"            = deterministic fallback, no ML, fast but weak semantics
+EMBEDDING_PROVIDER=sentence-transformers
+# multilingual-e5-base supports Turkish + English
+EMBEDDING_MODEL=intfloat/multilingual-e5-base
+EMBEDDING_DIMENSION=768
 
-# LLM
-LLM_PROVIDER=openai  # openai, anthropic, google, deepseek
+# LLM — Primary: Groq (fast inference, generous free tier)
+LLM_PROVIDER=groq
+# Get your free API key at: https://console.groq.com
+GROQ_API_KEY=your-groq-api-key-here
+# Available models:
+#   meta-llama/llama-4-maverick-17b-128e-instruct  (default — smartest, cheapest, multimodal)
+#   meta-llama/llama-4-scout-17b-16e-instruct      (fastest, huge context)
+#   llama-3.3-70b-versatile                        (reliable fallback)
+#   llama-3.1-8b-instant                           (cheapest)
+GROQ_MODEL=meta-llama/llama-4-maverick-17b-128e-instruct
+
+# OpenAI (optional fallback)
 OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4-turbo-preview
-OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o-mini
 
 # Security
 JWT_SECRET=your-secret-key-change-in-production
@@ -271,6 +285,7 @@ RATE_LIMIT_PER_DAY=10000
 
 # Admin
 ADMIN_USERS=admin@example.com
+ADMIN_API_KEY=change-me-admin-key
 
 # Observability
 SENTRY_DSN=
@@ -888,36 +903,24 @@ class SemanticChunker:
 
 **8.1 - Embedding Service**
 
-Create `src/ingestion/embedding_service.py`:
+Embedding logic lives in `src/rag/embeddings.py` (already implemented).
+
+Key design decisions:
+- **Model**: `intfloat/multilingual-e5-base` (Turkish + English support, 768-dim)
+- **Provider**: `sentence-transformers` — runs locally, no API key required
+- Model is loaded once via `lru_cache` and runs in a thread pool to avoid blocking the async event loop
+- Uses `"passage: "` prefix for documents, `"query: "` prefix for search queries (required by e5 models)
+- Redis caches embeddings to avoid re-computing on repeated texts
+
 ```python
-from sentence_transformers import SentenceTransformer
-from typing import List
-import numpy as np
-import asyncio
+# Usage (already implemented in src/rag/embeddings.py)
+from src.rag.embeddings import embed_texts, embed_query
 
-class EmbeddingService:
-    def __init__(self, model_name: str = "BAAI/bge-large-en"):
-        self.model = SentenceTransformer(model_name)
-        self.model_name = model_name
-        self.dimension = 1024  # BAAI/bge-large-en
-    
-    async def embed_batch(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
-        """Embed multiple texts efficiently"""
-        embeddings = []
-        
-        for i in range(0, len(texts), batch_size):
-            batch = texts[i:i+batch_size]
-            batch_embeddings = self.model.encode(batch, convert_to_numpy=True)
-            embeddings.extend(batch_embeddings.tolist())
-        
-        return embeddings
-    
-    async def embed(self, text: str) -> List[float]:
-        """Embed single text"""
-        embedding = self.model.encode(text, convert_to_numpy=True)
-        return embedding.tolist()
+# Embed passages for storage
+embeddings = await embed_texts(["My project uses LangGraph..."])
 
-embedding_service = EmbeddingService()
+# Embed a search query
+query_vec = await embed_query("What technologies did you use?")
 ```
 
 **8.2 - Async Ingestion Pipeline**

@@ -1,16 +1,15 @@
 """
 LangGraph Orchestration Module
 
-This module implements the 12-node orchestration pipeline for RAG processing.
+RAG pipeline using langgraph 0.2.x TypedDict-based state.
 Each node handles a specific step in the pipeline.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import time
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypedDict
 
 from langgraph.graph import StateGraph, END
 from src.cache.redis_manager import redis_manager
@@ -22,28 +21,27 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
-# State Schema
+# State Schema — TypedDict required by langgraph 0.2+
 # ============================================================================
 
-@dataclass
-class OrchestrationState:
-    query: str = ""
-    session_id: str = ""
-    user_id: str = ""
-    query_type: str = "general_question"
-    confidence: float = 1.0
-    conversation_history: List[Dict[str, str]] = field(default_factory=list)
-    session_context: Dict[str, Any] = field(default_factory=dict)
-    query_variations: List[str] = field(default_factory=list)
-    retrieval_strategy: str = "hybrid_balanced"
-    retrieved_chunks: List[Dict[str, Any]] = field(default_factory=list)
-    ranked_chunks: List[Dict[str, Any]] = field(default_factory=list)
-    context: str = ""
-    response: str = ""
-    tokens: List[str] = field(default_factory=list)
-    citations: List[Dict[str, str]] = field(default_factory=list)
-    start_time: float = 0.0
-    latencies: Dict[str, float] = field(default_factory=dict)
+class OrchestrationState(TypedDict, total=False):
+    query: str
+    session_id: str
+    user_id: str
+    query_type: str
+    confidence: float
+    conversation_history: List[Dict[str, str]]
+    session_context: Dict[str, Any]
+    query_variations: List[str]
+    retrieval_strategy: str
+    retrieved_chunks: List[Dict[str, Any]]
+    ranked_chunks: List[Dict[str, Any]]
+    context: str
+    response: str
+    tokens: List[str]
+    citations: List[Dict[str, Any]]
+    start_time: float
+    latencies: Dict[str, float]
 
 
 # ============================================================================
@@ -51,57 +49,63 @@ class OrchestrationState:
 # ============================================================================
 
 async def node_user_input(state: OrchestrationState) -> OrchestrationState:
-    logger.info(f"[USER_INPUT] Processing query: {state.query[:50]}...")
-    state.query = state.query.strip()
-    if len(state.query) > 1000:
-        state.query = state.query[:1000]
-    return state
+    logger.info("[USER_INPUT] Processing query: %s...", state.get("query", "")[:50])
+    query = (state.get("query") or "").strip()
+    if len(query) > 1000:
+        query = query[:1000]
+    return {**state, "query": query}
 
 
 async def node_classify_query(state: OrchestrationState) -> OrchestrationState:
     logger.info("[CLASSIFY] Classifying query type...")
-    lower = state.query.lower()
-    if "architecture" in lower or "design" in lower:
-        state.query_type = "architecture_question"
-    elif "project" in lower or "portfolio" in lower:
-        state.query_type = "project_summary"
-    elif "skill" in lower or "technology" in lower:
-        state.query_type = "skill_assessment"
-    elif "experience" in lower or "worked" in lower:
-        state.query_type = "experience_question"
-    elif "compare" in lower or "vs" in lower:
-        state.query_type = "comparison_question"
-    elif "why" in lower or "how" in lower:
-        state.query_type = "technical_deep_dive"
+    lower = (state.get("query") or "").lower()
+
+    if any(k in lower for k in ("architecture", "design", "system", "mimari")):
+        query_type = "architecture_question"
+    elif any(k in lower for k in ("project", "portfolio", "proje", "yaptığım")):
+        query_type = "project_summary"
+    elif any(k in lower for k in ("skill", "technology", "tech", "bilgi", "yetenek", "teknoloji")):
+        query_type = "skill_assessment"
+    elif any(k in lower for k in ("experience", "worked", "deneyim", "çalıştım")):
+        query_type = "experience_question"
+    elif any(k in lower for k in ("compare", "vs", "karşılaştır")):
+        query_type = "comparison_question"
+    elif any(k in lower for k in ("why", "how", "neden", "nasıl")):
+        query_type = "technical_deep_dive"
     else:
-        state.query_type = "general_question"
-    state.confidence = 0.85
-    return state
+        query_type = "general_question"
+
+    return {**state, "query_type": query_type, "confidence": 0.85}
 
 
 async def node_memory_check(state: OrchestrationState) -> OrchestrationState:
-    logger.info(f"[MEMORY] Checking session memory for {state.session_id}...")
-    session_data = await redis_manager.get_session(state.session_id)
+    session_id = state.get("session_id") or ""
+    logger.info("[MEMORY] Checking session memory for %s...", session_id)
+    session_data = await redis_manager.get_session(session_id)
     if session_data:
-        state.session_context = session_data
-        state.conversation_history = session_data.get("history", [])
+        return {
+            **state,
+            "session_context": session_data,
+            "conversation_history": session_data.get("history", []),
+        }
     return state
 
 
 async def node_query_rewrite(state: OrchestrationState) -> OrchestrationState:
     logger.info("[REWRITE] Generating query variations...")
-    state.query_variations = [
-        state.query,
-        f"Explain {state.query} in detail",
-        f"What is the best answer for: {state.query}",
+    query = state.get("query") or ""
+    variations = [
+        query,
+        f"Explain {query} in detail",
+        f"What is the best answer for: {query}",
+        f"Provide context for: {query}",
     ]
-    if len(state.query_variations) < 5:
-        state.query_variations.append(f"Provide context for: {state.query}")
-    return state
+    return {**state, "query_variations": variations}
 
 
 async def node_retrieval_strategy_selector(state: OrchestrationState) -> OrchestrationState:
-    logger.info(f"[STRATEGY] Selecting retrieval strategy for {state.query_type}...")
+    query_type = state.get("query_type", "general_question")
+    logger.info("[STRATEGY] Selecting retrieval strategy for %s...", query_type)
     strategy_map = {
         "technical_deep_dive": "hybrid_balanced",
         "project_summary": "dense_heavy",
@@ -109,98 +113,112 @@ async def node_retrieval_strategy_selector(state: OrchestrationState) -> Orchest
         "experience_question": "multi_query",
         "architecture_question": "hybrid_balanced",
         "comparison_question": "hybrid_balanced",
-        "troubleshooting": "dense_heavy",
         "general_question": "hybrid_balanced",
     }
-    state.retrieval_strategy = strategy_map.get(state.query_type, "hybrid_balanced")
-    return state
+    strategy = strategy_map.get(query_type, "hybrid_balanced")
+    return {**state, "retrieval_strategy": strategy}
 
 
 async def node_hybrid_retriever(state: OrchestrationState) -> OrchestrationState:
-    logger.info(f"[RETRIEVER] Executing hybrid search strategy: {state.retrieval_strategy}...")
-    state.retrieved_chunks = await hybrid_search(
-        query=state.query,
-        query_variations=state.query_variations,
+    strategy = state.get("retrieval_strategy", "hybrid_balanced")
+    logger.info("[RETRIEVER] Executing hybrid search strategy: %s...", strategy)
+    chunks = await hybrid_search(
+        query=state.get("query") or "",
+        query_variations=state.get("query_variations"),
         top_k=15,
     )
-    state.latencies["retrieval_candidates"] = float(len(state.retrieved_chunks))
-    return state
+    latencies = dict(state.get("latencies") or {})
+    latencies["retrieval_candidates"] = float(len(chunks))
+    return {**state, "retrieved_chunks": chunks, "latencies": latencies}
 
 
 async def node_reranker(state: OrchestrationState) -> OrchestrationState:
-    logger.info(f"[RERANKER] Reranking {len(state.retrieved_chunks)} candidates...")
-    state.ranked_chunks = simple_rerank(state.query, state.retrieved_chunks, threshold=0.0, top_k=7)
-    state.latencies["reranked_chunks"] = float(len(state.ranked_chunks))
-    return state
+    retrieved = state.get("retrieved_chunks") or []
+    logger.info("[RERANKER] Reranking %d candidates...", len(retrieved))
+    ranked = simple_rerank(state.get("query") or "", retrieved, threshold=0.0, top_k=7)
+    latencies = dict(state.get("latencies") or {})
+    latencies["reranked_chunks"] = float(len(ranked))
+    return {**state, "ranked_chunks": ranked, "latencies": latencies}
 
 
 async def node_context_optimizer(state: OrchestrationState) -> OrchestrationState:
-    logger.info(f"[CONTEXT] Optimizing context from {len(state.ranked_chunks)} chunks...")
+    ranked = state.get("ranked_chunks") or []
+    logger.info("[CONTEXT] Optimizing context from %d chunks...", len(ranked))
     context_lines = []
-    for index, chunk in enumerate(state.ranked_chunks, start=1):
+    for index, chunk in enumerate(ranked, start=1):
         text = chunk.get("chunk_text", "")
         source = chunk.get("metadata", {}).get("source", f"chunk-{index}")
         retrieval_mode = chunk.get("metadata", {}).get("retrieval_mode", "hybrid")
         context_lines.append(f"[{source} | {retrieval_mode}] {text}")
-    state.context = "\n\n".join(context_lines)
-    return state
+    return {**state, "context": "\n\n".join(context_lines)}
 
 
 async def node_memory_injector(state: OrchestrationState) -> OrchestrationState:
     logger.info("[MEMORY_INJECT] Injecting conversation memory...")
-    if state.conversation_history:
-        history_lines = [f"{item.get('role')}: {item.get('content')}" for item in state.conversation_history[-5:]]
-        state.context = "\n\n".join(["Conversation history:"] + history_lines + [state.context])
-    return state
+    history = state.get("conversation_history") or []
+    context = state.get("context") or ""
+    if history:
+        history_lines = [
+            f"{item.get('role')}: {item.get('content')}"
+            for item in history[-5:]
+        ]
+        context = "\n\n".join(["Conversation history:"] + history_lines + [context])
+    return {**state, "context": context}
 
 
 async def node_llm_generator(state: OrchestrationState) -> OrchestrationState:
     logger.info("[LLM] Generating response with LLM...")
     system_prompt = (
-        "You are a software engineer assistant for a portfolio RAG system. "
-        "Answer using only the provided context. "
-        "If the context does not support the answer, say you do not know. "
-        "Do not invent projects, experience, metrics, or technologies."
+        "You are a helpful assistant representing a software engineer's portfolio. "
+        "Answer questions using only the provided context. "
+        "Be concise and factual. "
+        "If the context does not contain enough information, say you don't have that information. "
+        "Do not invent projects, metrics, or technologies."
     )
-    full_prompt = (
-        f"{system_prompt}\n\n"
-        "Write a direct answer in plain language. "
-        "Prefer short paragraphs over bullet-heavy output unless the question asks for a list.\n\n"
-        f"Context:\n{state.context}\n\n"
-        f"Question:\n{state.query}\n\n"
+    user_message = (
+        f"Context:\n{state.get('context', '')}\n\n"
+        f"Question:\n{state.get('query', '')}\n\n"
         "Answer:"
     )
-    state.response = await groq_client.generate_text(full_prompt, max_tokens=1200, temperature=0.1)
-    return state
+    response = await groq_client.generate_text(
+        prompt=user_message,
+        system_prompt=system_prompt,
+        max_tokens=1200,
+        temperature=0.1,
+    )
+    return {**state, "response": response}
 
 
 async def node_citation_builder(state: OrchestrationState) -> OrchestrationState:
     logger.info("[CITATIONS] Building citations...")
-    citations = []
-    for index, chunk in enumerate(state.ranked_chunks, start=1):
-        source = chunk.get("metadata", {}).get("source", f"chunk-{index}")
-        citations.append({
-            "source": source,
+    ranked = state.get("ranked_chunks") or []
+    citations = [
+        {
+            "source": chunk.get("metadata", {}).get("source", f"chunk-{i}"),
             "score": chunk.get("score", 0.0),
-            "excerpt": chunk.get("chunk_text", "")[:200],
-        })
-    state.citations = citations
-    return state
+            "excerpt": (chunk.get("chunk_text") or "")[:200],
+        }
+        for i, chunk in enumerate(ranked, start=1)
+    ]
+    return {**state, "citations": citations}
 
 
 async def node_streaming_response(state: OrchestrationState) -> OrchestrationState:
     logger.info("[STREAM] Preparing response for streaming...")
-    state.tokens = state.response.split()
-    state.latencies["total"] = time.time() - state.start_time
-    return state
+    start_time = state.get("start_time") or time.time()
+    latencies = dict(state.get("latencies") or {})
+    latencies["total"] = time.time() - start_time
+    tokens = (state.get("response") or "").split()
+    return {**state, "tokens": tokens, "latencies": latencies}
 
 
 # ============================================================================
 # Graph Builder
 # ============================================================================
 
-def build_orchestration_graph() -> StateGraph:
-    graph = StateGraph(OrchestrationState)
+def build_orchestration_graph():
+    graph: StateGraph = StateGraph(OrchestrationState)
+
     graph.add_node("user_input", node_user_input)
     graph.add_node("classify_query", node_classify_query)
     graph.add_node("memory_check", node_memory_check)
@@ -213,6 +231,7 @@ def build_orchestration_graph() -> StateGraph:
     graph.add_node("llm_generator", node_llm_generator)
     graph.add_node("citation_builder", node_citation_builder)
     graph.add_node("streaming_response", node_streaming_response)
+
     graph.set_entry_point("user_input")
     graph.add_edge("user_input", "classify_query")
     graph.add_edge("classify_query", "memory_check")
@@ -226,6 +245,7 @@ def build_orchestration_graph() -> StateGraph:
     graph.add_edge("llm_generator", "citation_builder")
     graph.add_edge("citation_builder", "streaming_response")
     graph.add_edge("streaming_response", END)
+
     return graph.compile()
 
 
@@ -233,19 +253,31 @@ orchestration_graph = build_orchestration_graph()
 
 
 async def process_query(query: str, session_id: str, user_id: str) -> Dict[str, Any]:
-    initial_state = OrchestrationState(
-        query=query,
-        session_id=session_id,
-        user_id=user_id,
-        start_time=time.time(),
-    )
-    final_state = await orchestration_graph.ainvoke(initial_state)
-    state = final_state if isinstance(final_state, dict) else final_state.__dict__
-    return {
-        "response": state.get("response", ""),
-        "citations": state.get("citations", []),
-        "query_type": state.get("query_type", "general_question"),
-        "latencies": state.get("latencies", {}),
+    initial_state: OrchestrationState = {
+        "query": query,
         "session_id": session_id,
-        "tokens": state.get("tokens", []),
+        "user_id": user_id,
+        "start_time": time.time(),
+        "query_type": "general_question",
+        "confidence": 1.0,
+        "conversation_history": [],
+        "session_context": {},
+        "query_variations": [],
+        "retrieval_strategy": "hybrid_balanced",
+        "retrieved_chunks": [],
+        "ranked_chunks": [],
+        "context": "",
+        "response": "",
+        "tokens": [],
+        "citations": [],
+        "latencies": {},
+    }
+    final_state = await orchestration_graph.ainvoke(initial_state)
+    return {
+        "response": final_state.get("response", ""),
+        "citations": final_state.get("citations", []),
+        "query_type": final_state.get("query_type", "general_question"),
+        "latencies": final_state.get("latencies", {}),
+        "session_id": session_id,
+        "tokens": final_state.get("tokens", []),
     }

@@ -1,14 +1,61 @@
-"""Embedding utilities for the RAG system."""
+"""Embedding utilities for the RAG system.
+
+Provider priority:
+  1. "sentence-transformers" — local ML model, best semantic quality, no API key needed.
+     Default model: intfloat/multilingual-e5-base (Turkish + English support).
+  2. "local-hash"           — deterministic hash-based fallback, no ML, fast but weak.
+
+Redis caching is applied in both cases to avoid re-computing embeddings for repeated texts.
+"""
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import logging
+from functools import lru_cache
 from typing import List
 
 from src.cache.redis_manager import redis_manager
 from src.config import settings
-from src.llm.groq_client import groq_client
 
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Sentence-Transformers (local model, loaded once)
+# ---------------------------------------------------------------------------
+
+@lru_cache(maxsize=1)
+def _load_sentence_transformer():
+    """Load the sentence-transformers model once and cache it in memory."""
+    try:
+        from sentence_transformers import SentenceTransformer
+        logger.info("Loading embedding model: %s", settings.EMBEDDING_MODEL)
+        model = SentenceTransformer(settings.EMBEDDING_MODEL)
+        logger.info("Embedding model loaded successfully.")
+        return model
+    except Exception as exc:
+        logger.error("Failed to load sentence-transformers model: %s", exc)
+        return None
+
+
+def _sentence_transformer_embed(texts: List[str]) -> List[List[float]]:
+    """Run sentence-transformers encoding synchronously (called in a thread)."""
+    model = _load_sentence_transformer()
+    if model is None:
+        logger.warning("Sentence-transformers unavailable, falling back to local-hash embeddings.")
+        return [local_hash_embedding(text) for text in texts]
+
+    # multilingual-e5-base works best with "query: " / "passage: " prefixes
+    prefixed = [f"passage: {text}" for text in texts]
+    vectors = model.encode(prefixed, normalize_embeddings=True, show_progress_bar=False)
+    return [v.tolist() for v in vectors]
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
 async def embed_texts(texts: List[str]) -> List[List[float]]:
     """Generate embeddings for text inputs, with Redis caching."""
@@ -37,21 +84,49 @@ async def embed_texts(texts: List[str]) -> List[List[float]]:
 async def generate_embeddings(texts: List[str]) -> List[List[float]]:
     """Generate embeddings using the configured provider."""
     provider = settings.EMBEDDING_PROVIDER.strip().lower()
-    if provider == "groq":
-        return await groq_client.embed_texts(texts)
+
+    if provider == "sentence-transformers":
+        # Run CPU-bound model in a thread pool to avoid blocking the event loop
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, _sentence_transformer_embed, texts)
+
+    # Fallback: deterministic hash embedding (no ML, weak semantic quality)
+    logger.debug("Using local-hash embedding provider.")
     return [local_hash_embedding(text) for text in texts]
 
 
+async def embed_query(query: str) -> List[float]:
+    """Embed a single query string (uses 'query: ' prefix for e5 models)."""
+    provider = settings.EMBEDDING_PROVIDER.strip().lower()
+
+    if provider == "sentence-transformers":
+        model = _load_sentence_transformer()
+        if model is not None:
+            loop = asyncio.get_event_loop()
+            prefixed = f"query: {query}"
+            embedding = await loop.run_in_executor(
+                None,
+                lambda: model.encode(prefixed, normalize_embeddings=True).tolist(),
+            )
+            return embedding
+
+    return local_hash_embedding(query)
+
+
+# ---------------------------------------------------------------------------
+# Hash-based fallback (no ML)
+# ---------------------------------------------------------------------------
+
 def local_hash_embedding(text: str) -> List[float]:
-    """Deterministic multilingual-friendly embedding fallback."""
+    """Deterministic multilingual-friendly embedding fallback using character n-grams."""
     dimension = settings.EMBEDDING_DIMENSION
     vector = [0.0] * dimension
-    normalized = normalize_text(text)
+    normalized = _normalize_text(text)
 
     for token in normalized.split():
         _accumulate_feature(vector, f"tok:{token}", weight=2.0)
 
-    for ngram in character_ngrams(normalized, n=3):
+    for ngram in _character_ngrams(normalized, n=3):
         _accumulate_feature(vector, f"chr:{ngram}", weight=0.5)
 
     norm = sum(value * value for value in vector) ** 0.5
@@ -60,17 +135,17 @@ def local_hash_embedding(text: str) -> List[float]:
     return vector
 
 
-def normalize_text(text: str) -> str:
+def _normalize_text(text: str) -> str:
     return " ".join(text.lower().strip().split())
 
 
-def character_ngrams(text: str, n: int = 3) -> List[str]:
+def _character_ngrams(text: str, n: int = 3) -> List[str]:
     compact = text.replace(" ", "_")
     if not compact:
         return []
     if len(compact) < n:
         return [compact]
-    return [compact[index:index + n] for index in range(len(compact) - n + 1)]
+    return [compact[i:i + n] for i in range(len(compact) - n + 1)]
 
 
 def _accumulate_feature(vector: List[float], feature: str, weight: float) -> None:
