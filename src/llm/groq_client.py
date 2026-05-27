@@ -21,6 +21,15 @@ class GroqClient:
         if not self.api_key:
             logger.warning("GROQ_API_KEY is not configured. Groq requests will fail until set.")
 
+    def _uses_reasoning_model(self) -> bool:
+        return self.model.startswith("openai/gpt-oss")
+
+    def _normalize_max_output_tokens(self, max_tokens: int) -> int:
+        """Keep enough room for reasoning models to produce a final answer."""
+        if self._uses_reasoning_model():
+            return max(max_tokens, 256)
+        return max_tokens
+
     async def _request(self, endpoint: str, payload: dict[str, Any]) -> dict[str, Any]:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -35,13 +44,14 @@ class GroqClient:
         self,
         prompt: str,
         max_tokens: int = 1024,
-        temperature: float = 0.7,
+        temperature: float = 0.2,
         stop: list[str] | None = None,
     ) -> str:
+        max_output_tokens = self._normalize_max_output_tokens(max_tokens)
         payload: dict[str, Any] = {
             "model": self.model,
             "input": prompt,
-            "max_output_tokens": max_tokens,
+            "max_output_tokens": max_output_tokens,
             "temperature": temperature,
         }
         if stop:
@@ -54,14 +64,25 @@ class GroqClient:
         output = result.get("output")
         if isinstance(output, list):
             parts: list[str] = []
+            reasoning_parts: list[str] = []
             for item in output:
                 if not isinstance(item, dict):
                     continue
                 for content_item in item.get("content", []):
-                    if isinstance(content_item, dict) and content_item.get("type") == "output_text":
+                    if not isinstance(content_item, dict):
+                        continue
+                    content_type = content_item.get("type")
+                    if content_type == "output_text":
                         parts.append(str(content_item.get("text", "")))
+                    elif content_type == "reasoning_text":
+                        reasoning_parts.append(str(content_item.get("text", "")))
             if parts:
                 return "".join(parts)
+            if reasoning_parts:
+                logger.warning(
+                    "Groq returned reasoning content without a final answer for model %s",
+                    self.model,
+                )
 
         choices = result.get("choices", [])
         if choices and isinstance(choices, list):

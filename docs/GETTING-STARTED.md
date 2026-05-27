@@ -1,4 +1,4 @@
-# Getting Started - Digital Twin Portfolio RAG System
+# Getting Started
 
 ##  Quick Start (5 minutes)
 
@@ -88,7 +88,7 @@ Open browser:
 - Redis UI: http://localhost:8001
 - Qdrant Dashboard: http://localhost:6333/dashboard
 
-**Congratulations!** Your system is running! 
+If those endpoints open, the local setup is working.
 
 ---
 

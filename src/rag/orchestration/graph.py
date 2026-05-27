@@ -157,11 +157,20 @@ async def node_memory_injector(state: OrchestrationState) -> OrchestrationState:
 async def node_llm_generator(state: OrchestrationState) -> OrchestrationState:
     logger.info("[LLM] Generating response with LLM...")
     system_prompt = (
-        "You are an expert software engineer assistant. Answer based only on the context below. "
-        "If the answer is not available, say you do not know."
+        "You are a software engineer assistant for a portfolio RAG system. "
+        "Answer using only the provided context. "
+        "If the context does not support the answer, say you do not know. "
+        "Do not invent projects, experience, metrics, or technologies."
     )
-    full_prompt = f"{system_prompt}\n\nContext:\n{state.context}\n\nQuestion:\n{state.query}\n\nAnswer:"
-    state.response = await groq_client.generate_text(full_prompt, max_tokens=1024, temperature=0.2)
+    full_prompt = (
+        f"{system_prompt}\n\n"
+        "Write a direct answer in plain language. "
+        "Prefer short paragraphs over bullet-heavy output unless the question asks for a list.\n\n"
+        f"Context:\n{state.context}\n\n"
+        f"Question:\n{state.query}\n\n"
+        "Answer:"
+    )
+    state.response = await groq_client.generate_text(full_prompt, max_tokens=1200, temperature=0.1)
     return state
 
 

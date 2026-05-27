@@ -68,8 +68,8 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="AI Digital Twin Portfolio",
-    description="Production-grade RAG system for intelligent portfolio clone",
+    title="Digital Twin Portfolio API",
+    description="API for the portfolio knowledge and chat system.",
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/api/v1/docs" if settings.DEBUG else None,
@@ -198,7 +198,7 @@ async def ingest_site_content(
 async def root():
     """API information."""
     return {
-        "name": "AI Digital Twin Portfolio",
+        "name": "Digital Twin Portfolio API",
         "version": "1.0.0",
         "docs": "/api/v1/docs",
         "health": "/api/v1/health"
