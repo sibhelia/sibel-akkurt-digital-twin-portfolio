@@ -50,8 +50,8 @@ class Settings(BaseSettings):
     #   "meta-llama/llama-4-scout-17b-16e-instruct" — faster, huge context window
     #   "llama-3.3-70b-versatile"                   — reliable fallback, battle-tested
     #   "llama-3.1-8b-instant"                      — fastest & cheapest, lower quality
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "meta-llama/llama-4-maverick-17b-128e-instruct")
-
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    
     # OpenAI fallback
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL: str = "gpt-4o-mini"

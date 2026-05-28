@@ -4,10 +4,13 @@ Main FastAPI application entry point.
 Initializes the API server with all middleware, routes, and services.
 """
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
+import shutil
+import uuid
+from pathlib import Path
 
 from src.config import settings
 from src.db.session import init_db, close_db
@@ -19,7 +22,7 @@ from src.api.schemas import (
     ChatResponse,
     SiteKnowledgeRequest,
 )
-from src.ingestion import IngestionMetadata, ingest_text
+from src.ingestion.pipeline import IngestionMetadata, ingest_text, ingest_file
 from src.rag.orchestration.graph import process_query
 
 
@@ -115,15 +118,20 @@ async def health_check():
 @app.post("/api/v1/chat", response_model=ChatResponse, tags=["chat"])
 async def chat(request: ChatRequest):
     """Process a chat request through the RAG orchestration pipeline."""
-    result = await process_query(request.query, request.session_id, request.user_id)
-    return ChatResponse(
-        response=result.get("response", ""),
-        citations=result.get("citations", []),
-        query_type=result.get("query_type", "general_question"),
-        latencies=result.get("latencies", {}),
-        session_id=result.get("session_id", request.session_id),
-        tokens=result.get("tokens", []),
-    )
+    try:
+        result = await process_query(request.query, request.session_id, request.user_id)
+        return ChatResponse(
+            response=result.get("response", ""),
+            citations=result.get("citations", []),
+            query_type=result.get("query_type", "general_question"),
+            latencies=result.get("latencies", {}),
+            session_id=result.get("session_id", request.session_id),
+            tokens=result.get("tokens", []),
+        )
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        raise HTTPException(status_code=400, detail=f"Chat failed: {str(e)}\n\nTraceback:\n{error_msg}")
 
 
 @app.post("/api/v1/admin/knowledge/profile-entry", response_model=AdminIngestResponse, tags=["admin"])
@@ -192,6 +200,50 @@ async def ingest_site_content(
     )
     return AdminIngestResponse(**result)
 
+
+@app.post("/api/v1/admin/knowledge/upload", response_model=AdminIngestResponse, tags=["admin"])
+async def upload_file(
+    file: UploadFile = File(...),
+    project_name: str | None = Form(None),
+    technologies: str | None = Form(None),
+    topics: str | None = Form(None),
+    importance: str | None = Form("medium"),
+    created_by: str | None = Form(None),
+    _: None = Depends(require_admin),
+):
+    """Upload a file (PDF, Word, MD) and ingest it into the knowledge base."""
+    upload_dir = Path("uploads")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    file_ext = Path(file.filename or "").suffix
+    temp_filename = f"{uuid.uuid4()}{file_ext}"
+    temp_path = upload_dir / temp_filename
+    
+    with open(temp_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    try:
+        tech_list = [t.strip() for t in technologies.split(",")] if technologies else []
+        topic_list = [t.strip() for t in topics.split(",")] if topics else []
+        
+        metadata = IngestionMetadata(
+            project_name=project_name,
+            technologies=tech_list,
+            topics=topic_list,
+            importance=importance,
+            ingested_by=created_by,
+        )
+        
+        result = await ingest_file(str(temp_path), metadata=metadata)
+        result["file_name"] = file.filename
+        return AdminIngestResponse(**result)
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        raise HTTPException(status_code=400, detail=f"Upload failed: {str(e)}\n\nTraceback:\n{error_msg}")
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
 
 # Root endpoint
 @app.get("/", tags=["root"])
