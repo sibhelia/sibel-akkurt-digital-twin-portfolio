@@ -29,7 +29,7 @@ export default function Services() {
     <section
       id="services"
       data-testid="services-section"
-      className="py-20 lg:py-28 bg-base"
+      className="py-20 lg:py-28 relative z-10"
     >
       <div className="container-wide">
         <div className="mb-12">

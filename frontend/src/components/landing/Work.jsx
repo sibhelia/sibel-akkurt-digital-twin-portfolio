@@ -36,7 +36,7 @@ export default function Work() {
     <section
       id="work"
       data-testid="work-section"
-      className="py-20 lg:py-28 bg-base"
+      className="py-20 lg:py-28 relative z-10"
     >
       <div className="container-wide">
         <div className="max-w-2xl mb-12">

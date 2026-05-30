@@ -37,7 +37,7 @@ export default function About() {
               Sibel <span className="text-purple-accent">Akkurt</span>
             </h2>
             
-            <p className="text-white/75 leading-relaxed text-sm lg:text-base mb-8">
+            <p className="font-medium tracking-wide leading-relaxed text-sm lg:text-base mb-8 drop-shadow-sm" style={{ color: '#f8fafc', textShadow: '0 0 10px rgba(0,0,0,0.5)' }}>
               Balıkesir Üniversitesi Bilgisayar Mühendisliği son sınıf öğrencisiyim. Python ve
               .NET teknolojileriyle yapay zekâ destekli uygulamalar ve backend sistemleri
               geliştiriyorum; üretime hazır RAG mimarileri, kurumsal ERP modülleri ve

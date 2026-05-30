@@ -29,7 +29,7 @@ export default function Contact() {
     <section
       id="contact"
       data-testid="contact-section"
-      className="py-20 lg:py-28 bg-base"
+      className="py-20 lg:py-28 relative z-10"
     >
       <div className="container-wide">
         <div className="text-center mb-12">

@@ -26,7 +26,7 @@ export default function Testimonials() {
     <section
       id="testimonials"
       data-testid="testimonials-section"
-      className="py-20 lg:py-28 bg-card-darker"
+      className="py-20 lg:py-28 relative z-10"
     >
       <div className="container-wide">
         <div className="max-w-2xl mb-12">
