@@ -3,23 +3,17 @@ import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Deniz Yılmaz",
-    role: "Ürün Müdürü, Acme Co.",
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
-    text: "Beklediğimden çok daha fazlasını teslim etti. İletişim mükemmel, kodu temiz, tasarımı zarif.",
+    name: "Ekip Lideri",
+    role: "Modsoft Bilişim",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+    text: "Backend ve ERP geliştirme süreçlerine kısa sürede adapte oldu. Temiz kod ve katmanlı mimari yaklaşımı oldukça olgun.",
   },
   {
-    name: "Elif Demir",
-    role: "Kurucu, StartHub",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
-    text: "Vizyonumuzu hızlıca anladı ve ürünü zamanında, kaliteli şekilde hayata geçirdi.",
-  },
-  {
-    name: "Mert Kaya",
-    role: "CTO, Cloud Labs",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
-    text: "Detaylara verdiği özen ve performans optimizasyonları sayesinde dönüşümlerimiz iki katına çıktı.",
-  },
+    name: "Akademik Danışman",
+    role: "TÜBİTAK 2209-A Projesi",
+    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80",
+    text: "Smart Memory AI projesinde mimari kararları ve üretim ortamı entegrasyonunu büyük bir özveriyle yürüttü. Sonuçlar oldukça başarılı.",
+  }
 ];
 
 export default function Testimonials() {
@@ -36,9 +30,11 @@ export default function Testimonials() {
     >
       <div className="container-wide">
         <div className="max-w-2xl mb-12">
-          <p className="section-tag mb-3">Müşterilerimden Birkaç Söz</p>
+          <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">
+            BİRLİKTE ÇALIŞTIKLARIMDAN
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            Müşterilerim <span className="text-purple-accent">Ne Diyor</span>
+            Hakkımda <span className="text-purple-accent">Ne Söylediler</span>
           </h2>
         </div>
 
@@ -47,52 +43,56 @@ export default function Testimonials() {
             <div
               key={i}
               data-testid={`testimonial-card-${i}`}
-              className="lift-on-hover relative rounded-2xl bg-card-dark border border-white/5 p-7"
+              className="lift-on-hover relative rounded-2xl bg-card-dark border border-white/5 p-8"
             >
-              <Quote className="absolute top-5 right-5 w-7 h-7 text-purple-accent/30" />
-              <p className="text-white/75 leading-relaxed">"{t.text}"</p>
-              <div className="mt-6 flex items-center gap-3">
+              <Quote className="absolute top-6 right-6 w-8 h-8 text-white/5" />
+              <p className="text-white/80 leading-relaxed text-sm">"{t.text}"</p>
+              <div className="mt-8 flex items-center gap-4">
                 <img
                   src={t.avatar}
                   alt={t.name}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-purple-accent/40"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
                 />
                 <div>
-                  <div className="font-bold">{t.name}</div>
-                  <div className="text-xs text-white/55">{t.role}</div>
+                  <div className="font-bold text-sm">{t.name}</div>
+                  <div className="text-xs text-white/50">{t.role}</div>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-10 flex justify-center items-center gap-3">
+        <div className="mt-12 flex justify-center items-center gap-4">
           <button
             data-testid="testimonial-prev"
             onClick={() => setPage((p) => (p - 1 + pageCount) % pageCount)}
-            className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-purple-accent hover:text-purple-accent transition-colors"
+            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:border-purple-accent hover:text-purple-accent transition-colors"
             aria-label="Önceki"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
-          {Array.from({ length: pageCount }).map((_, i) => (
-            <button
-              key={i}
-              data-testid={`testimonial-dot-${i}`}
-              onClick={() => setPage(i)}
-              className={`h-2 rounded-full transition-all ${
-                page === i ? "bg-purple-accent w-6" : "bg-white/20 w-2"
-              }`}
-              aria-label={`Sayfa ${i + 1}`}
-            />
-          ))}
+          
+          <div className="flex gap-2">
+            {Array.from({ length: pageCount }).map((_, i) => (
+              <button
+                key={i}
+                data-testid={`testimonial-dot-${i}`}
+                onClick={() => setPage(i)}
+                className={`h-1.5 rounded-full transition-all ${
+                  page === i ? "bg-purple-accent w-6" : "bg-white/20 w-1.5 hover:bg-white/40"
+                }`}
+                aria-label={`Sayfa ${i + 1}`}
+              />
+            ))}
+          </div>
+
           <button
             data-testid="testimonial-next"
             onClick={() => setPage((p) => (p + 1) % pageCount)}
-            className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-purple-accent hover:text-purple-accent transition-colors"
+            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:border-purple-accent hover:text-purple-accent transition-colors"
             aria-label="Sonraki"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

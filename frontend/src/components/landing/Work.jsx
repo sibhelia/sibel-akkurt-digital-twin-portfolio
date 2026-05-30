@@ -2,20 +2,33 @@ import { ArrowUpRight } from "lucide-react";
 
 const projects = [
   {
-    title: "E-Ticaret Web Uygulaması",
-    tag: "Web Uygulaması",
-    img: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?auto=format&fit=crop&w=1100&q=80",
+    title: "Smart Memory AI (QABot)",
+    tag: "TÜBİTAK 2209-A & SAAS",
+    desc: "Üretimde aktif Agentic RAG platformu. ChromaDB + BM25 ensemble retriever, +80% doğruluk, <2s yanıt süresi.",
+    img: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1100&q=80",
+    link: "GitHub'da Gör"
   },
   {
-    title: "Mobil Bankacılık Uygulaması",
-    tag: "Mobil Uygulama",
-    img: "https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=1100&q=80",
+    title: "StoreFlow ERP",
+    tag: "ASP.NET CORE",
+    desc: "Uçtan uca stok takip ve sipariş yönetimi. EF Core & LINQ ile 70+ ileri seviye yöntem ve performans optimizasyonu.",
+    img: "https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=1100&q=80",
+    link: "GitHub'da Gör"
   },
   {
-    title: "Mobil Yaşam Tarzı Uygulaması",
-    tag: "Mobil Uygulama",
-    img: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=1100&q=80",
+    title: "Müşteri Analitik Paneli",
+    tag: "VERİ ANALİZİ",
+    desc: "Büyük veri setlerini işleyerek müşteri davranış modelleri çıkaran gerçek zamanlı dashboard. Python ve React.",
+    img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1100&q=80",
+    link: "GitHub'da Gör"
   },
+  {
+    title: "Otonom Depo Yönlendirme",
+    tag: "OPTİMİZASYON",
+    desc: "Gelişmiş algoritmalar ile depolardaki ürün toplama rotalarını optimize eden özel yönlendirme sistemi.",
+    img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1100&q=80",
+    link: "GitHub'da Gör"
+  }
 ];
 
 export default function Work() {
@@ -23,53 +36,50 @@ export default function Work() {
     <section
       id="work"
       data-testid="work-section"
-      className="py-20 lg:py-28 bg-card-darker"
+      className="py-20 lg:py-28 bg-base"
     >
       <div className="container-wide">
         <div className="max-w-2xl mb-12">
-          <p className="section-tag mb-3">Son Çalışmalarım</p>
+          <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">
+            ÖNE ÇIKAN PROJELERİM
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
             Harika <span className="text-purple-accent">Projelerim</span>
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           {projects.map((p, i) => (
             <article
               key={p.title}
               data-testid={`project-card-${i}`}
-              className="lift-on-hover group rounded-2xl overflow-hidden bg-card-dark border border-white/5"
+              className="lift-on-hover group rounded-2xl overflow-hidden bg-card-dark border border-white/5 flex flex-col"
             >
-              <div className="relative h-56 overflow-hidden">
+              <div className="relative h-60 overflow-hidden">
                 <img
                   src={p.img}
                   alt={p.title}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent" />
               </div>
-              <div className="p-6">
-                <span className="text-xs uppercase tracking-widest text-purple-accent font-semibold">
+              <div className="p-6 flex-1 flex flex-col">
+                <span className="text-[10px] uppercase tracking-widest text-purple-accent font-bold mb-2">
                   {p.tag}
                 </span>
-                <h3 className="mt-2 text-lg font-bold">{p.title}</h3>
+                <h3 className="text-xl font-bold mb-3">{p.title}</h3>
+                <p className="text-sm text-white/60 leading-relaxed flex-1">
+                  {p.desc}
+                </p>
                 <a
                   href="#contact"
                   data-testid={`project-cta-${i}`}
-                  className="mt-4 inline-flex items-center gap-2 text-sm text-white/80 hover:text-purple-accent"
+                  className="mt-6 inline-flex items-center gap-2 text-sm text-white/80 hover:text-purple-accent font-semibold transition-colors"
                 >
-                  Detayları Gör <ArrowUpRight className="w-4 h-4" />
+                  {p.link} <ArrowUpRight className="w-4 h-4" />
                 </a>
               </div>
             </article>
           ))}
-        </div>
-
-        {/* carousel dots aesthetic */}
-        <div className="mt-10 flex justify-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-purple-accent" />
-          <span className="w-2 h-2 rounded-full bg-white/20" />
-          <span className="w-2 h-2 rounded-full bg-white/20" />
         </div>
       </div>
     </section>

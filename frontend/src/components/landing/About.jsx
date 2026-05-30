@@ -1,30 +1,74 @@
 import { Button } from "@/components/ui/button";
 
+const skills = [
+  "Python", "C#", ".NET Core", "ASP.NET Core", "FastAPI",
+  "React.js", "Vue.js", "Blazor", "LangChain", "RAG",
+  "PostgreSQL", "Neo4j", "ChromaDB", "Docker"
+];
+
 export default function About() {
   return (
     <section id="about" className="py-20 lg:py-28">
       <div className="container-wide">
-        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] items-start">
-          <div className="fade-up">
-            <p className="section-tag">About</p>
-            <h2 className="mt-4 text-4xl lg:text-6xl font-extrabold tracking-tight text-white max-w-xl">
-              Klasik hakkında sayfası değil, yaşayan bir profil.
-            </h2>
-            <p className="mt-6 max-w-2xl text-white/70 text-base lg:text-lg leading-8">
-              Portfolyom, sorulara cevap verebilen dijital bir klon gibi davranır. Projeler, deneyim ve çalışma
-              biçimim tek bir akışta, mümkün olduğunca net ve profesyonel biçimde sunulur.
+        <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-16 items-center">
+          
+          {/* Left: Image */}
+          <div className="relative fade-up mx-auto lg:mx-0 w-full max-w-sm lg:max-w-md">
+            {/* Decorative dots */}
+            <span className="absolute top-10 -left-6 w-2 h-2 bg-purple-accent rounded-full shadow-[0_0_10px_#8b5cf6]" />
+            <span className="absolute bottom-20 -left-10 w-2 h-2 bg-purple-accent/50 rounded-full" />
+            <span className="absolute top-1/2 -right-4 w-1.5 h-1.5 bg-purple-accent rounded-full" />
+            
+            <div className="aspect-square rounded-full overflow-hidden border-2 border-white/10 shadow-2xl relative z-10 bg-card-dark">
+              <img 
+                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80" 
+                alt="Sibel Akkurt" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Right: Content */}
+          <div className="fade-up" style={{ animationDelay: "100ms" }}>
+            <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">
+              Hakkımda
             </p>
+            <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-6">
+              Sibel <span className="text-purple-accent">Akkurt</span>
+            </h2>
+            
+            <p className="text-white/75 leading-relaxed text-sm lg:text-base mb-8">
+              Balıkesir Üniversitesi Bilgisayar Mühendisliği son sınıf öğrencisiyim. Python ve
+              .NET teknolojileriyle yapay zekâ destekli uygulamalar ve backend sistemleri
+              geliştiriyorum; üretime hazır RAG mimarileri, kurumsal ERP modülleri ve
+              ölçeklenebilir API çözümleri üzerinde çalışıyorum. ASP.NET Core, FastAPI,
+              PostgreSQL, LangChain ve Docker ekosistemlerinde aktif deneyimim var.
+            </p>
+
+            <div className="mb-8">
+              <h4 className="text-white font-bold mb-4 text-sm">Yetkinliklerim:</h4>
+              <div className="flex flex-wrap gap-3">
+                {skills.map((skill) => (
+                  <span 
+                    key={skill} 
+                    className="px-4 py-2 rounded-full border border-white/10 bg-card-dark text-white/80 text-xs font-medium hover:border-purple-accent/50 transition-colors cursor-default"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
 
             <Button
               data-testid="about-cta"
-              className="btn-purple rounded-full mt-8 h-12 px-7 text-sm font-semibold"
+              className="btn-purple rounded-full h-12 px-8 text-sm font-semibold hover:scale-105 transition-transform"
               asChild
             >
               <a href="#contact">Benimle İletişime Geç</a>
             </Button>
 
-            {/* Stats moved from hero */}
-            <div className="mt-10 grid grid-cols-3 gap-6 max-w-md pt-8 border-t border-white/5">
+            {/* Stats */}
+            <div className="mt-12 flex flex-wrap gap-10 pt-8 border-t border-white/5">
               {[
                 { n: "4+", l: "Staj & Proje" },
                 { n: "10+", l: "Üretim Projesi" },
@@ -38,18 +82,6 @@ export default function About() {
             </div>
           </div>
 
-          <div className="card bg-card-dark border border-white/10 p-6 lg:p-8 lift-on-hover">
-            <p className="section-tag">Approach</p>
-            <div className="mt-5 grid gap-4 text-white/75 leading-7">
-              <p>
-                İçerik yönetimi, chat deneyimi ve admin katmanı birlikte çalışır. Tek kişi kullansa bile düzenli,
-                güven veren ve premium hissi olan bir yapı hedeflenir.
-              </p>
-              <p>
-                Tasarım tarafında ise yüksek kontrast, geniş boşluklar ve kontrollü mor aksanlar kullanılır.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </section>

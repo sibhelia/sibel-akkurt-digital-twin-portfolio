@@ -1,25 +1,25 @@
-import { ArrowUpRight, Code, Smartphone, Gamepad2 } from "lucide-react";
+import { ArrowUpRight, Brain, Server, Database } from "lucide-react";
 
 const services = [
   {
-    icon: Code,
-    title: "Web Geliştirme",
-    desc: "Modern web siteleri ve web uygulamaları geliştiriyorum. React, Next.js ve Node.js kullanarak performanslı çözümler sunuyorum.",
-    cta: "Fiyatları Gör",
+    icon: Brain,
+    title: "Yapay Zekâ & RAG",
+    desc: "LangChain, LangGraph ve vektör veritabanlarıyla üretime hazır Agentic RAG sistemleri tasarlıyorum. Halüsinasyonu düşük, ölçülebilir doğrulukta AI çözümleri.",
+    cta: "Detaylar",
     featured: false,
   },
   {
-    icon: Smartphone,
-    title: "Mobil Geliştirme",
-    desc: "iOS ve Android için yerel hissettiren çapraz platform mobil uygulamalar tasarlıyor ve geliştiriyorum.",
-    cta: "Fiyatları Gör",
+    icon: Server,
+    title: "Backend & API",
+    desc: "ASP.NET Core ve FastAPI ile katmanlı mimari, RESTful API ve servis entegrasyonları geliştiriyorum. Temiz kod, OOP ve tasarım desenleri önceliğim.",
+    cta: "Detaylar",
     featured: false,
   },
   {
-    icon: Gamepad2,
-    title: "Oyun Geliştirme",
-    desc: "Unity ve Unreal Engine ile 2D / 3D oyun deneyimleri yaratıyorum. Etkileyici görseller, pürüzsüz oynanış.",
-    cta: "Fiyatları Gör",
+    icon: Database,
+    title: "Kurumsal ERP",
+    desc: "Stok, sipariş ve tedarik zinciri için .NET tabanlı ERP modülleri inşa ediyorum. EF Core ile performans optimizasyonu ve raporlama dahil.",
+    cta: "Detaylar",
     featured: true,
   },
 ];
@@ -32,8 +32,10 @@ export default function Services() {
       className="py-20 lg:py-28 bg-base"
     >
       <div className="container-wide">
-        <div className="max-w-2xl mb-12">
-          <p className="section-tag mb-3">Müşterilerime Sunduklarım</p>
+        <div className="mb-12">
+          <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">
+            SUNDUĞUM HİZMETLER
+          </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
             En İyi <span className="text-purple-accent">Hizmetlerim</span>
           </h2>
@@ -54,13 +56,13 @@ export default function Services() {
               >
                 <div
                   className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${
-                    s.featured ? "bg-white/15" : "bg-purple-accent/15 text-purple-accent"
+                    s.featured ? "bg-white/15" : "bg-white/5 border border-white/10 text-purple-accent"
                   }`}
                 >
-                  <Icon className="w-6 h-6" />
+                  <Icon className="w-5 h-5" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">{s.title}</h3>
-                <p className={`text-sm leading-relaxed mb-8 ${s.featured ? "text-white/85" : "text-white/60"}`}>
+                <p className={`text-sm leading-relaxed mb-10 ${s.featured ? "text-white/85" : "text-white/60"}`}>
                   {s.desc}
                 </p>
                 <a
