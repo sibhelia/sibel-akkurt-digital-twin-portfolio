@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .container-wide {
+    @apply max-w-7xl mx-auto px-6 lg:px-8;
+  }
+  .section-tag {
+    @apply text-sm font-semibold tracking-widest text-purple-accent uppercase;
+  }
+  .lift-on-hover {
+    @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-accent/10;
+  }
+}
+
+body {
+  background-color: #0f0f11;
+  color: #ffffff;
+}
