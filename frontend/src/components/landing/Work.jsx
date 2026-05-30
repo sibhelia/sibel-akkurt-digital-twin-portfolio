@@ -53,7 +53,7 @@ export default function Work() {
             <article
               key={p.title}
               data-testid={`project-card-${i}`}
-              className="lift-on-hover group rounded-2xl overflow-hidden bg-card-dark border border-white/5 flex flex-col"
+              className="lift-on-hover group rounded-2xl overflow-hidden bg-card-dark border border-purple-accent/20 shadow-[0_0_30px_rgba(124,92,255,0.15)] hover:shadow-[0_0_50px_rgba(124,92,255,0.4)] flex flex-col transition-all duration-300"
             >
               <div className="relative h-60 overflow-hidden">
                 <img

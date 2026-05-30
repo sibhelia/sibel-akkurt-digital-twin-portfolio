@@ -19,7 +19,7 @@ export default function About() {
             <span className="absolute bottom-20 -left-10 w-2 h-2 bg-purple-accent/50 rounded-full" />
             <span className="absolute top-1/2 -right-4 w-1.5 h-1.5 bg-purple-accent rounded-full" />
             
-            <div className="aspect-square rounded-full overflow-hidden border-2 border-white/10 shadow-2xl relative z-10 bg-card-dark">
+            <div className="aspect-square rounded-full overflow-hidden border-2 border-purple-accent/30 shadow-[0_0_40px_rgba(124,92,255,0.35)] relative z-10 bg-card-dark">
               <img 
                 src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80" 
                 alt="Sibel Akkurt" 

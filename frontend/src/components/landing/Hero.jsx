@@ -30,7 +30,7 @@ export default function Hero() {
           <div className="relative w-full max-w-[320px] aspect-square group">
             
             {/* The Speech Bubble Shape */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-accent/30 to-[#1a1a22] rounded-[40px] rounded-bl-sm border border-purple-accent/40 shadow-[0_0_40px_-10px_rgba(139,92,246,0.3)] transition-transform duration-500 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-accent/30 to-[#1a1a22] rounded-[40px] rounded-bl-sm border border-purple-accent/50 shadow-[0_0_50px_rgba(124,92,255,0.45)] transition-transform duration-500 group-hover:scale-105" />
             
             {/* Speech Bubble Tail */}
             <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-br from-purple-accent/30 to-[#1a1a22] rounded-full border-b border-l border-purple-accent/40 z-0" />

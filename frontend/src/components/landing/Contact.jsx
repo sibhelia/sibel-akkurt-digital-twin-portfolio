@@ -33,61 +33,64 @@ export default function Contact() {
     >
       <div className="container-wide">
         <div className="text-center mb-12">
-          <p className="section-tag mb-3">İletişime Geç</p>
+          <p className="section-tag mb-3">İletişime Geçin</p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            Benimle <span className="text-purple-accent">İletişime Geç</span>
+            Projelerinizi Birlikte <span className="text-purple-accent">Hayata Geçirelim</span>
           </h2>
+          <p className="text-gray-300 mt-4 max-w-2xl mx-auto">
+            Yeni bir proje fikriniz mi var veya ekibinize değer katacak bir yazılım mühendisi mi arıyorsunuz? Aşağıdaki formu doldurarak benimle iletişime geçebilirsiniz.
+          </p>
         </div>
 
-        <div className="relative max-w-4xl mx-auto">
+        <div className="relative w-full">
           {/* Floating rocket / illustration accent */}
-          <div className="hidden md:flex absolute -top-10 -right-6 w-24 h-24 rounded-full bg-purple-accent items-center justify-center shadow-2xl shadow-purple-accent/30 floaty">
+          <div className="hidden lg:flex absolute -top-10 -right-6 w-24 h-24 rounded-full bg-purple-accent items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.6)] floaty">
             <Rocket className="w-10 h-10 text-white -rotate-12" />
           </div>
 
           <form
             onSubmit={submit}
             data-testid="contact-form"
-            className="rounded-2xl bg-card-dark border border-white/5 p-7 md:p-10"
+            className="w-full rounded-2xl bg-card-dark/80 backdrop-blur-md border border-white/10 p-7 md:p-12 shadow-[0_0_40px_rgba(124,92,255,0.1)]"
           >
-            <div className="grid md:grid-cols-2 gap-5">
+            <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <label className="text-xs uppercase tracking-widest text-white/55 font-semibold">
-                  Ad
+                <label className="text-xs uppercase tracking-widest text-white/70 font-semibold mb-2 block">
+                  Adınız Soyadınız
                 </label>
                 <Input
                   data-testid="contact-name"
                   value={form.name}
                   onChange={update("name")}
-                  placeholder="Adınız"
-                  className="mt-2 bg-card-darker border-white/10 text-white h-12 rounded-lg focus-visible:ring-purple-accent placeholder:text-white/30"
+                  placeholder="Örn: Ahmet Yılmaz"
+                  className="bg-card-darker/80 border-white/10 text-white h-14 rounded-xl focus-visible:ring-purple-accent focus-visible:border-purple-accent placeholder:text-white/30 text-base"
                 />
               </div>
               <div>
-                <label className="text-xs uppercase tracking-widest text-white/55 font-semibold">
-                  E-posta
+                <label className="text-xs uppercase tracking-widest text-white/70 font-semibold mb-2 block">
+                  Kurumsal E-posta
                 </label>
                 <Input
                   data-testid="contact-email"
                   type="email"
                   value={form.email}
                   onChange={update("email")}
-                  placeholder="ornek@email.com"
-                  className="mt-2 bg-card-darker border-white/10 text-white h-12 rounded-lg focus-visible:ring-purple-accent placeholder:text-white/30"
+                  placeholder="ornek@sirket.com"
+                  className="bg-card-darker/80 border-white/10 text-white h-14 rounded-xl focus-visible:ring-purple-accent focus-visible:border-purple-accent placeholder:text-white/30 text-base"
                 />
               </div>
             </div>
-            <div className="mt-5">
-              <label className="text-xs uppercase tracking-widest text-white/55 font-semibold">
-                Mesaj
+            <div className="mt-8">
+              <label className="text-xs uppercase tracking-widest text-white/70 font-semibold mb-2 block">
+                Proje Detayları veya Mesajınız
               </label>
               <Textarea
                 data-testid="contact-message"
                 value={form.message}
                 onChange={update("message")}
-                placeholder="Bana projenden bahset..."
-                rows={6}
-                className="mt-2 bg-card-darker border-white/10 text-white rounded-lg focus-visible:ring-purple-accent placeholder:text-white/30 resize-none"
+                placeholder="Projenizden veya işbirliği fırsatlarından bahsedebilirsiniz..."
+                rows={7}
+                className="bg-card-darker/80 border-white/10 text-white rounded-xl focus-visible:ring-purple-accent focus-visible:border-purple-accent placeholder:text-white/30 resize-none text-base p-4"
               />
             </div>
 

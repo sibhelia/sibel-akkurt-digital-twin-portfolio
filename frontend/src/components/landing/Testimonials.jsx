@@ -51,7 +51,7 @@ export default function Testimonials() {
                 <img
                   src={t.avatar}
                   alt={t.name}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-purple-accent/40 shadow-[0_0_20px_rgba(124,92,255,0.4)]"
                 />
                 <div>
                   <div className="font-bold text-sm">{t.name}</div>
