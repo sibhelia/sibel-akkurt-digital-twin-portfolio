@@ -1,69 +1,50 @@
-import { Github, Twitter, Linkedin, Instagram, Mail, MapPin, Phone } from "lucide-react";
+import SmartContact from "./SmartContact";
 
 export default function Footer() {
   return (
-    <footer data-testid="footer" className="bg-purple-accent text-white">
-      <div className="container-wide py-14 grid md:grid-cols-2 lg:grid-cols-4 gap-10">
-        <div>
-          <h3 className="text-2xl font-extrabold">Selam!</h3>
-          <p className="mt-3 text-white/85 text-sm leading-relaxed max-w-xs">
-            Yeni projeler ve işbirlikleri için her zaman açığım. Hadi birlikte
-            harika bir şey inşa edelim.
+    <footer data-testid="footer" className="bg-[#0a0a0c] text-white border-t border-white/5 relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-px bg-gradient-to-r from-transparent via-purple-accent/50 to-transparent" />
+      
+      <div className="container-wide py-16 lg:py-24 grid md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
+        <div className="lg:col-span-5">
+          <h3 className="text-3xl font-extrabold mb-4">Dijital İkizine<br/>Merhaba De!</h3>
+          <p className="text-white/60 text-sm leading-relaxed max-w-sm mb-8">
+            Yeni projeler ve heyecan verici işbirlikleri için her zaman buradayım. Hadi birlikte harika şeyler inşa edelim.
           </p>
-          <div className="mt-5 flex gap-3">
-            {[
-              { I: Github, l: "github" },
-              { I: Twitter, l: "twitter" },
-              { I: Linkedin, l: "linkedin" },
-              { I: Instagram, l: "instagram" },
-            ].map(({ I, l }) => (
-              <a
-                key={l}
-                href="#"
-                data-testid={`footer-social-${l}`}
-                aria-label={l}
-                className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
-              >
-                <I className="w-4 h-4" />
-              </a>
-            ))}
+          
+          <div className="flex flex-wrap gap-3">
+            <SmartContact type="email" label="Email" value="sibelakk23@gmail.com" link="mailto:sibelakk23@gmail.com" />
+            <SmartContact type="linkedin" label="LinkedIn" value="sibelakkurt" link="https://linkedin.com/in/sibelakkurt" />
+            <SmartContact type="github" label="GitHub" value="sibelakkurt" link="https://github.com/sibelakkurt" />
+            <SmartContact type="twitter" label="X Account" value="@sibelakkurt" link="https://x.com/sibelakkurt" />
           </div>
         </div>
 
-        <div>
-          <h4 className="font-bold mb-4 text-sm uppercase tracking-widest">Menü</h4>
-          <ul className="space-y-2 text-sm text-white/85">
-            <li><a href="#home" className="hover:underline">Anasayfa</a></li>
-            <li><a href="#about" className="hover:underline">Hakkımda</a></li>
-            <li><a href="#services" className="hover:underline">Hizmetler</a></li>
-            <li><a href="#work" className="hover:underline">Portfolyo</a></li>
+        <div className="lg:col-span-2 lg:col-start-8">
+          <h4 className="font-bold mb-6 text-xs uppercase tracking-widest text-purple-accent">Menü</h4>
+          <ul className="space-y-3 text-sm text-white/60">
+            <li><a href="#home" className="hover:text-white transition-colors">Anasayfa</a></li>
+            <li><a href="#about" className="hover:text-white transition-colors">Hakkımda</a></li>
+            <li><a href="#services" className="hover:text-white transition-colors">Hizmetler</a></li>
+            <li><a href="#work" className="hover:text-white transition-colors">Portfolyo</a></li>
           </ul>
         </div>
 
-        <div>
-          <h4 className="font-bold mb-4 text-sm uppercase tracking-widest">Destek</h4>
-          <ul className="space-y-2 text-sm text-white/85">
-            <li><a href="#contact" className="hover:underline">SSS</a></li>
-            <li><a href="#contact" className="hover:underline">İletişim</a></li>
-            <li><a href="#" className="hover:underline">Gizlilik</a></li>
-            <li><a href="#" className="hover:underline">Şartlar</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="font-bold mb-4 text-sm uppercase tracking-widest">İletişim</h4>
-          <ul className="space-y-3 text-sm text-white/85">
-            <li className="flex items-start gap-2"><MapPin className="w-4 h-4 mt-0.5 shrink-0" /> İstanbul, Türkiye</li>
-            <li className="flex items-start gap-2"><Mail className="w-4 h-4 mt-0.5 shrink-0" /> merhaba@adinsoyadin.com</li>
-            <li className="flex items-start gap-2"><Phone className="w-4 h-4 mt-0.5 shrink-0" /> +90 555 123 45 67</li>
+        <div className="lg:col-span-2">
+          <h4 className="font-bold mb-6 text-xs uppercase tracking-widest text-purple-accent">Bağlantılar</h4>
+          <ul className="space-y-3 text-sm text-white/60">
+            <li><a href="#resume" className="hover:text-white transition-colors">Özgeçmiş</a></li>
+            <li><a href="#contact" className="hover:text-white transition-colors">İletişim Formu</a></li>
+            <li><a href="#" className="hover:text-white transition-colors">Gizlilik Politikası</a></li>
+            <li><a href="#" className="hover:text-white transition-colors">Kullanım Şartları</a></li>
           </ul>
         </div>
       </div>
 
-      <div className="border-t border-white/15">
-        <div className="container-wide py-5 text-xs text-white/85 flex flex-col md:flex-row gap-2 justify-between">
-          <span>© {new Date().getFullYear()} Adın Soyadın. Tüm hakları saklıdır.</span>
-          <span>Tasarım & Geliştirme: Adın Soyadın</span>
+      <div className="border-t border-white/5 bg-black/20">
+        <div className="container-wide py-6 text-xs text-white/40 flex flex-col md:flex-row gap-2 justify-between items-center">
+          <span>© {new Date().getFullYear()} Sibel Akkurt. Tüm hakları saklıdır.</span>
+          <span>Tasarım & Geliştirme: Digital Twin</span>
         </div>
       </div>
     </footer>

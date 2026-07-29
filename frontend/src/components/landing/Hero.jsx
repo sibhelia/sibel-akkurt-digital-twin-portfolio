@@ -1,4 +1,6 @@
 import Chatbot from "@/components/landing/Chatbot";
+import { motion } from "framer-motion";
+import { staggerContainer, fadeUp, scaleUp, viewPortConfig } from "@/utils/animations";
 
 export default function Hero() {
   return (
@@ -17,20 +19,33 @@ export default function Hero() {
       <div className="absolute bottom-1/3 right-1/4 w-20 h-20 bg-purple-500/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
 
       {/* Changed Grid to make Chatbot much larger (approx 65% / 35%) */}
-      <div className="container-wide relative z-10 grid lg:grid-cols-[1.3fr_0.7fr] gap-12 lg:gap-20 items-center">
+      <motion.div 
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={viewPortConfig}
+        className="container-wide relative z-10 grid lg:grid-cols-[1.3fr_0.7fr] gap-12 lg:gap-20 items-center"
+      >
         
         {/* Left - Chatbot */}
-        <div className="fade-up order-2 lg:order-1 relative z-20">
+        <motion.div variants={fadeUp} className="order-2 lg:order-1 relative z-20">
           <Chatbot />
-        </div>
+        </motion.div>
 
         {/* Right - Portrait (Smaller, Speech Bubble styling) */}
-        <div className="relative h-[280px] sm:h-[350px] lg:h-[400px] fade-up order-1 lg:order-2 flex items-center justify-center">
+        <motion.div 
+          variants={scaleUp} 
+          className="relative h-[280px] sm:h-[350px] lg:h-[400px] order-1 lg:order-2 flex items-center justify-center"
+        >
           
           <div className="relative w-full max-w-[320px] aspect-square group">
             
             {/* The Speech Bubble Shape */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-accent/30 to-[#1a1a22] rounded-[40px] rounded-bl-sm border border-purple-accent/50 shadow-[0_0_50px_rgba(124,92,255,0.45)] transition-transform duration-500 group-hover:scale-105" />
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="absolute inset-0 bg-gradient-to-br from-purple-accent/30 to-[#1a1a22] rounded-[40px] rounded-bl-sm border border-purple-accent/50 shadow-[0_0_50px_rgba(124,92,255,0.45)] cursor-pointer" 
+            />
             
             {/* Speech Bubble Tail */}
             <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-br from-purple-accent/30 to-[#1a1a22] rounded-full border-b border-l border-purple-accent/40 z-0" />
@@ -40,7 +55,7 @@ export default function Hero() {
               data-testid="hero-portrait"
               src="/portfolio-logo.png"
               alt="Sibel Akkurt"
-              className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] object-cover rounded-[32px] rounded-bl-sm z-10 border border-purple-500/30"
+              className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] object-cover rounded-[32px] rounded-bl-sm z-10 border border-purple-500/30 pointer-events-none"
               onError={(e) => {
                 e.target.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80";
               }}
@@ -53,9 +68,9 @@ export default function Hero() {
             <span className="absolute bottom-1/3 -left-8 w-2 h-2 bg-purple-300 rounded-full shadow-[0_0_5px_#d8b4fe] animate-bounce" style={{ animationDuration: '2s', animationDelay: '1.5s' }} />
 
           </div>
-        </div>
+        </motion.div>
         
-      </div>
+      </motion.div>
     </section>
   );
 }

@@ -9,6 +9,8 @@ import Resume from "@/components/landing/Resume";
 import Testimonials from "@/components/landing/Testimonials";
 import Contact from "@/components/landing/Contact";
 import Footer from "@/components/landing/Footer";
+import CursorDotTrail from "@/components/landing/CursorDotTrail";
+import Galaxy3D from "@/components/landing/Galaxy3D";
 
 // A sub-component to render the premium background effects
 function PremiumBackground() {
@@ -38,6 +40,16 @@ function PremiumBackground() {
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-base">
+      
+      {/* 3D WebGL Galaxy Background */}
+      <Galaxy3D 
+        transparentBackground={true} 
+        particleCount={30000} 
+        cameraPitch={15} 
+        cameraDistance={16} // Zoomed in to make it look bigger
+        radius={11} // Increased radius to physically make the galaxy larger
+      />
+
       {/* Massive Ambient Glowing Orbs */}
       <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-purple-accent/10 rounded-full blur-[150px] animate-float-slow" />
       <div className="absolute top-[40%] -right-[20%] w-[60%] h-[60%] bg-[#4c1d95]/15 rounded-full blur-[180px] animate-float-slow" style={{ animationDelay: '2s' }} />
@@ -99,6 +111,15 @@ export default function LandingPage() {
   return (
     <div data-testid="landing-page" className="relative min-h-screen text-white overflow-hidden">
       
+      {/* Custom Framer Cursor Trail - Bright purple, medium tail, smaller dot */}
+      <CursorDotTrail 
+        color="#d8b4fe" 
+        spring={0.5}    
+        friction={0.3}  
+        trailDuration={250} 
+        size={8} /* Reduced dot size */
+      />
+
       {/* 1. Global Premium Background */}
       <PremiumBackground />
 
