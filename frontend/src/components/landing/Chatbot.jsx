@@ -38,11 +38,12 @@ export default function Chatbot() {
     setInput("");
     setLoading(true);
     try {
-      // Expects backend POST /api/chat -> { messages: [{role, content}] } => { reply: "..." }
       const res = await axios.post(`${API}/chat`, {
-        messages: next.filter((m) => m.role !== "assistant" || m !== GREETING),
+        query: content,
+        session_id: "portfolio-guest-session",
+        user_id: "guest-user",
       });
-      const reply = res?.data?.reply ?? res?.data?.message ?? res?.data?.content ?? "...";
+      const reply = res?.data?.response ?? res?.data?.reply ?? "Yanıt alınamadı.";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (e) {
       setMessages((prev) => [

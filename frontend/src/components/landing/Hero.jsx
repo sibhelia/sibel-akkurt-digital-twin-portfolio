@@ -38,9 +38,12 @@ export default function Hero() {
             {/* Image Inside the Bubble */}
             <img
               data-testid="hero-portrait"
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80"
+              src="/portfolio-logo.png"
               alt="Sibel Akkurt"
-              className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] object-cover rounded-[32px] rounded-bl-sm z-10"
+              className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] object-cover rounded-[32px] rounded-bl-sm z-10 border border-purple-500/30"
+              onError={(e) => {
+                e.target.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80";
+              }}
             />
 
             {/* Little floating bubbles around the image */}

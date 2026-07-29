@@ -258,6 +258,29 @@ async def upload_file(
         if temp_path.exists():
             temp_path.unlink()
 
+@app.post("/api/v1/admin/upload-image", tags=["admin"])
+async def upload_image(
+    file: UploadFile = File(...),
+    _: None = Depends(require_admin),
+):
+    """Upload an image file and return its public URL."""
+    upload_dir = Path("uploads")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    file_ext = Path(file.filename or "").suffix.lower()
+    if file_ext not in [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]:
+        raise HTTPException(status_code=400, detail="Sadece resim dosyaları (.png, .jpg, .webp, .svg) yüklenebilir.")
+        
+    unique_filename = f"img_{uuid.uuid4().hex[:8]}{file_ext}"
+    target_path = upload_dir / unique_filename
+    
+    with open(target_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    image_url = f"/uploads/{unique_filename}"
+    return {"url": image_url, "file_name": file.filename}
+
+
 # Static Files for Uploads
 upload_dir = Path("uploads")
 upload_dir.mkdir(parents=True, exist_ok=True)

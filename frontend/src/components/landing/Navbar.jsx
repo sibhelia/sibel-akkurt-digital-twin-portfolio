@@ -17,8 +17,13 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#1a1a22]/85 border-b border-white/5">
       <div className="container-wide flex items-center justify-between py-4">
-        <a href="#home" className="text-xl text-white font-bold tracking-tight flex items-center">
-          Sibel<span className="text-white/80">.Akkurt</span>
+        <a href="#home" className="text-xl text-white font-bold tracking-tight flex items-center gap-3">
+          <img 
+            src="/portfolio-logo.png" 
+            alt="Sibel Akkurt Logo" 
+            className="w-9 h-9 rounded-xl object-cover border border-purple-500/30 shadow-lg shadow-purple-900/30"
+          />
+          <span>Sibel<span className="text-purple-400">.Akkurt</span></span>
         </a>
 
         {/* Desktop Nav */}
