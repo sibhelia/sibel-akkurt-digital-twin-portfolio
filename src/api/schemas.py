@@ -10,6 +10,7 @@ class ChatRequest(BaseModel):
     query: str
     session_id: str
     user_id: str
+    language: Optional[str] = "tr"
     stream: bool = False
 
 

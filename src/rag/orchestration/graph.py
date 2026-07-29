@@ -28,6 +28,7 @@ class OrchestrationState(TypedDict, total=False):
     query: str
     session_id: str
     user_id: str
+    language: str
     query_type: str
     confidence: float
     conversation_history: List[Dict[str, str]]
@@ -60,18 +61,22 @@ async def node_classify_query(state: OrchestrationState) -> OrchestrationState:
     logger.info("[CLASSIFY] Classifying query type...")
     lower = (state.get("query") or "").lower()
 
-    if any(k in lower for k in ("architecture", "design", "system", "mimari")):
+    if any(k in lower for k in ("architecture", "design", "system", "mimari", "tasarım", "altyapı")):
         query_type = "architecture_question"
-    elif any(k in lower for k in ("project", "portfolio", "proje", "yaptığım")):
+    elif any(k in lower for k in ("project", "portfolio", "proje", "yaptığım", "geliştirdiğim", "uygulama")):
         query_type = "project_summary"
-    elif any(k in lower for k in ("skill", "technology", "tech", "bilgi", "yetenek", "teknoloji")):
+    elif any(k in lower for k in ("skill", "technology", "tech", "bilgi", "yetenek", "teknoloji", "framework", "language", "dil", "araç")):
         query_type = "skill_assessment"
-    elif any(k in lower for k in ("experience", "worked", "deneyim", "çalıştım")):
+    elif any(k in lower for k in ("experience", "worked", "work", "job", "deneyim", "çalıştım", "çalışıyor", "staj", "intern", "şirket", "company")):
         query_type = "experience_question"
-    elif any(k in lower for k in ("compare", "vs", "karşılaştır")):
+    elif any(k in lower for k in ("compare", "vs", "versus", "difference", "karşılaştır", "fark")):
         query_type = "comparison_question"
-    elif any(k in lower for k in ("why", "how", "neden", "nasıl")):
+    elif any(k in lower for k in ("why", "how", "explain", "neden", "nasıl", "açıkla", "anlat")):
         query_type = "technical_deep_dive"
+    elif any(k in lower for k in ("education", "university", "degree", "eğitim", "üniversite", "okul", "mezun", "bölüm", "sertifika", "certificate")):
+        query_type = "education_question"
+    elif any(k in lower for k in ("contact", "email", "iletişim", "mail", "ulaş", "telefon", "linkedin", "github")):
+        query_type = "contact_question"
     else:
         query_type = "general_question"
 
@@ -96,9 +101,8 @@ async def node_query_rewrite(state: OrchestrationState) -> OrchestrationState:
     query = state.get("query") or ""
     variations = [
         query,
-        f"Explain {query} in detail",
-        f"What is the best answer for: {query}",
-        f"Provide context for: {query}",
+        f"Sibel Akkurt {query}",
+        f"{query} yetkinlikleri ve projeleri",
     ]
     return {**state, "query_variations": variations}
 
@@ -113,6 +117,8 @@ async def node_retrieval_strategy_selector(state: OrchestrationState) -> Orchest
         "experience_question": "multi_query",
         "architecture_question": "hybrid_balanced",
         "comparison_question": "hybrid_balanced",
+        "education_question": "dense_heavy",
+        "contact_question": "sparse_only",
         "general_question": "hybrid_balanced",
     }
     strategy = strategy_map.get(query_type, "hybrid_balanced")
@@ -168,23 +174,41 @@ async def node_memory_injector(state: OrchestrationState) -> OrchestrationState:
 
 async def node_llm_generator(state: OrchestrationState) -> OrchestrationState:
     logger.info("[LLM] Generating response with LLM...")
-    system_prompt = (
-        "You are a helpful assistant representing a software engineer's portfolio. "
-        "Answer questions using only the provided context. "
-        "Be concise and factual. "
-        "If the context does not contain enough information, say you don't have that information. "
-        "Do not invent projects, metrics, or technologies."
-    )
-    user_message = (
-        f"Context:\n{state.get('context', '')}\n\n"
-        f"Question:\n{state.get('query', '')}\n\n"
-        "Answer:"
-    )
+    lang = state.get("language", "tr")
+
+    if lang == "en":
+        system_prompt = (
+            "You are Sibel Akkurt's Digital Twin AI Assistant. "
+            "Answer user questions about Sibel's technical skills, projects, work experience, and education in fluent, professional, and friendly English. "
+            "Use the provided context (which may be in Turkish or English) to construct an accurate and helpful answer. "
+            "If the context does not contain enough information, state politely that you don't have that specific information yet but the user can reach out to Sibel via the contact section. "
+            "Do not invent projects, metrics, or technologies."
+        )
+        user_message = (
+            f"Context (Knowledge Base):\n{state.get('context', '')}\n\n"
+            f"User Question:\n{state.get('query', '')}\n\n"
+            "Your Answer:"
+        )
+    else:
+        system_prompt = (
+            "Sen Sibel Akkurt'un Dijital İkiz Yapay Zekâ Asistanısın. "
+            "Kullanıcıların Sibel'in teknik yetkinlikleri, projeleri, iş deneyimleri ve eğitimi hakkındaki sorularını yanıtlıyorsun. "
+            "Verilen bağlamdaki (Context) bilgileri temel alarak nazik, profesyonel, samimi ve Türkçe olarak cevap ver. "
+            "Sorulan soru bağlamda varsa net ve detaylıca açıkla. "
+            "Eğer verilen bağlamda aranan bilgi yoksa dürüstçe bu konuda henüz bilgim bulunmadığını ama Sibel'e iletişim bölümünden ulaşılabileceğini belirt. "
+            "Asla uydurma proje, metrik veya teknoloji ekleme."
+        )
+        user_message = (
+            f"Bağlam (Bilgi Tabanı):\n{state.get('context', '')}\n\n"
+            f"Kullanıcı Sorusu:\n{state.get('query', '')}\n\n"
+            "Yanıtın:"
+        )
+
     response = await groq_client.generate_text(
         prompt=user_message,
         system_prompt=system_prompt,
         max_tokens=1200,
-        temperature=0.1,
+        temperature=0.2,
     )
     return {**state, "response": response}
 
@@ -252,11 +276,12 @@ def build_orchestration_graph():
 orchestration_graph = build_orchestration_graph()
 
 
-async def process_query(query: str, session_id: str, user_id: str) -> Dict[str, Any]:
+async def process_query(query: str, session_id: str, user_id: str, language: str = "tr") -> Dict[str, Any]:
     initial_state: OrchestrationState = {
         "query": query,
         "session_id": session_id,
         "user_id": user_id,
+        "language": language,
         "start_time": time.time(),
         "query_type": "general_question",
         "confidence": 1.0,
@@ -281,3 +306,4 @@ async def process_query(query: str, session_id: str, user_id: str) -> Dict[str, 
         "session_id": session_id,
         "tokens": final_state.get("tokens", []),
     }
+

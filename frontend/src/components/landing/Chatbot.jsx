@@ -1,28 +1,52 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Sparkles, Bot, User as UserIcon } from "lucide-react";
+import { Send, Sparkles, Bot, User as UserIcon, Globe } from "lucide-react";
 import axios from "axios";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const API = `${BACKEND_URL}/api/v1`;
 
-const SUGGESTIONS = [
+const SUGGESTIONS_TR = [
   "Teknik yetkinlikleriniz nelerdir?",
-  "TÜBİTAK destekli projenizin detayları nelerdir?",
-  "Hangi yazılım dillerinde ve framework'lerde uzmansınız?",
-  "Smart Memory AI projesi nasıl çalışıyor?",
+  "Hangi projelerde yer aldınız?",
+  "Hangi teknolojilerde uzmansınız?",
+  "Kariyer hedefiniz nedir?",
 ];
 
-const GREETING = {
+const SUGGESTIONS_EN = [
+  "What are your technical skills?",
+  "What projects have you worked on?",
+  "Which technologies do you specialize in?",
+  "What is your career goal?",
+];
+
+const GREETING_TR = {
   role: "assistant",
   content:
-    "Merhaba! Ben Sibel'in yapay zekâ asistanıyım. Teknik uzmanlıkları, projeleri ve kariyer geçmişi hakkında size detaylı bilgi sunabilirim. Size nasıl yardımcı olabilirim?",
+    "Merhaba! Ben Sibel'in yapay zeka asistaniyim. Teknik yetkinlikleri, projeleri ve kariyer gecmisi hakkinda size detayli bilgi sunabilirim. Size nasil yardimci olabilirim?",
+};
+
+const GREETING_EN = {
+  role: "assistant",
+  content:
+    "Hello! I'm Sibel's AI assistant. I can provide you with detailed information about her technical skills, projects, and career background. How can I help you?",
 };
 
 export default function Chatbot() {
-  const [messages, setMessages] = useState([GREETING]);
+  const [language, setLanguage] = useState("tr");
+  const [messages, setMessages] = useState([GREETING_TR]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
+
+  const suggestions = language === "en" ? SUGGESTIONS_EN : SUGGESTIONS_TR;
+
+  // When language changes, reset conversation with the new greeting
+  const switchLanguage = (lang) => {
+    if (lang === language) return;
+    setLanguage(lang);
+    setMessages([lang === "en" ? GREETING_EN : GREETING_TR]);
+    setInput("");
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -42,8 +66,9 @@ export default function Chatbot() {
         query: content,
         session_id: "portfolio-guest-session",
         user_id: "guest-user",
+        language: language,
       });
-      const reply = res?.data?.response ?? res?.data?.reply ?? "Yanıt alınamadı.";
+      const reply = res?.data?.response ?? res?.data?.reply ?? (language === "en" ? "Could not get a response." : "Yanit alinamadi.");
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (e) {
       setMessages((prev) => [
@@ -51,7 +76,9 @@ export default function Chatbot() {
         {
           role: "assistant",
           content:
-            "Şu an yanıt veremiyorum, lütfen biraz sonra tekrar dene veya İletişim bölümünden bana ulaş.",
+            language === "en"
+              ? "Unable to answer at the moment. Please try again later or reach out via the Contact section."
+              : "Su an yanit veremiyorum, lutfen biraz sonra tekrar dene veya Iletisim bolumunden bana ulas.",
         },
       ]);
     } finally {
@@ -82,13 +109,36 @@ export default function Chatbot() {
           </div>
           <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-[#25252e]" />
         </div>
-        <div className="flex-1">
-          <div className="font-bold text-sm tracking-wide">Yapay Zekâ Asistanı</div>
-          <div className="text-[11px] text-white/50 mt-0.5">Sibel Akkurt · AI Destekli Profil</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-sm tracking-wide truncate">
+            {language === "en" ? "AI Assistant" : "Yapay Zeka Asistani"}
+          </div>
+          <div className="text-[11px] text-white/50 mt-0.5">Sibel Akkurt · Digital Twin</div>
         </div>
-        <span className="text-[10px] uppercase tracking-widest text-purple-accent font-semibold border border-purple-accent/40 rounded-full px-2.5 py-1">
-          AKTİF
-        </span>
+
+        {/* TR / EN Language Switcher */}
+        <div className="flex items-center bg-[#25252e] p-0.5 rounded-full border border-white/10 text-[11px] font-bold shrink-0">
+          <button
+            onClick={() => switchLanguage("tr")}
+            className={`px-2.5 py-1 rounded-full transition-all ${
+              language === "tr"
+                ? "bg-purple-accent text-white shadow-md shadow-purple-900/40"
+                : "text-white/40 hover:text-white"
+            }`}
+          >
+            TR
+          </button>
+          <button
+            onClick={() => switchLanguage("en")}
+            className={`px-2.5 py-1 rounded-full transition-all ${
+              language === "en"
+                ? "bg-purple-accent text-white shadow-md shadow-purple-900/40"
+                : "text-white/40 hover:text-white"
+            }`}
+          >
+            EN
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -142,7 +192,7 @@ export default function Chatbot() {
       {/* Suggestions */}
       {messages.length <= 1 && (
         <div className="px-5 pb-3 flex flex-wrap gap-2 shrink-0">
-          {SUGGESTIONS.map((s) => (
+          {suggestions.map((s) => (
             <button
               key={s}
               data-testid={`chat-suggest-${s}`}
@@ -163,14 +213,18 @@ export default function Chatbot() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKey}
-            placeholder="Kariyerim ve projelerim hakkında soru sorun..."
+            placeholder={
+              language === "en"
+                ? "Ask about my career and projects..."
+                : "Kariyerim ve projelerim hakkinda soru sorun..."
+            }
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/40 text-white"
           />
           <button
             data-testid="chat-send"
             onClick={() => send()}
             disabled={loading || !input.trim()}
-            aria-label="Gönder"
+            aria-label={language === "en" ? "Send" : "Gonder"}
             className="w-10 h-10 rounded-full bg-purple-accent text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#6a48f0] transition-colors"
           >
             <Send className="w-4 h-4" />
@@ -180,3 +234,4 @@ export default function Chatbot() {
     </div>
   );
 }
+

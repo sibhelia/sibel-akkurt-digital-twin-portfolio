@@ -65,6 +65,9 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
         await redis_manager.connect()
+        # Ensure Qdrant collection exists (creates if missing)
+        from src.rag.retrieval.vector_searcher import ensure_collection
+        ensure_collection()
         logger.info("All services initialized successfully")
     except Exception as e:
         logger.error(f"Startup failed: {e}")
@@ -132,7 +135,7 @@ async def health_check():
 async def chat(request: ChatRequest):
     """Process a chat request through the RAG orchestration pipeline."""
     try:
-        result = await process_query(request.query, request.session_id, request.user_id)
+        result = await process_query(request.query, request.session_id, request.user_id, language=request.language or "tr")
         return ChatResponse(
             response=result.get("response", ""),
             citations=result.get("citations", []),
