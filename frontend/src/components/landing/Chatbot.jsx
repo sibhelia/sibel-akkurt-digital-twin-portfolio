@@ -3,7 +3,7 @@ import { Send, Sparkles, Bot, User as UserIcon } from "lucide-react";
 import axios from "axios";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-const API = `${BACKEND_URL}/api`;
+const API = `${BACKEND_URL}/api/v1`;
 
 const SUGGESTIONS = [
   "Teknik yetkinlikleriniz nelerdir?",

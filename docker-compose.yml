@@ -53,11 +53,14 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+    # NOTE: the qdrant/qdrant image ships no curl/wget, so a curl-based
+    # healthcheck always fails. Use the built-in bash TCP check instead.
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/6333' 2>/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   # FastAPI Application (development mode)
   api:
@@ -89,7 +92,7 @@ services:
       redis:
         condition: service_healthy
       qdrant:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - ./src:/app/src
       - ./docs:/app/docs

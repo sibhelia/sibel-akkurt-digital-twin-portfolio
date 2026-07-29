@@ -6,14 +6,17 @@ Initializes the API server with all middleware, routes, and services.
 
 from fastapi import Depends, FastAPI, Header, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import logging
 import shutil
 import uuid
 from pathlib import Path
+from sqlalchemy import select
 
 from src.config import settings
-from src.db.session import init_db, close_db
+from src.db.session import init_db, close_db, get_session
+from src.db.models import PortfolioSettings, Experience, Project, Certificate
 from src.cache.redis_manager import redis_manager
 from src.api.schemas import (
     AdminIngestResponse,
@@ -21,9 +24,19 @@ from src.api.schemas import (
     ChatRequest,
     ChatResponse,
     SiteKnowledgeRequest,
+    FullPortfolioContentResponse,
+    PortfolioSettingsUpdate,
+    PortfolioSettingsResponse,
+    ExperienceCreate,
+    ExperienceResponse,
+    ProjectCreate,
+    ProjectResponse,
+    CertificateCreate,
+    CertificateResponse,
 )
 from src.ingestion.pipeline import IngestionMetadata, ingest_text, ingest_file
 from src.rag.orchestration.graph import process_query
+
 
 
 # Configure logging
@@ -245,6 +258,165 @@ async def upload_file(
         if temp_path.exists():
             temp_path.unlink()
 
+# Static Files for Uploads
+upload_dir = Path("uploads")
+upload_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
+
+
+# --- Dynamic Portfolio Content API Endpoints ---
+
+@app.get("/api/v1/portfolio/content", response_model=FullPortfolioContentResponse, tags=["portfolio"])
+async def get_full_portfolio_content():
+    """Public endpoint to fetch all dynamic portfolio content."""
+    async with get_session() as session:
+        settings_result = await session.execute(select(PortfolioSettings))
+        settings = settings_result.scalars().first()
+        
+        exp_result = await session.execute(select(Experience).order_by(Experience.created_at.desc()))
+        experiences = exp_result.scalars().all()
+        
+        proj_result = await session.execute(select(Project).order_by(Project.created_at.desc()))
+        projects = proj_result.scalars().all()
+        
+        cert_result = await session.execute(select(Certificate).order_by(Certificate.created_at.desc()))
+        certificates = cert_result.scalars().all()
+
+        return FullPortfolioContentResponse(
+            settings=PortfolioSettingsResponse(
+                id=str(settings.id),
+                full_name=settings.full_name,
+                title=settings.title,
+                hero_subtitle=settings.hero_subtitle,
+                about_markdown=settings.about_markdown,
+                contact_email=settings.contact_email,
+                github_url=settings.github_url,
+                linkedin_url=settings.linkedin_url,
+                avatar_url=settings.avatar_url,
+            ) if settings else None,
+            experiences=[
+                ExperienceResponse(
+                    id=str(e.id),
+                    company=e.company,
+                    position=e.position,
+                    location=e.location,
+                    start_date=e.start_date,
+                    end_date=e.end_date,
+                    is_current=e.is_current,
+                    description=e.description,
+                    technologies=e.technologies or [],
+                ) for e in experiences
+            ],
+            projects=[
+                ProjectResponse(
+                    id=str(p.id),
+                    title=p.title,
+                    slug=p.slug,
+                    summary=p.summary,
+                    description=p.description,
+                    technologies=p.technologies or [],
+                    github_url=p.github_url,
+                    live_url=p.live_url,
+                    image_url=p.image_url,
+                    is_featured=p.is_featured,
+                ) for p in projects
+            ],
+            certificates=[
+                CertificateResponse(
+                    id=str(c.id),
+                    title=c.title,
+                    issuer=c.issuer,
+                    issue_date=c.issue_date,
+                    credential_id=c.credential_id,
+                    credential_url=c.credential_url,
+                ) for c in certificates
+            ]
+        )
+
+
+@app.post("/api/v1/admin/portfolio/settings", response_model=PortfolioSettingsResponse, tags=["admin"])
+async def update_portfolio_settings(
+    payload: PortfolioSettingsUpdate,
+    _: None = Depends(require_admin),
+):
+    """Update profile settings & ingest into RAG."""
+    async with get_session() as session:
+        result = await session.execute(select(PortfolioSettings))
+        settings = result.scalars().first()
+        
+        if not settings:
+            settings = PortfolioSettings()
+            session.add(settings)
+            
+        settings.full_name = payload.full_name
+        settings.title = payload.title
+        settings.hero_subtitle = payload.hero_subtitle
+        settings.about_markdown = payload.about_markdown
+        settings.contact_email = payload.contact_email
+        settings.github_url = payload.github_url
+        settings.linkedin_url = payload.linkedin_url
+        settings.avatar_url = payload.avatar_url
+        
+        await session.commit()
+        await session.refresh(settings)
+
+    rag_content = f"# Portfolio Owner Profile\nName: {payload.full_name}\nTitle: {payload.title}\nBio: {payload.hero_subtitle or ''}\n\nAbout:\n{payload.about_markdown or ''}"
+    await ingest_text(
+        title=f"Profile - {payload.full_name}",
+        content=rag_content,
+        source_type="admin_profile",
+        file_name="admin-profile.md",
+    )
+    
+    return PortfolioSettingsResponse(id=str(settings.id), **payload.dict())
+
+
+@app.post("/api/v1/admin/portfolio/experience", response_model=ExperienceResponse, tags=["admin"])
+async def add_experience(
+    payload: ExperienceCreate,
+    _: None = Depends(require_admin),
+):
+    """Add new work experience & ingest into RAG."""
+    async with get_session() as session:
+        exp = Experience(**payload.dict())
+        session.add(exp)
+        await session.commit()
+        await session.refresh(exp)
+
+    rag_content = f"# Experience: {payload.position} at {payload.company}\nLocation: {payload.location or 'N/A'}\nDates: {payload.start_date or ''} - {payload.end_date or ('Present' if payload.is_current else '')}\nTechnologies: {', '.join(payload.technologies)}\n\nDescription:\n{payload.description or ''}"
+    await ingest_text(
+        title=f"Experience - {payload.position} at {payload.company}",
+        content=rag_content,
+        source_type="admin_experience",
+        file_name=f"experience-{payload.company.lower().replace(' ', '-')}.md",
+    )
+
+    return ExperienceResponse(id=str(exp.id), **payload.dict())
+
+
+@app.post("/api/v1/admin/portfolio/project", response_model=ProjectResponse, tags=["admin"])
+async def add_project(
+    payload: ProjectCreate,
+    _: None = Depends(require_admin),
+):
+    """Add new project & ingest into RAG."""
+    async with get_session() as session:
+        proj = Project(**payload.dict())
+        session.add(proj)
+        await session.commit()
+        await session.refresh(proj)
+
+    rag_content = f"# Project: {payload.title}\nSummary: {payload.summary or ''}\nTechnologies: {', '.join(payload.technologies)}\nGitHub: {payload.github_url or ''}\nLive Demo: {payload.live_url or ''}\n\nDescription:\n{payload.description or ''}"
+    await ingest_text(
+        title=f"Project - {payload.title}",
+        content=rag_content,
+        source_type="admin_project",
+        file_name=f"project-{payload.title.lower().replace(' ', '-')}.md",
+    )
+
+    return ProjectResponse(id=str(proj.id), **payload.dict())
+
+
 # Root endpoint
 @app.get("/", tags=["root"])
 async def root():
@@ -255,6 +427,7 @@ async def root():
         "docs": "/api/v1/docs",
         "health": "/api/v1/health"
     }
+
 
 
 def build_profile_entry_file_name(request: AdminProfileEntryRequest) -> str:

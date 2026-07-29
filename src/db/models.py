@@ -205,3 +205,66 @@ class IngestionLog(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime)
 
     document: Mapped["Document | None"] = relationship(back_populates="ingestion_logs")
+
+
+# =====================================================================
+# Dynamic CMS Portfolio Models
+# =====================================================================
+
+class PortfolioSettings(TimestampMixin, Base):
+    """Stores general profile information (Name, Title, Bio, Social Links)."""
+    __tablename__ = "portfolio_settings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False, default="Sibel Akkurt")
+    title: Mapped[str] = mapped_column(String(255), nullable=False, default="Full Stack Developer & AI Engineer")
+    hero_subtitle: Mapped[str | None] = mapped_column(Text)
+    about_markdown: Mapped[str | None] = mapped_column(Text)
+    contact_email: Mapped[str | None] = mapped_column(String(255))
+    github_url: Mapped[str | None] = mapped_column(String(500))
+    linkedin_url: Mapped[str | None] = mapped_column(String(500))
+    avatar_url: Mapped[str | None] = mapped_column(String(500))
+
+
+class Experience(TimestampMixin, Base):
+    """Stores work experiences for the portfolio."""
+    __tablename__ = "experiences"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company: Mapped[str] = mapped_column(String(255), nullable=False)
+    position: Mapped[str] = mapped_column(String(255), nullable=False)
+    location: Mapped[str | None] = mapped_column(String(255))
+    start_date: Mapped[str | None] = mapped_column(String(50))
+    end_date: Mapped[str | None] = mapped_column(String(50))
+    is_current: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    technologies: Mapped[list[Any]] = mapped_column(JSONB, default=_json_default, nullable=False)
+
+
+class Project(TimestampMixin, Base):
+    """Stores portfolio projects."""
+    __tablename__ = "projects"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    slug: Mapped[str | None] = mapped_column(String(255))
+    summary: Mapped[str | None] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
+    technologies: Mapped[list[Any]] = mapped_column(JSONB, default=_json_default, nullable=False)
+    github_url: Mapped[str | None] = mapped_column(String(500))
+    live_url: Mapped[str | None] = mapped_column(String(500))
+    image_url: Mapped[str | None] = mapped_column(String(500))
+    is_featured: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class Certificate(TimestampMixin, Base):
+    """Stores certifications and courses."""
+    __tablename__ = "certificates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    issuer: Mapped[str] = mapped_column(String(255), nullable=False)
+    issue_date: Mapped[str | None] = mapped_column(String(50))
+    credential_id: Mapped[str | None] = mapped_column(String(255))
+    credential_url: Mapped[str | None] = mapped_column(String(500))
+

@@ -63,3 +63,71 @@ class SiteKnowledgeRequest(BaseModel):
     project_name: Optional[str] = None
     importance: Optional[str] = "medium"
     created_by: Optional[str] = "site-sync"
+
+
+# --- Dynamic Portfolio CMS Schemas ---
+
+class PortfolioSettingsUpdate(BaseModel):
+    full_name: str
+    title: str
+    hero_subtitle: Optional[str] = None
+    about_markdown: Optional[str] = None
+    contact_email: Optional[str] = None
+    github_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+
+class PortfolioSettingsResponse(PortfolioSettingsUpdate):
+    id: str
+
+
+class ExperienceCreate(BaseModel):
+    company: str
+    position: str
+    location: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    is_current: bool = False
+    description: Optional[str] = None
+    technologies: List[str] = Field(default_factory=list)
+
+
+class ExperienceResponse(ExperienceCreate):
+    id: str
+
+
+class ProjectCreate(BaseModel):
+    title: str
+    slug: Optional[str] = None
+    summary: Optional[str] = None
+    description: Optional[str] = None
+    technologies: List[str] = Field(default_factory=list)
+    github_url: Optional[str] = None
+    live_url: Optional[str] = None
+    image_url: Optional[str] = None
+    is_featured: bool = True
+
+
+class ProjectResponse(ProjectCreate):
+    id: str
+
+
+class CertificateCreate(BaseModel):
+    title: str
+    issuer: str
+    issue_date: Optional[str] = None
+    credential_id: Optional[str] = None
+    credential_url: Optional[str] = None
+
+
+class CertificateResponse(CertificateCreate):
+    id: str
+
+
+class FullPortfolioContentResponse(BaseModel):
+    settings: Optional[PortfolioSettingsResponse] = None
+    experiences: List[ExperienceResponse] = Field(default_factory=list)
+    projects: List[ProjectResponse] = Field(default_factory=list)
+    certificates: List[CertificateResponse] = Field(default_factory=list)
+
