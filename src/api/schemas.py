@@ -131,4 +131,74 @@ class FullPortfolioContentResponse(BaseModel):
     experiences: List[ExperienceResponse] = Field(default_factory=list)
     projects: List[ProjectResponse] = Field(default_factory=list)
     certificates: List[CertificateResponse] = Field(default_factory=list)
+    skills: List[SkillResponse] = Field(default_factory=list)
+    education: List[EducationResponse] = Field(default_factory=list)
+    technologies: List[TechnologyResponse] = Field(default_factory=list)
+    services: List[ServiceResponse] = Field(default_factory=list)
+    testimonials: List[TestimonialResponse] = Field(default_factory=list)
+    messages: List[ContactMessageResponse] = Field(default_factory=list)
+    banners: List[BannerResponse] = Field(default_factory=list)
+
+
+
+class SkillCreate(BaseModel):
+    name: str
+    is_active: bool = True
+
+class SkillResponse(SkillCreate):
+    id: str
+
+class EducationCreate(BaseModel):
+    school: str
+    degree: str
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+
+class EducationResponse(EducationCreate):
+    id: str
+
+class TechnologyCreate(BaseModel):
+    name: str
+    category: Optional[str] = None
+    icon_url: Optional[str] = None
+
+class TechnologyResponse(TechnologyCreate):
+    id: str
+
+class ServiceCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    icon_name: Optional[str] = None
+
+class ServiceResponse(ServiceCreate):
+    id: str
+
+class TestimonialCreate(BaseModel):
+    client_name: str
+    client_title: Optional[str] = None
+    company: Optional[str] = None
+    content: str
+    is_approved: bool = True
+
+class TestimonialResponse(TestimonialCreate):
+    id: str
+
+class ContactMessageCreate(BaseModel):
+    full_name: str
+    email: str
+    content: str
+    is_read: bool = False
+
+class ContactMessageResponse(ContactMessageCreate):
+    id: str
+
+class BannerCreate(BaseModel):
+    title: str
+    subtitle: Optional[str] = None
+    image_url: Optional[str] = None
+    is_active: bool = True
+
+class BannerResponse(BannerCreate):
+    id: str
 

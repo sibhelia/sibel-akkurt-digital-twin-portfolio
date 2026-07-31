@@ -1,77 +1,102 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
 import { 
-  FiLock, FiMail, FiUser, FiBriefcase, FiFolder, FiCheckCircle, 
-  FiAlertCircle, FiArrowLeft, FiLogOut, FiKey, FiGrid, FiUploadCloud, 
-  FiTrash2, FiExternalLink, FiCpu, FiDatabase, FiShield
-} from "react-icons/fi";
+  LayoutDashboard, Image as ImageIcon, Code2, Briefcase, GraduationCap, FolderDot, 
+  Layers, Wrench, User, MessageSquare, Mail, Settings, LogOut, 
+  Search, Bell, Plus, Trash2, CheckCircle2, XCircle, Eye, X,
+  Activity, BarChart3, Clock, ShieldCheck, ShieldAlert
+} from "lucide-react";
+import { toast } from "sonner";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const ADMIN_API_KEY = "dtp-admin-2026-4rK9mQ7xLp2vNz8s-secure";
+const API_URL = "http://localhost:8000/api/v1";
+
+const axiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "x-admin-api-key": ADMIN_API_KEY,
+  }
+});
+
+const MENU_GROUPS = [
+  {
+    title: "Ana Menü",
+    items: [
+      { id: "dashboard", label: "Gösterge Paneli", icon: LayoutDashboard },
+    ]
+  },
+  {
+    title: "Chatbot Yönetimi",
+    items: [
+      { id: "chatbot_analytics", label: "Sorgu & Diyalog Analitiği", icon: Activity },
+    ]
+  },
+  {
+    title: "İçerik Yönetimi",
+    items: [
+      { id: "banner", label: "Banner", icon: ImageIcon },
+      { id: "skills", label: "Yeteneklerim", icon: Code2 },
+      { id: "experience", label: "Deneyimlerim", icon: Briefcase },
+      { id: "education", label: "Eğitimlerim", icon: GraduationCap },
+      { id: "projects", label: "Projelerim", icon: FolderDot },
+      { id: "services", label: "Hizmetlerim", icon: Wrench },
+    ]
+  },
+  {
+    title: "İletişim & Analiz",
+    items: [
+      { id: "testimonials", label: "Yorumlar", icon: MessageSquare },
+      { id: "messages", label: "Gelen Mesajlar", icon: Mail },
+    ]
+  },
+  {
+    title: "Sistem",
+    items: [
+      { id: "about", label: "Firma/Profil Yönetimi", icon: User },
+      { id: "technologies", label: "Teknolojiler", icon: Layers },
+      { id: "settings", label: "Sistem Ayarları", icon: Settings },
+    ]
+  }
+];
+
+function Modal({ isOpen, onClose, title, children }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+          <h3 className="font-bold">{title}</h3>
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="p-6 overflow-y-auto">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(
     sessionStorage.getItem("admin_logged_in") === "true"
   );
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [portfolioData, setPortfolioData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [adminCreds, setAdminCreds] = useState({
-    email: localStorage.getItem("admin_email") || "sibelakk23@gmail.com",
-    password: localStorage.getItem("admin_password") || "SibelAkk*4646"
-  });
-
-  const [activeMenu, setActiveMenu] = useState("dashboard"); // dashboard, settings, experience, project, media
-  const [statusMsg, setStatusMsg] = useState({ type: "", text: "" });
-  const [loading, setLoading] = useState(false);
-  const [showPassModal, setShowPassModal] = useState(false);
-  const [newPassInput, setNewPassInput] = useState("");
-
-  // Data States for ERP Dashboard
-  const [portfolioData, setPortfolioData] = useState({
-    settings: null,
-    experiences: [],
-    projects: [],
-    certificates: []
-  });
-
-  // Forms
-  const [settingsForm, setSettingsForm] = useState({
-    full_name: "Sibel Akkurt",
-    title: "Full Stack Developer & AI Engineer",
-    hero_subtitle: "Dinamik portfolyoma ve yapay zekâ asistanıma hoş geldiniz.",
-    about_markdown: "Yazılım geliştirme ve Yapay Zekâ (RAG) teknolojileri üzerine çalışıyorum.",
-    contact_email: "sibelakk23@gmail.com",
-    github_url: "https://github.com",
-    linkedin_url: "https://linkedin.com",
-    avatar_url: ""
-  });
-
-  const [expForm, setExpForm] = useState({
-    company: "",
-    position: "",
-    location: "",
-    start_date: "",
-    end_date: "",
-    is_current: false,
-    description: "",
-    technologies: ""
-  });
-
-  const [projForm, setProjForm] = useState({
-    title: "",
-    summary: "",
-    description: "",
-    technologies: "",
-    github_url: "",
-    live_url: "",
-    image_url: ""
-  });
-
-  // Image Upload State
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const fetchPortfolioData = async () => {
+    try {
+      const res = await axiosInstance.get("/portfolio/content");
+      setPortfolioData(res.data);
+    } catch (error) {
+      toast.error("Veriler alınırken hata oluştu!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -81,750 +106,689 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  const fetchPortfolioData = async () => {
-    try {
-      const res = await axios.get(`${BACKEND_URL}/api/v1/portfolio/content`);
-      if (res.data) {
-        setPortfolioData(res.data);
-        if (res.data.settings) {
-          setSettingsForm(res.data.settings);
-        }
-      }
-    } catch (err) {
-      console.error("Data fetch error:", err);
-    }
-  };
-
   const handleLogout = () => {
     sessionStorage.removeItem("admin_logged_in");
     setIsAuthenticated(false);
     navigate("/admin/login");
   };
 
-  const handleChangePassword = (e) => {
-    e.preventDefault();
-    if (newPassInput.trim().length < 6) {
-      showStatus("error", "Şifre en az 6 karakter olmalıdır!");
-      return;
-    }
-    localStorage.setItem("admin_password", newPassInput.trim());
-    setAdminCreds(prev => ({ ...prev, password: newPassInput.trim() }));
-    setShowPassModal(false);
-    setNewPassInput("");
-    showStatus("success", "Admin şifreniz başarıyla güncellendi!");
-  };
+  if (!isAuthenticated) return null;
 
-  const showStatus = (type, text) => {
-    setStatusMsg({ type, text });
-    setTimeout(() => setStatusMsg({ type: "", text: "" }), 5000);
-  };
-
-  // Image Upload Handler
-  const handleImageUploadSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedFile) return;
-
-    setUploadingImage(true);
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
-    try {
-      const res = await axios.post(
-        `${BACKEND_URL}/api/v1/admin/upload-image`,
-        formData,
-        {
-          headers: {
-            "x-admin-api-key": ADMIN_API_KEY,
-            "Content-Type": "multipart/form-data"
-          }
-        }
-      );
-      const fullUrl = `${BACKEND_URL}${res.data.url}`;
-      setUploadedImageUrl(fullUrl);
-      showStatus("success", "Görsel başarıyla sunucuya yüklendi! Link aşağıda.");
-    } catch (err) {
-      showStatus("error", err.response?.data?.detail || "Görsel yükleme başarısız.");
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  // Submit Profile Settings
-  const handleSettingsSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await axios.post(
-        `${BACKEND_URL}/api/v1/admin/portfolio/settings`,
-        settingsForm,
-        { headers: { "x-admin-api-key": ADMIN_API_KEY } }
-      );
-      showStatus("success", "Profil ayarları güncellendi ve RAG yapay zekâsına öğretildi!");
-      fetchPortfolioData();
-    } catch (err) {
-      showStatus("error", err.response?.data?.detail || "Güncelleme başarısız.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Submit Experience
-  const handleExpSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const payload = {
-        ...expForm,
-        technologies: typeof expForm.technologies === "string" 
-          ? expForm.technologies.split(",").map(t => t.trim()).filter(Boolean)
-          : expForm.technologies
-      };
-      await axios.post(
-        `${BACKEND_URL}/api/v1/admin/portfolio/experience`,
-        payload,
-        { headers: { "x-admin-api-key": ADMIN_API_KEY } }
-      );
-      showStatus("success", "Yeni deneyim eklendi ve Qdrant AI hafızasına işlendi.");
-      setExpForm({ company: "", position: "", location: "", start_date: "", end_date: "", is_current: false, description: "", technologies: "" });
-      fetchPortfolioData();
-    } catch (err) {
-      showStatus("error", err.response?.data?.detail || "Ekleme başarısız.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Submit Project
-  const handleProjSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const payload = {
-        ...projForm,
-        technologies: typeof projForm.technologies === "string" 
-          ? projForm.technologies.split(",").map(t => t.trim()).filter(Boolean)
-          : projForm.technologies
-      };
-      await axios.post(
-        `${BACKEND_URL}/api/v1/admin/portfolio/project`,
-        payload,
-        { headers: { "x-admin-api-key": ADMIN_API_KEY } }
-      );
-      showStatus("success", "Yeni proje portfolyoya ve RAG yapay zekâsına eklendi.");
-      setProjForm({ title: "", summary: "", description: "", technologies: "", github_url: "", live_url: "", image_url: "" });
-      fetchPortfolioData();
-    } catch (err) {
-      showStatus("error", err.response?.data?.detail || "Ekleme başarısız.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Lock Screen has been moved to AdminLogin.jsx
-  if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
-  }
+  const adminName = portfolioData?.settings?.full_name || "Sibel Akkurt";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex">
-      
-      {/* LEFT SIDEBAR (ERP NAV MENU) */}
-      <aside className="w-64 bg-slate-900/90 border-r border-slate-800 flex flex-col justify-between hidden md:flex backdrop-blur-xl">
-        <div>
-          {/* Logo / Brand */}
-          <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-            <img 
-              src="/portfolio-logo.png" 
-              alt="Digital Twin Logo" 
-              className="w-10 h-10 rounded-xl object-cover border border-purple-500/30 shadow-lg shadow-purple-900/40"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-            <div>
-              <h2 className="font-extrabold text-white text-base tracking-wide">DIGITAL TWIN</h2>
-              <span className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider block">ERP Dashboard v2.0</span>
+    <div className="flex h-screen bg-[#f3f4f6] font-sans text-slate-800">
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 h-full overflow-y-auto">
+        <div className="flex flex-col items-center justify-center p-6 border-b border-slate-100">
+          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
+             <img src="/chatbot-mascot.png" alt="Logo" className="w-12 h-12 object-contain" />
+          </div>
+          <h1 className="text-emerald-700 font-extrabold text-center text-sm leading-tight uppercase tracking-wide">
+            Digital Twin<br/>Yönetim Paneli
+          </h1>
+        </div>
+        
+        <nav className="p-4 space-y-6">
+          {MENU_GROUPS.map((group, idx) => (
+            <div key={idx}>
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">{group.title}</h4>
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = activeTab === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        isActive 
+                          ? "bg-emerald-50 text-emerald-600 border-r-4 border-emerald-500" 
+                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isActive ? "text-emerald-600" : "text-slate-400"}`} />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+          ))}
+          
+          <div className="pt-4 border-t border-slate-100">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Çıkış Yap
+            </button>
           </div>
-
-          {/* Navigation Links */}
-          <nav className="p-4 space-y-1.5">
-            <button
-              onClick={() => setActiveMenu("dashboard")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeMenu === "dashboard"
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
-                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-              }`}
-            >
-              <FiGrid className="w-5 h-5" /> Genel Bakış (Dashboard)
-            </button>
-
-            <button
-              onClick={() => setActiveMenu("settings")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeMenu === "settings"
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
-                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-              }`}
-            >
-              <FiUser className="w-5 h-5" /> Profil & Biyografi
-            </button>
-
-            <button
-              onClick={() => setActiveMenu("experience")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeMenu === "experience"
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
-                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-              }`}
-            >
-              <FiBriefcase className="w-5 h-5" /> Deneyim Yönetimi
-            </button>
-
-            <button
-              onClick={() => setActiveMenu("project")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeMenu === "project"
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
-                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-              }`}
-            >
-              <FiFolder className="w-5 h-5" /> Proje Portföyü
-            </button>
-
-            <button
-              onClick={() => setActiveMenu("media")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeMenu === "media"
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
-                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-              }`}
-            >
-              <FiUploadCloud className="w-5 h-5" /> Görsel / Medya Yöneticisi
-            </button>
-          </nav>
-        </div>
-
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-slate-800 space-y-3">
-          <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
-            <span className="text-[11px] text-slate-400 block">Giriş Yapılan Hesap</span>
-            <span className="text-xs font-semibold text-purple-300 truncate block">{adminCreds.email}</span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-xs font-semibold transition-colors"
-          >
-            <FiLogOut /> Oturumu Kapat
-          </button>
-        </div>
+        </nav>
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
-        
-        {/* TOP NAVBAR */}
-        <header className="bg-slate-900/60 border-b border-slate-800 p-4 md:px-8 flex items-center justify-between backdrop-blur-xl sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              {activeMenu === "dashboard" && <>ERP Genel Bakış & İstatistikler</>}
-              {activeMenu === "settings" && <>Profil & Biyografi Yönetimi</>}
-              {activeMenu === "experience" && <>İş Deneyimleri</>}
-              {activeMenu === "project" && <>Proje Portföyü</>}
-              {activeMenu === "media" && <>Medya ve Dosya Sunucusu</>}
-            </h1>
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* HEADER */}
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+          <div className="relative w-96">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Talep, yayın veya modül ara..." 
+              className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
+            />
           </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowPassModal(true)}
-              className="px-3.5 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2"
-            >
-              <FiKey /> Şifre Değiştir
+          <div className="flex items-center gap-6">
+            <button className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold border border-emerald-200 hover:bg-emerald-100 transition-colors">
+              CHATBOT <span className="text-emerald-500">↗</span>
             </button>
-            <Link
-              to="/"
-              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2"
-            >
-              <FiExternalLink /> Ön Yüze Git
-            </Link>
+            <div className="flex items-center gap-4 text-slate-400">
+              <Bell className="w-5 h-5 hover:text-slate-600 cursor-pointer" />
+              <Settings className="w-5 h-5 hover:text-slate-600 cursor-pointer" />
+            </div>
+            <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+              <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                {adminName.split(' ').map(n => n[0]).join('').substring(0,2)}
+              </div>
+              <span className="text-sm font-bold text-slate-700">{adminName}</span>
+            </div>
           </div>
         </header>
 
-        {/* Change Password Modal */}
-        {showPassModal && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-purple-500/30 p-6 rounded-2xl max-w-sm w-full space-y-4">
-              <h3 className="text-lg font-bold text-white">Admin Şifresini Güncelle</h3>
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Yeni Şifre</label>
-                  <input
-                    type="password"
-                    placeholder="Yeni güçlü şifreniz"
-                    value={newPassInput}
-                    onChange={(e) => setNewPassInput(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                    required
+        <div className="flex-1 overflow-auto p-6 lg:p-8">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+            </div>
+          ) : (
+            <>
+              {activeTab === "dashboard" && <DashboardAdmin data={portfolioData} />}
+              {activeTab === "chatbot_analytics" && <ChatbotAnalytics />}
+              {activeTab === "banner" && <BannerAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "skills" && <SkillsAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "experience" && <ExperienceAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "education" && <EducationAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "projects" && <ProjectsAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "technologies" && <TechnologiesAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "services" && <ServicesAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "about" && <AboutAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "testimonials" && <TestimonialsAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "messages" && <MessagesAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "settings" && <SettingsAdmin data={portfolioData} refresh={fetchPortfolioData} adminName={adminName} />}
+            </>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// --- DASHBOARD & ANALYTICS COMPONENTS --- //
+
+function DashboardAdmin({ data }) {
+  const [analytics, setAnalytics] = useState(null);
+
+  useEffect(() => {
+    axiosInstance.get("/admin/chatbot/analytics").then(res => setAnalytics(res.data)).catch(e => console.error(e));
+  }, []);
+
+  const metrics = analytics?.metrics || { accuracy: 0, avgLatencySec: 0, totalQueries: 0, pendingApprovals: 0 };
+  const weeklyVolume = analytics?.charts?.weeklyVolume || [];
+  const satisfaction = analytics?.charts?.satisfaction || [];
+
+  return (
+    <div className="max-w-7xl">
+      <div className="mb-6 bg-blue-50/50 border border-blue-100 rounded-lg p-4 text-sm text-blue-700">
+        Bilgi: Chatbot performansınızı yapay zeka yardımıyla değerlendirebilir, bu panel üzerinden anlık analiz edebilirsiniz.
+      </div>
+      
+      {/* 4 Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-purple-50/50 border border-purple-100 p-5 rounded-xl shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-500"><ShieldCheck className="w-4 h-4"/></div>
+            <span className="text-purple-600 text-xs font-bold">↑ +2.4%</span>
+          </div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Doğruluk Oranı</p>
+          <h3 className="text-2xl font-black text-slate-800">{metrics.accuracy} <span className="text-sm font-bold text-slate-500">%</span></h3>
+          <p className="text-[10px] text-slate-400 mt-2">Botun verdiği yanıtların doğruluğunu ve kullanıcı memnuniyet seviyesini gösterir.</p>
+        </div>
+        
+        <div className="bg-emerald-50/50 border border-emerald-100 p-5 rounded-xl shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500"><Clock className="w-4 h-4"/></div>
+            <span className="text-emerald-600 text-xs font-bold">↓ -0.3sn</span>
+          </div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ort. Yanıt Süresi</p>
+          <h3 className="text-2xl font-black text-slate-800">{metrics.avgLatencySec} <span className="text-sm font-bold text-slate-500">sn</span></h3>
+          <p className="text-[10px] text-slate-400 mt-2">Soruların yapay zeka tarafından milisaniyeler bazında cevaplanma hızıdır.</p>
+        </div>
+
+        <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-xl shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500"><BarChart3 className="w-4 h-4"/></div>
+            <span className="text-blue-600 text-xs font-bold">↑ +12</span>
+          </div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Toplam Sorgu</p>
+          <h3 className="text-2xl font-black text-slate-800">{metrics.totalQueries} <span className="text-sm font-bold text-slate-500">adet</span></h3>
+          <p className="text-[10px] text-slate-400 mt-2">Sistem yayına girdiğinden bu yana kullanıcılardan gelen toplam soru miktarı.</p>
+        </div>
+
+        <div className="bg-amber-50/50 border border-amber-100 p-5 rounded-xl shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-500"><ShieldAlert className="w-4 h-4"/></div>
+          </div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bekleyen Onay</p>
+          <h3 className="text-2xl font-black text-slate-800">{metrics.pendingApprovals} <span className="text-sm font-bold text-slate-500">adet</span></h3>
+          <p className="text-[10px] text-slate-400 mt-2">Botun cevaplayamadığı ve sizin öğretmesini onayladığınız soru sayısıdır.</p>
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kullanım Trendi</p>
+              <h3 className="text-base font-bold text-slate-800">Haftalık Sorgu Hacmi</h3>
+              <p className="text-xs text-slate-400 mt-1">Sisteme gelen soru trafiğini gün bazında yoğunluğunu ölçer.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+              <span className="text-xs font-bold text-slate-600">Sorgular</span>
+            </div>
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={weeklyVolume}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} dx={-10} />
+                <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                <Line type="monotone" dataKey="sorgu" stroke="#ec4899" strokeWidth={2} dot={false} activeDot={{r: 4}} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Deneyim Analizi</p>
+          <h3 className="text-base font-bold text-slate-800">Kullanıcı Memnuniyeti</h3>
+          <p className="text-xs text-slate-400 mt-1 mb-6">Yapay zeka yanıtlarına verilen geri bildirimlerin dağılımını gösterir.</p>
+          
+          <div className="h-48 relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={satisfaction} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                  {satisfaction.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-2xl font-black text-slate-800">{satisfaction[0]?.value || 0}%</span>
+              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Başarı</span>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex justify-center gap-4">
+            {satisfaction.map(s => (
+              <div key={s.name} className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: s.color}}></span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase">{s.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChatbotAnalytics() {
+  const [queries, setQueries] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axiosInstance.get("/admin/chatbot/queries")
+      .then(res => setQueries(res.data))
+      .catch(e => toast.error("Analitik verisi alınamadı"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="max-w-6xl">
+      <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-2">Sorgu & Diyalog Analitiği</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+        <TableHeader title="Chatbot Sorguları" subtitle="Kullanıcıların chatbot ile yaptığı diyalog kayıtları" count={queries.length} />
+        <div className="p-5">
+          <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11px] uppercase tracking-wider font-semibold">
+                  <th className="py-3.5 px-4 w-12 text-center border-r border-white/10">#</th>
+                  <th className="py-3.5 px-4 border-r border-white/10">OTURUM ID</th>
+                  <th className="py-3.5 px-4 border-r border-white/10 text-center">MESAJ SAYISI</th>
+                  <th className="py-3.5 px-4 border-r border-white/10">TARİH</th>
+                  <th className="py-3.5 px-4 w-32 text-center">DURUM</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {loading ? <tr><td colSpan="5" className="py-8 text-center text-slate-400">Yükleniyor...</td></tr> : queries.map((q, i) => (
+                  <tr key={q.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
+                    <td className="py-3 px-4 font-mono text-xs text-slate-600">{q.session_id.substring(0,12)}...</td>
+                    <td className="py-3 px-4 text-center font-bold text-emerald-600">{q.message_count}</td>
+                    <td className="py-3 px-4 text-slate-500">{new Date(q.created_at).toLocaleString('tr-TR')}</td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">
+                        {q.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {!loading && queries.length === 0 && <tr><td colSpan="5" className="py-8 text-center text-slate-400">Henüz sorgu bulunmuyor.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- REUSABLE COMPONENTS --- //
+
+function TableHeader({ title, subtitle, count, activeCount, onAdd }) {
+  return (
+    <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h3 className="font-semibold flex items-center gap-2 text-sm text-slate-800">
+          <span className="text-emerald-500">⚡</span>
+          {title}
+        </h3>
+        <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        {count !== undefined && (
+          <div className="px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold flex items-center gap-3 shadow-sm">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-3 bg-white/50 rounded-full inline-block"></span> Toplam: {count}
+            </span>
+            {activeCount !== undefined && (
+              <>
+                <span className="text-white/30">|</span>
+                <span className="flex items-center gap-1">Aktif: {activeCount}</span>
+              </>
+            )}
+          </div>
+        )}
+        {onAdd && (
+          <button onClick={onAdd} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm">
+            <Plus className="w-4 h-4" /> Yeni Ekle
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GenericTableWithModal({ title, dataList, columns, endpoint, formFields, refresh }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [form, setForm] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await axiosInstance.post(endpoint, form);
+      toast.success(`${title} başarıyla eklendi`);
+      setIsModalOpen(false);
+      setForm({});
+      refresh();
+    } catch(e) {
+      toast.error("Eklenirken hata oluştu");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const deleteItem = async (id) => {
+    if(!window.confirm("Silmek istediğinize emin misiniz?")) return;
+    try {
+      await axiosInstance.delete(`${endpoint}/${id}`);
+      toast.success("Silindi");
+      refresh();
+    } catch(e) {
+      toast.error("Silinemedi");
+    }
+  }
+
+  return (
+    <div className="max-w-6xl">
+      <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-2">{title}</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+        <TableHeader title={title} subtitle={`${title} listesi ve yönetimi`} count={dataList.length} onAdd={() => setIsModalOpen(true)} />
+        <div className="p-5">
+          <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11px] uppercase tracking-wider font-semibold">
+                  <th className="py-3.5 px-4 w-12 text-center border-r border-white/10">#</th>
+                  {columns.map(c => <th key={c.key} className="py-3.5 px-4 border-r border-white/10">{c.label}</th>)}
+                  <th className="py-3.5 px-4 w-24 text-right">İŞLEMLER</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {dataList.map((row, i) => (
+                  <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
+                    {columns.map(c => (
+                      <td key={c.key} className="py-3 px-4 text-slate-600 truncate max-w-[200px]">
+                        {c.render ? c.render(row[c.key], row) : String(row[c.key] || '')}
+                      </td>
+                    ))}
+                    <td className="py-3 px-4 text-right">
+                      <button onClick={()=>deleteItem(row.id)} className="w-7 h-7 rounded bg-red-50 text-red-500 hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {dataList.length === 0 && <tr><td colSpan={columns.length+2} className="py-8 text-center text-slate-400">Veri bulunamadı.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Yeni ${title} Ekle`}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {formFields.map(field => (
+            <div key={field.key}>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">{field.label}</label>
+              {field.type === 'textarea' ? (
+                <textarea 
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-emerald-500"
+                  value={form[field.key] || ''}
+                  onChange={e => setForm({...form, [field.key]: e.target.value})}
+                  rows={4}
+                />
+              ) : field.type === 'checkbox' ? (
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 text-emerald-600 rounded"
+                    checked={form[field.key] || false}
+                    onChange={e => setForm({...form, [field.key]: e.target.checked})}
                   />
+                  <span className="text-sm font-semibold text-slate-600">{field.label} Seçimi</span>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2.5 rounded-xl text-sm transition-all"
-                  >
-                    Güncelle
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowPassModal(false)}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all"
-                  >
-                    İptal
-                  </button>
-                </div>
-              </form>
+              ) : (
+                <input 
+                  type={field.type || 'text'}
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-emerald-500"
+                  value={form[field.key] || ''}
+                  onChange={e => setForm({...form, [field.key]: e.target.value})}
+                  required={field.required}
+                />
+              )}
+            </div>
+          ))}
+          <button type="submit" disabled={submitting} className="w-full py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-emerald-700 disabled:opacity-50 mt-4">
+            {submitting ? "Ekleniyor..." : "Kaydet"}
+          </button>
+        </form>
+      </Modal>
+    </div>
+  );
+}
+
+// --- STANDARD TABS --- //
+function ExperienceAdmin({ data, refresh }) {
+  return <GenericTableWithModal title="Deneyimlerim" dataList={data?.experiences||[]} refresh={refresh} endpoint="/admin/portfolio/experience"
+    columns={[{label: "ŞİRKET", key: "company"}, {label: "POZİSYON", key: "position"}, {label: "TARİH", key: "start_date"}]} 
+    formFields={[
+      {label: "Şirket Adı", key: "company", required: true},
+      {label: "Pozisyon", key: "position", required: true},
+      {label: "Başlangıç Tarihi", key: "start_date"},
+      {label: "Açıklama", key: "description", type: "textarea"}
+    ]} 
+  />;
+}
+function EducationAdmin({ data, refresh }) {
+  return <GenericTableWithModal title="Eğitimlerim" dataList={data?.education||[]} refresh={refresh} endpoint="/admin/portfolio/education"
+    columns={[{label: "OKUL", key: "school"}, {label: "DERECE", key: "degree"}]} 
+    formFields={[
+      {label: "Okul Adı", key: "school", required: true},
+      {label: "Derece / Bölüm", key: "degree", required: true},
+      {label: "Başlangıç Tarihi", key: "start_date"},
+      {label: "Bitiş Tarihi", key: "end_date"}
+    ]} 
+  />;
+}
+function ProjectsAdmin({ data, refresh }) {
+  return <GenericTableWithModal title="Projelerim" dataList={data?.projects||[]} refresh={refresh} endpoint="/admin/portfolio/projects"
+    columns={[{label: "PROJE ADI", key: "title"}, {label: "ÖZET", key: "summary"}]} 
+    formFields={[
+      {label: "Proje Adı", key: "title", required: true},
+      {label: "Özet Açıklama", key: "summary"},
+      {label: "Canlı Link", key: "live_url"},
+      {label: "Github Linki", key: "github_url"}
+    ]} 
+  />;
+}
+function TechnologiesAdmin({ data, refresh }) {
+  return <GenericTableWithModal title="Teknolojiler" dataList={data?.technologies||[]} refresh={refresh} endpoint="/admin/portfolio/technologies"
+    columns={[{label: "TEKNOLOJİ", key: "name"}, {label: "KATEGORİ", key: "category"}]} 
+    formFields={[
+      {label: "Teknoloji Adı (Örn: React)", key: "name", required: true},
+      {label: "Kategori (Örn: Frontend)", key: "category"}
+    ]} 
+  />;
+}
+function ServicesAdmin({ data, refresh }) {
+  return <GenericTableWithModal title="Hizmetlerim" dataList={data?.services||[]} refresh={refresh} endpoint="/admin/portfolio/services"
+    columns={[{label: "BAŞLIK", key: "title"}, {label: "AÇIKLAMA", key: "description"}]} 
+    formFields={[
+      {label: "Hizmet Başlığı", key: "title", required: true},
+      {label: "Açıklama", key: "description", type: "textarea"}
+    ]} 
+  />;
+}
+function BannerAdmin({ data, refresh }) {
+  return <GenericTableWithModal title="Banner" dataList={data?.banners||[]} refresh={refresh} endpoint="/admin/portfolio/banners"
+    columns={[{label: "BAŞLIK", key: "title"}, {label: "ALT BAŞLIK", key: "subtitle"}]} 
+    formFields={[
+      {label: "Ana Başlık", key: "title", required: true},
+      {label: "Alt Başlık", key: "subtitle"}
+    ]} 
+  />;
+}
+function TestimonialsAdmin({ data, refresh }) {
+  return <GenericTableWithModal title="Yorumlar" dataList={data?.testimonials||[]} refresh={refresh} endpoint="/admin/portfolio/testimonials"
+    columns={[{label: "MÜŞTERİ", key: "client_name"}, {label: "YORUM", key: "content"}]} 
+    formFields={[
+      {label: "Müşteri Adı", key: "client_name", required: true},
+      {label: "Şirketi", key: "company"},
+      {label: "Yorumu", key: "content", type: "textarea", required: true}
+    ]} 
+  />;
+}
+
+function SkillsAdmin({ data, refresh }) {
+  const items = data?.skills || [];
+  return <GenericTableWithModal title="Yeteneklerim" dataList={items} refresh={refresh} endpoint="/admin/portfolio/skills"
+    columns={[
+      {label: "YETENEK ADI", key: "name"},
+      {label: "DURUM", key: "is_active", render: (val) => val ? (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Aktif</span>
+      ) : (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-500 border border-red-100"><XCircle className="w-3 h-3 mr-1"/> Pasif</span>
+      )}
+    ]} 
+    formFields={[
+      {label: "Yetenek Adı", key: "name", required: true},
+      {label: "Aktif mi?", key: "is_active", type: "checkbox"}
+    ]} 
+  />;
+}
+
+function MessagesAdmin({ data, refresh }) {
+  const msgs = data?.messages || [];
+  const [selectedMsg, setSelectedMsg] = useState(null);
+  
+  const toggleRead = async (id) => {
+    try {
+      await axiosInstance.put(`/admin/portfolio/messages/${id}/read`);
+      toast.success("Mesaj durumu güncellendi");
+      refresh();
+    } catch (e) {
+      toast.error("Hata oluştu");
+    }
+  };
+
+  const deleteMsg = async (id) => {
+    if(!window.confirm("Silmek istediğinize emin misiniz?")) return;
+    try {
+      await axiosInstance.delete(`/admin/portfolio/messages/${id}`);
+      toast.success("Mesaj silindi");
+      refresh();
+    } catch (e) {
+      toast.error("Hata oluştu");
+    }
+  };
+
+  return (
+    <div className="max-w-6xl">
+      <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-2">Gelen Mesajlar</h2>
+      
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+        <TableHeader title="Gelen Mesajlar" subtitle="Tüm gelen mesajların listesi ve yönetimi" count={msgs.length} />
+        
+        <div className="p-5">
+          <div className="border border-slate-200 rounded-lg overflow-hidden">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11px] uppercase tracking-wider font-semibold">
+                  <th className="py-3.5 px-4 w-12 text-center border-r border-white/10">#</th>
+                  <th className="py-3.5 px-4 border-r border-white/10">AD-SOYAD</th>
+                  <th className="py-3.5 px-4 border-r border-white/10">EMAIL</th>
+                  <th className="py-3.5 px-4 border-r border-white/10 text-center w-32">DURUM</th>
+                  <th className="py-3.5 px-4 w-28 text-center">İŞLEMLER</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {msgs.map((m, i) => (
+                  <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
+                    <td className="py-3 px-4 font-medium text-slate-700">{m.full_name}</td>
+                    <td className="py-3 px-4 text-slate-500">{m.email}</td>
+                    <td className="py-3 px-4 text-center">
+                      <button onClick={() => toggleRead(m.id)} className={`px-3 py-1 rounded-full text-[11px] font-bold border ${m.is_read ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-500 border-red-100'}`}>
+                        {m.is_read ? "Okundu" : "Okunmadı"}
+                      </button>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex justify-center gap-1.5">
+                        <button onClick={() => setSelectedMsg(m)} className="w-7 h-7 rounded bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white flex items-center justify-center transition-colors">
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => deleteMsg(m.id)} className="w-7 h-7 rounded bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {msgs.length === 0 && <tr><td colSpan="6" className="py-8 text-center text-slate-400">Henüz mesaj yok.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <Modal isOpen={!!selectedMsg} onClose={() => setSelectedMsg(null)} title="Mesaj Detayı">
+        {selectedMsg && (
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-slate-500 font-bold">Kimden:</label>
+              <p className="text-sm font-semibold">{selectedMsg.full_name} ({selectedMsg.email})</p>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 font-bold">Mesaj:</label>
+              <div className="mt-1 p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm whitespace-pre-wrap">
+                {selectedMsg.content}
+              </div>
             </div>
           </div>
         )}
+      </Modal>
+    </div>
+  );
+}
 
-        {/* PAGE BODY CONTENT */}
-        <main className="p-4 md:p-8 space-y-6 flex-1">
-          
-          {/* Status Toast Notification */}
-          {statusMsg.text && (
-            <div
-              className={`p-4 rounded-xl flex items-center gap-3 border ${
-                statusMsg.type === "success"
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                  : "bg-red-500/10 border-red-500/30 text-red-400"
-              }`}
-            >
-              {statusMsg.type === "success" ? <FiCheckCircle className="w-5 h-5 flex-shrink-0" /> : <FiAlertCircle className="w-5 h-5 flex-shrink-0" />}
-              <span className="text-sm font-medium">{statusMsg.text}</span>
-            </div>
-          )}
+function SettingsAdmin({ data, refresh, adminName }) {
+  const [formData, setFormData] = useState({
+    username: "sibelakkurt",
+    fullName: adminName,
+    password: "",
+    passwordConfirm: ""
+  });
 
-          {/* MENU 1: DASHBOARD (OVERVIEW & STATS) */}
-          {activeMenu === "dashboard" && (
-            <div className="space-y-6">
-              {/* Stats Widgets Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-slate-900/60 border border-purple-500/20 p-5 rounded-2xl space-y-2">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Toplam Deneyim</span>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-3xl font-extrabold text-white">{portfolioData.experiences.length}</span>
-                    <FiBriefcase className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1"><FiCheckCircle /> Supabase DB Senkronize</span>
-                </div>
+  return (
+    <div className="max-w-3xl">
+      <h2 className="text-xl font-bold text-slate-800 mb-6">Sistem Ayarları</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-5 text-white">
+          <h3 className="font-semibold text-sm flex items-center gap-2">
+            <Settings className="w-4 h-4" /> Profili Güncelle
+          </h3>
+          <p className="text-xs text-white/70 mt-1">Aşağıdaki formu doldurarak profil bilgisini güncelleyin.</p>
+        </div>
+        <div className="p-6 space-y-4">
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Kullanıcı Adı</label><input type="text" value={formData.username} onChange={e=>setFormData({...formData, username: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Ad-Soyad</label><input type="text" value={formData.fullName} onChange={e=>setFormData({...formData, fullName: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Yeni Şifre</label><input type="password" value={formData.password} onChange={e=>setFormData({...formData, password: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Şifre Tekrar</label><input type="password" value={formData.passwordConfirm} onChange={e=>setFormData({...formData, passwordConfirm: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" /></div>
+          <div className="pt-4"><button onClick={() => toast.success("Ayarlar başarıyla güncellendi (Mock)")} className="px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-700 transition-colors">Kaydet</button></div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-                <div className="bg-slate-900/60 border border-purple-500/20 p-5 rounded-2xl space-y-2">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Toplam Proje</span>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-3xl font-extrabold text-white">{portfolioData.projects.length}</span>
-                    <FiFolder className="w-6 h-6 text-indigo-400" />
-                  </div>
-                  <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1"><FiCheckCircle /> Ön Yüzde Yayında</span>
-                </div>
-
-                <div className="bg-slate-900/60 border border-purple-500/20 p-5 rounded-2xl space-y-2">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">RAG Hafıza Durumu</span>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xl font-bold text-emerald-400">Aktif (Aktif)</span>
-                    <FiDatabase className="w-6 h-6 text-emerald-400" />
-                  </div>
-                  <span className="text-[11px] text-slate-400 block">Qdrant Vector DB Bağlı</span>
-                </div>
-
-                <div className="bg-slate-900/60 border border-purple-500/20 p-5 rounded-2xl space-y-2">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Sistem Rolü</span>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xl font-bold text-purple-300">Super Admin</span>
-                    <FiShield className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <span className="text-[11px] text-slate-400 block">Tam Yönetim Yetkisi</span>
-                </div>
-              </div>
-
-              {/* Quick Summary Section */}
-              <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl space-y-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FiCpu className="text-purple-400" /> Sistem Genel Bilgileri
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
-                  <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-1">
-                    <span className="text-xs font-semibold text-slate-500 uppercase">Aktif Profil Sahibi</span>
-                    <p className="font-semibold text-white">{portfolioData.settings?.full_name || "Sibel Akkurt"}</p>
-                    <p className="text-xs text-purple-400">{portfolioData.settings?.title || "AI Engineer"}</p>
-                  </div>
-                  <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-1">
-                    <span className="text-xs font-semibold text-slate-500 uppercase">Veritabanı Sağlığı</span>
-                    <p className="font-semibold text-emerald-400">PostgreSQL (Supabase Cloud) Bağlı</p>
-                    <p className="text-xs text-slate-400">Tüm eklemeler otomatik RAG Vektörleme hattına girer.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MENU 2: PROFILE SETTINGS */}
-          {activeMenu === "settings" && (
-            <form onSubmit={handleSettingsSubmit} className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl space-y-6">
-              <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-3">Profil & Biyografi Güncelle</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Ad Soyad</label>
-                  <input
-                    type="text"
-                    value={settingsForm.full_name}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, full_name: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Ünvan / Başlık</label>
-                  <input
-                    type="text"
-                    value={settingsForm.title}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, title: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">E-Posta</label>
-                  <input
-                    type="email"
-                    value={settingsForm.contact_email}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, contact_email: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Profil Fotoğrafı URL</label>
-                  <input
-                    type="text"
-                    placeholder="Görsel Yöneticisinden aldığınız URL'yi yapıştırın"
-                    value={settingsForm.avatar_url || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, avatar_url: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">GitHub URL</label>
-                  <input
-                    type="text"
-                    value={settingsForm.github_url || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, github_url: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">LinkedIn URL</label>
-                  <input
-                    type="text"
-                    value={settingsForm.linkedin_url || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, linkedin_url: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Hero Alt Başlık</label>
-                <input
-                  type="text"
-                  value={settingsForm.hero_subtitle || ""}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, hero_subtitle: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Hakkımda Metni (Markdown)</label>
-                <textarea
-                  rows={5}
-                  value={settingsForm.about_markdown || ""}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, about_markdown: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 text-sm"
-              >
-                {loading ? "Kaydediliyor ve Qdrant'a İşleniyor..." : "Ayarları Kaydet ve RAG Yapay Zekâsına İşle"}
-              </button>
-            </form>
-          )}
-
-          {/* MENU 3: EXPERIENCE MANAGEMENT */}
-          {activeMenu === "experience" && (
-            <div className="space-y-8">
-              {/* Form */}
-              <form onSubmit={handleExpSubmit} className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl space-y-6">
-                <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-3">Yeni Deneyim Ekle</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Şirket / Kurum</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: Trendyol"
-                      value={expForm.company}
-                      onChange={(e) => setExpForm({ ...expForm, company: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Pozisyon</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: Senior Software Engineer"
-                      value={expForm.position}
-                      onChange={(e) => setExpForm({ ...expForm, position: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Başlangıç Tarihi</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: 2022"
-                      value={expForm.start_date}
-                      onChange={(e) => setExpForm({ ...expForm, start_date: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Bitiş Tarihi</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: Devam Ediyor veya 2024"
-                      value={expForm.end_date}
-                      onChange={(e) => setExpForm({ ...expForm, end_date: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Teknolojiler (Virgülle Ayırın)</label>
-                  <input
-                    type="text"
-                    placeholder="Python, FastAPI, React, Docker"
-                    value={expForm.technologies}
-                    onChange={(e) => setExpForm({ ...expForm, technologies: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Açıklama</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Bu pozisyondaki sorumluluklarınız"
-                    value={expForm.description}
-                    onChange={(e) => setExpForm({ ...expForm, description: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 text-sm"
-                >
-                  {loading ? "Ekleniyor..." : "Deneyimi Kaydet ve Qdrant AI'ya Öğret"}
-                </button>
-              </form>
-
-              {/* List Existing Experiences */}
-              <div className="space-y-4">
-                <h4 className="text-md font-bold text-slate-300">Ekli İş Deneyimleri ({portfolioData.experiences.length})</h4>
-                <div className="space-y-3">
-                  {portfolioData.experiences.map((exp) => (
-                    <div key={exp.id} className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between">
-                      <div>
-                        <h5 className="font-bold text-white">{exp.position} - <span className="text-purple-400">{exp.company}</span></h5>
-                        <p className="text-xs text-slate-400">{exp.start_date} - {exp.end_date || "Devam"}</p>
-                        <p className="text-xs text-slate-300 mt-1">{exp.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MENU 4: PROJECT PORTFOLIO */}
-          {activeMenu === "project" && (
-            <div className="space-y-8">
-              {/* Form */}
-              <form onSubmit={handleProjSubmit} className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl space-y-6">
-                <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-3">Yeni Proje Ekle</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Proje Başlığı</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: E-Ticaret Platformu"
-                      value={projForm.title}
-                      onChange={(e) => setProjForm({ ...projForm, title: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Teknolojiler (Virgülle Ayırın)</label>
-                    <input
-                      type="text"
-                      placeholder="React, Next.js, Qdrant"
-                      value={projForm.technologies}
-                      onChange={(e) => setProjForm({ ...projForm, technologies: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">GitHub URL</label>
-                    <input
-                      type="text"
-                      placeholder="https://github.com/user/repo"
-                      value={projForm.github_url}
-                      onChange={(e) => setProjForm({ ...projForm, github_url: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Canlı Demo URL</label>
-                    <input
-                      type="text"
-                      placeholder="https://demo.com"
-                      value={projForm.live_url}
-                      onChange={(e) => setProjForm({ ...projForm, live_url: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Görsel / Ekran Görüntüsü URL</label>
-                  <input
-                    type="text"
-                    placeholder="Görsel Yöneticisinden yüklediğiniz URL'yi buraya yapıştırın"
-                    value={projForm.image_url}
-                    onChange={(e) => setProjForm({ ...projForm, image_url: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Kısa Özet</label>
-                  <input
-                    type="text"
-                    placeholder="Proje kartında görünecek tek cümlelik özet"
-                    value={projForm.summary}
-                    onChange={(e) => setProjForm({ ...projForm, summary: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Detaylı Açıklama</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Projede neler yapıldı?"
-                    value={projForm.description}
-                    onChange={(e) => setProjForm({ ...projForm, description: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 text-sm"
-                >
-                  {loading ? "Ekleniyor..." : "Projeyi Kaydet ve Qdrant AI'ya Öğret"}
-                </button>
-              </form>
-
-              {/* List Projects */}
-              <div className="space-y-4">
-                <h4 className="text-md font-bold text-slate-300">Ekli Projeler ({portfolioData.projects.length})</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {portfolioData.projects.map((p) => (
-                    <div key={p.id} className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2">
-                      <h5 className="font-bold text-white">{p.title}</h5>
-                      <p className="text-xs text-slate-400">{p.summary}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MENU 5: MEDIA & FILE UPLOADER (SERVES PHOTOS NATIVELY) */}
-          {activeMenu === "media" && (
-            <div className="space-y-6">
-              <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl space-y-6">
-                <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <FiUploadCloud className="text-purple-400" /> Görsel ve Dosya Sunucusu
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Bilgisayarınızdan profil fotoğrafı veya proje ekran görüntüsü seçip yükleyin. Sunucu size anında URL verecektir.
-                  </p>
-                </div>
-
-                <form onSubmit={handleImageUploadSubmit} className="space-y-4">
-                  <div className="border-2 border-dashed border-purple-500/30 bg-slate-950/60 hover:bg-slate-950 rounded-2xl p-8 text-center transition-all">
-                    <FiUploadCloud className="w-12 h-12 text-purple-400 mx-auto mb-3" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setSelectedFile(e.target.files[0])}
-                      className="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer"
-                    />
-                    <span className="text-xs text-slate-500 mt-2 block">Desteklenen formatlar: PNG, JPG, WEBP, SVG</span>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={!selectedFile || uploadingImage}
-                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-purple-900/30 text-sm disabled:opacity-50"
-                  >
-                    {uploadingImage ? "Görsel Yükleniyor..." : "Görseli Yükle ve URL Oluştur"}
-                  </button>
-                </form>
-
-                {/* Display Uploaded Result */}
-                {uploadedImageUrl && (
-                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-3">
-                    <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5"><FiCheckCircle /> Görsel Başarıyla Yüklendi!</span>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        readOnly
-                        value={uploadedImageUrl}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-purple-300 font-mono"
-                      />
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(uploadedImageUrl);
-                          showStatus("success", "URL Panoya Kopyalandı!");
-                        }}
-                        className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-colors"
-                      >
-                        Kopyala
-                      </button>
-                    </div>
-                    {/* Preview Image */}
-                    <div className="mt-2">
-                      <span className="text-[11px] text-slate-400 block mb-1">Önizleme:</span>
-                      <img src={uploadedImageUrl} alt="Uploaded" className="h-32 rounded-lg object-cover border border-slate-800" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-        </main>
+function AboutAdmin({ data, refresh }) {
+  const [formData, setFormData] = useState({
+    full_name: data?.settings?.full_name || "",
+    title: data?.settings?.title || "",
+    about_markdown: data?.settings?.about_markdown || ""
+  });
+  const save = async () => {
+    try {
+      await axiosInstance.post("/admin/portfolio/settings", formData);
+      toast.success("Kaydedildi");
+      refresh();
+    } catch(e){ toast.error("Hata"); }
+  }
+  return (
+    <div className="max-w-3xl">
+      <h2 className="text-xl font-bold text-slate-800 mb-6">Firma/Profil Yönetimi</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-5 text-white">
+          <h3 className="font-semibold text-sm">Hakkımda Ayarları</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Ad Soyad</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.full_name} onChange={e=>setFormData({...formData, full_name: e.target.value})} /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-emerald-500 focus:outline-none" value={formData.about_markdown} onChange={e=>setFormData({...formData, about_markdown: e.target.value})}></textarea></div>
+          <button onClick={save} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">Kaydet</button>
+        </div>
       </div>
     </div>
   );

@@ -268,3 +268,65 @@ class Certificate(TimestampMixin, Base):
     credential_id: Mapped[str | None] = mapped_column(String(255))
     credential_url: Mapped[str | None] = mapped_column(String(500))
 
+
+
+class Skill(TimestampMixin, Base):
+    __tablename__ = "skills"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class Education(TimestampMixin, Base):
+    __tablename__ = "education"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    school: Mapped[str] = mapped_column(String(255), nullable=False)
+    degree: Mapped[str] = mapped_column(String(255), nullable=False)
+    start_date: Mapped[str | None] = mapped_column(String(50))
+    end_date: Mapped[str | None] = mapped_column(String(50))
+    description: Mapped[str | None] = mapped_column(Text)
+
+
+class Technology(TimestampMixin, Base):
+    __tablename__ = "technologies"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    category: Mapped[str | None] = mapped_column(String(100))
+    icon_url: Mapped[str | None] = mapped_column(String(500))
+
+
+class Service(TimestampMixin, Base):
+    __tablename__ = "services"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    icon_name: Mapped[str | None] = mapped_column(String(100))
+
+
+class Testimonial(TimestampMixin, Base):
+    __tablename__ = "testimonials"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    client_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    client_title: Mapped[str | None] = mapped_column(String(255))
+    company: Mapped[str | None] = mapped_column(String(255))
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    is_approved: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class ContactMessage(TimestampMixin, Base):
+    __tablename__ = "contact_messages"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class Banner(TimestampMixin, Base):
+    __tablename__ = "banners"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    subtitle: Mapped[str | None] = mapped_column(Text)
+    image_url: Mapped[str | None] = mapped_column(String(500))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
