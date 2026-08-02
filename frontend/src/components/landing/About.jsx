@@ -1,14 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp, slideInLeft, scaleUp, viewPortConfig } from "@/utils/animations";
+import { useLanguage } from "@/context/LanguageContext";
+import { localized } from "@/utils/localized";
 
-const skills = [
+const defaultSkills = [
   "Python", "C#", ".NET Core", "ASP.NET Core", "FastAPI",
   "React.js", "Vue.js", "Blazor", "LangChain", "RAG",
   "PostgreSQL", "Neo4j", "ChromaDB", "Docker"
 ];
 
-export default function About() {
+export default function About({ settings, skills: apiSkills }) {
+  const { language, t } = useLanguage();
+
+  const bio = settings ? localized(settings, 'about_markdown', language) : t("about.bio");
+  const name = settings?.owner_name || "Sibel";
+  const surname = settings?.owner_surname || "Akkurt";
+
+  const skills = apiSkills && apiSkills.length > 0
+    ? apiSkills.map(skill => localized(skill, 'name', language) || skill.name)
+    : defaultSkills;
+
   return (
     <section id="about" className="py-20 lg:py-28">
       <div className="container-wide overflow-hidden">
@@ -39,22 +51,18 @@ export default function About() {
           {/* Right: Content */}
           <motion.div variants={fadeUp}>
             <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">
-              Hakkımda
+              {t("about.tag")}
             </p>
             <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-6">
-              Sibel <span className="text-purple-accent">Akkurt</span>
+              {name} <span className="text-purple-accent">{surname}</span>
             </h2>
             
             <p className="font-medium tracking-wide leading-relaxed text-sm lg:text-base mb-8 drop-shadow-sm" style={{ color: '#f8fafc', textShadow: '0 0 10px rgba(0,0,0,0.5)' }}>
-              Balıkesir Üniversitesi Bilgisayar Mühendisliği son sınıf öğrencisiyim. Python ve
-              .NET teknolojileriyle yapay zekâ destekli uygulamalar ve backend sistemleri
-              geliştiriyorum; üretime hazır RAG mimarileri, kurumsal ERP modülleri ve
-              ölçeklenebilir API çözümleri üzerinde çalışıyorum. ASP.NET Core, FastAPI,
-              PostgreSQL, LangChain ve Docker ekosistemlerinde aktif deneyimim var.
+              {bio}
             </p>
 
             <div className="mb-8">
-              <h4 className="text-white font-bold mb-4 text-sm">Yetkinliklerim:</h4>
+              <h4 className="text-white font-bold mb-4 text-sm">{t("about.skills_title")}</h4>
               <div className="flex flex-wrap gap-3">
                 {skills.map((skill) => (
                   <motion.span 
@@ -74,15 +82,15 @@ export default function About() {
               className="btn-purple rounded-full h-12 px-8 text-sm font-semibold hover:scale-105 transition-transform"
               asChild
             >
-              <a href="#contact">Benimle İletişime Geç</a>
+              <a href="#contact">{t("about.cta")}</a>
             </Button>
 
             {/* Stats */}
             <div className="mt-12 flex flex-wrap gap-10 pt-8 border-t border-white/5">
               {[
-                { n: "4+", l: "Staj & Proje" },
-                { n: "10+", l: "Üretim Projesi" },
-                { n: "80%+", l: "RAG Doğruluk" },
+                { n: "4+", l: t("about.stat1") },
+                { n: "10+", l: t("about.stat2") },
+                { n: "80%+", l: t("about.stat3") },
               ].map((s) => (
                 <div key={s.l} data-testid={`about-stat-${s.l}`}>
                   <div className="text-2xl lg:text-3xl font-extrabold text-white">{s.n}</div>

@@ -1,9 +1,50 @@
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
-import { services } from "../../data/portfolioData";
+import { ArrowUpRight, Brain, Server, Database } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import { staggerContainer, fadeUp } from "../../utils/animations";
+import { localized } from "@/utils/localized";
 
-export default function Services() {
+export default function Services({ services: apiServices }) {
+  const { language, t } = useLanguage();
+
+  const defaultServices = [
+    {
+      icon: Brain,
+      title: t("service.ai.title"),
+      desc: t("service.ai.desc"),
+      cta: t("service.cta"),
+      featured: false,
+    },
+    {
+      icon: Server,
+      title: t("service.backend.title"),
+      desc: t("service.backend.desc"),
+      cta: t("service.cta"),
+      featured: false,
+    },
+    {
+      icon: Database,
+      title: t("service.erp.title"),
+      desc: t("service.erp.desc"),
+      cta: t("service.cta"),
+      featured: true,
+    },
+  ];
+
+  const services = apiServices && apiServices.length > 0
+    ? apiServices.map((svc, i) => {
+        const Icon = i === 0 ? Brain : (i === 1 ? Server : Database);
+        return {
+          icon: Icon,
+          title: localized(svc, 'title', language),
+          desc: localized(svc, 'description', language),
+          cta: t("service.cta"),
+          featured: i === 2,
+        };
+      })
+    : defaultServices;
+
+
   return (
     <section
       id="services"
@@ -19,10 +60,10 @@ export default function Services() {
           viewport={{ once: true, margin: "-100px" }}
         >
           <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">
-            SUNDUĞUM HİZMETLER
+            {t("services.tag")}
           </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            En İyi <span className="text-purple-accent">Hizmetlerim</span>
+            {t("services.heading1")} <span className="text-purple-accent">{t("services.heading2")}</span>
           </h2>
         </motion.div>
 

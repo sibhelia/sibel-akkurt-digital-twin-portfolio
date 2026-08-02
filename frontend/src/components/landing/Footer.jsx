@@ -1,15 +1,17 @@
 import SmartContact from "./SmartContact";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Footer() {
+  const { t } = useLanguage();
   return (
     <footer data-testid="footer" className="bg-[#0a0a0c] text-white border-t border-white/5 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-px bg-gradient-to-r from-transparent via-purple-accent/50 to-transparent" />
       
       <div className="container-wide py-16 lg:py-24 grid md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
         <div className="lg:col-span-5">
-          <h3 className="text-3xl font-extrabold mb-4">Dijital İkizine<br/>Merhaba De!</h3>
+          <h3 className="text-3xl font-extrabold mb-4">{t("footer.heading1")}<br/>{t("footer.heading2")}</h3>
           <p className="text-white/60 text-sm leading-relaxed max-w-sm mb-8">
-            Yeni projeler ve heyecan verici işbirlikleri için her zaman buradayım. Hadi birlikte harika şeyler inşa edelim.
+            {t("footer.desc")}
           </p>
           
           <div className="flex flex-wrap gap-3">
@@ -21,30 +23,30 @@ export default function Footer() {
         </div>
 
         <div className="lg:col-span-2 lg:col-start-8">
-          <h4 className="font-bold mb-6 text-xs uppercase tracking-widest text-purple-accent">Menü</h4>
+          <h4 className="font-bold mb-6 text-xs uppercase tracking-widest text-purple-accent">{t("footer.menu")}</h4>
           <ul className="space-y-3 text-sm text-white/60">
-            <li><a href="#home" className="hover:text-white transition-colors">Anasayfa</a></li>
-            <li><a href="#about" className="hover:text-white transition-colors">Hakkımda</a></li>
-            <li><a href="#services" className="hover:text-white transition-colors">Hizmetler</a></li>
-            <li><a href="#work" className="hover:text-white transition-colors">Portfolyo</a></li>
+            <li><a href="#home" className="hover:text-white transition-colors">{t("nav.home")}</a></li>
+            <li><a href="#about" className="hover:text-white transition-colors">{t("nav.about")}</a></li>
+            <li><a href="#services" className="hover:text-white transition-colors">{t("nav.services")}</a></li>
+            <li><a href="#work" className="hover:text-white transition-colors">{t("footer.portfolio")}</a></li>
           </ul>
         </div>
 
         <div className="lg:col-span-2">
-          <h4 className="font-bold mb-6 text-xs uppercase tracking-widest text-purple-accent">Bağlantılar</h4>
+          <h4 className="font-bold mb-6 text-xs uppercase tracking-widest text-purple-accent">{t("footer.links")}</h4>
           <ul className="space-y-3 text-sm text-white/60">
-            <li><a href="#resume" className="hover:text-white transition-colors">Özgeçmiş</a></li>
-            <li><a href="#contact" className="hover:text-white transition-colors">İletişim Formu</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Gizlilik Politikası</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Kullanım Şartları</a></li>
+            <li><a href="#resume" className="hover:text-white transition-colors">{t("nav.resume")}</a></li>
+            <li><a href="#contact" className="hover:text-white transition-colors">{t("footer.contact_form")}</a></li>
+            <li><a href="#" className="hover:text-white transition-colors">{t("footer.privacy")}</a></li>
+            <li><a href="#" className="hover:text-white transition-colors">{t("footer.terms")}</a></li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-white/5 bg-black/20">
         <div className="container-wide py-6 text-xs text-white/40 flex flex-col md:flex-row gap-2 justify-between items-center">
-          <span>© {new Date().getFullYear()} Sibel Akkurt. Tüm hakları saklıdır.</span>
-          <span>Tasarım & Geliştirme: Digital Twin</span>
+          <span>© {new Date().getFullYear()} Sibel Akkurt. {t("footer.rights")}</span>
+          <span>{t("footer.attribution")}</span>
         </div>
       </div>
     </footer>

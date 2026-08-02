@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Sparkles, Bot, User as UserIcon, Globe } from "lucide-react";
 import axios from "axios";
+import { useLanguage } from "@/context/LanguageContext";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const API = `${BACKEND_URL}/api/v1`;
@@ -22,7 +23,7 @@ const SUGGESTIONS_EN = [
 const GREETING_TR = {
   role: "assistant",
   content:
-    "Merhaba! Ben Sibel'in yapay zeka asistaniyim. Teknik yetkinlikleri, projeleri ve kariyer gecmisi hakkinda size detayli bilgi sunabilirim. Size nasil yardimci olabilirim?",
+    "Merhaba! Ben Sibel'in yapay zeka asistanıyım. Teknik yetkinlikleri, projeleri ve kariyer geçmişi hakkında size detaylı bilgi sunabilirim. Size nasıl yardımcı olabilirim?",
 };
 
 const GREETING_EN = {
@@ -32,21 +33,18 @@ const GREETING_EN = {
 };
 
 export default function Chatbot() {
-  const [language, setLanguage] = useState("tr");
-  const [messages, setMessages] = useState([GREETING_TR]);
+  const { language, t } = useLanguage();
+  const [messages, setMessages] = useState([language === 'en' ? GREETING_EN : GREETING_TR]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
 
   const suggestions = language === "en" ? SUGGESTIONS_EN : SUGGESTIONS_TR;
 
-  // When language changes, reset conversation with the new greeting
-  const switchLanguage = (lang) => {
-    if (lang === language) return;
-    setLanguage(lang);
-    setMessages([lang === "en" ? GREETING_EN : GREETING_TR]);
-    setInput("");
-  };
+  useEffect(() => {
+    setMessages([language === 'en' ? GREETING_EN : GREETING_TR]);
+    setInput('');
+  }, [language]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -68,7 +66,7 @@ export default function Chatbot() {
         user_id: "guest-user",
         language: language,
       });
-      const reply = res?.data?.response ?? res?.data?.reply ?? (language === "en" ? "Could not get a response." : "Yanit alinamadi.");
+      const reply = res?.data?.response ?? res?.data?.reply ?? (language === "en" ? "Could not get a response." : "Yanıt alınamadı.");
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (e) {
       setMessages((prev) => [
@@ -78,7 +76,7 @@ export default function Chatbot() {
           content:
             language === "en"
               ? "Unable to answer at the moment. Please try again later or reach out via the Contact section."
-              : "Su an yanit veremiyorum, lutfen biraz sonra tekrar dene veya Iletisim bolumunden bana ulas.",
+              : "Şu an yanıt veremiyorum, lütfen biraz sonra tekrar dene veya İletişim bölümünden bana ulaş.",
         },
       ]);
     } finally {
@@ -111,33 +109,9 @@ export default function Chatbot() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-bold text-sm tracking-wide truncate">
-            {language === "en" ? "AI Assistant" : "Yapay Zeka Asistani"}
+            {t("chatbot.title")}
           </div>
           <div className="text-[11px] text-white/50 mt-0.5">Sibel Akkurt · Digital Twin</div>
-        </div>
-
-        {/* TR / EN Language Switcher */}
-        <div className="flex items-center bg-[#25252e] p-0.5 rounded-full border border-white/10 text-[11px] font-bold shrink-0">
-          <button
-            onClick={() => switchLanguage("tr")}
-            className={`px-2.5 py-1 rounded-full transition-all ${
-              language === "tr"
-                ? "bg-purple-accent text-white shadow-md shadow-purple-900/40"
-                : "text-white/40 hover:text-white"
-            }`}
-          >
-            TR
-          </button>
-          <button
-            onClick={() => switchLanguage("en")}
-            className={`px-2.5 py-1 rounded-full transition-all ${
-              language === "en"
-                ? "bg-purple-accent text-white shadow-md shadow-purple-900/40"
-                : "text-white/40 hover:text-white"
-            }`}
-          >
-            EN
-          </button>
         </div>
       </div>
 
@@ -213,18 +187,14 @@ export default function Chatbot() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKey}
-            placeholder={
-              language === "en"
-                ? "Ask about my career and projects..."
-                : "Kariyerim ve projelerim hakkinda soru sorun..."
-            }
+            placeholder={t("chatbot.placeholder")}
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/40 text-white"
           />
           <button
             data-testid="chat-send"
             onClick={() => send()}
             disabled={loading || !input.trim()}
-            aria-label={language === "en" ? "Send" : "Gonder"}
+            aria-label={t("chatbot.send")}
             className="w-10 h-10 rounded-full bg-purple-accent text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#6a48f0] transition-colors"
           >
             <Send className="w-4 h-4" />
@@ -234,4 +204,3 @@ export default function Chatbot() {
     </div>
   );
 }
-

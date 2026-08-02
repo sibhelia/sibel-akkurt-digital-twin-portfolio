@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Image as ImageIcon, Code2, Briefcase, GraduationCap, FolderDot, 
   Layers, Wrench, User, MessageSquare, Mail, Settings, LogOut, 
   Search, Bell, Plus, Trash2, CheckCircle2, XCircle, Eye, X,
-  Activity, BarChart3, Clock, ShieldCheck, ShieldAlert
+  Activity, BarChart3, Clock, ShieldCheck, ShieldAlert, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -441,6 +441,34 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [formLang, setFormLang] = useState('tr');
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleAutoTranslate = async () => {
+    const extractedTexts = {};
+    formFields.forEach(f => {
+      if (!f.key.endsWith('_en') && form[f.key] && typeof form[f.key] === 'string') {
+        extractedTexts[f.key] = form[f.key];
+      }
+    });
+    
+    if (Object.keys(extractedTexts).length === 0) {
+      toast.info("Çevrilecek metin bulunamadı.");
+      return;
+    }
+    
+    setIsTranslating(true);
+    try {
+      const res = await axiosInstance.post("/translate", { texts: extractedTexts });
+      setForm(prev => ({...prev, ...res.data}));
+      setFormLang('en');
+      toast.success("Otomatik çeviri tamamlandı.");
+    } catch(e) {
+      toast.error("Çeviri sırasında hata oluştu.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -508,8 +536,23 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Yeni ${title} Ekle`}>
+        <div className="flex mb-4 border-b border-gray-600 justify-between items-center">
+          <div className="flex">
+            <button type="button" onClick={() => setFormLang('tr')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'tr' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>Türkçe</button>
+            <button type="button" onClick={() => setFormLang('en')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'en' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>English</button>
+          </div>
+          <button 
+            type="button" 
+            onClick={handleAutoTranslate} 
+            disabled={isTranslating}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+            {isTranslating ? "Çevriliyor..." : "Auto-Translate"}
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {formFields.map(field => (
+          {formFields.filter(f => !f.lang || f.lang === formLang).map(field => (
             <div key={field.key}>
               <label className="block text-xs font-semibold text-slate-600 mb-1">{field.label}</label>
               {field.type === 'textarea' ? (
@@ -555,9 +598,11 @@ function ExperienceAdmin({ data, refresh }) {
     columns={[{label: "ŞİRKET", key: "company"}, {label: "POZİSYON", key: "position"}, {label: "TARİH", key: "start_date"}]} 
     formFields={[
       {label: "Şirket Adı", key: "company", required: true},
-      {label: "Pozisyon", key: "position", required: true},
       {label: "Başlangıç Tarihi", key: "start_date"},
-      {label: "Açıklama", key: "description", type: "textarea"}
+      {label: "Pozisyon", key: "position", required: true, lang: 'tr'},
+      {label: "Pozisyon (EN)", key: "position_en", required: true, lang: 'en'},
+      {label: "Açıklama", key: "description", type: "textarea", lang: 'tr'},
+      {label: "Açıklama (EN)", key: "description_en", type: "textarea", lang: 'en'}
     ]} 
   />;
 }
@@ -565,10 +610,14 @@ function EducationAdmin({ data, refresh }) {
   return <GenericTableWithModal title="Eğitimlerim" dataList={data?.education||[]} refresh={refresh} endpoint="/admin/portfolio/education"
     columns={[{label: "OKUL", key: "school"}, {label: "DERECE", key: "degree"}]} 
     formFields={[
-      {label: "Okul Adı", key: "school", required: true},
-      {label: "Derece / Bölüm", key: "degree", required: true},
+      {label: "Okul Adı", key: "school", required: true, lang: 'tr'},
+      {label: "Okul Adı (EN)", key: "school_en", required: true, lang: 'en'},
+      {label: "Derece / Bölüm", key: "degree", required: true, lang: 'tr'},
+      {label: "Derece / Bölüm (EN)", key: "degree_en", required: true, lang: 'en'},
       {label: "Başlangıç Tarihi", key: "start_date"},
-      {label: "Bitiş Tarihi", key: "end_date"}
+      {label: "Bitiş Tarihi", key: "end_date"},
+      {label: "Açıklama", key: "description", type: "textarea", lang: 'tr'},
+      {label: "Açıklama (EN)", key: "description_en", type: "textarea", lang: 'en'}
     ]} 
   />;
 }
@@ -576,8 +625,12 @@ function ProjectsAdmin({ data, refresh }) {
   return <GenericTableWithModal title="Projelerim" dataList={data?.projects||[]} refresh={refresh} endpoint="/admin/portfolio/projects"
     columns={[{label: "PROJE ADI", key: "title"}, {label: "ÖZET", key: "summary"}]} 
     formFields={[
-      {label: "Proje Adı", key: "title", required: true},
-      {label: "Özet Açıklama", key: "summary"},
+      {label: "Proje Adı", key: "title", required: true, lang: 'tr'},
+      {label: "Proje Adı (EN)", key: "title_en", required: true, lang: 'en'},
+      {label: "Özet Açıklama", key: "summary", lang: 'tr'},
+      {label: "Özet Açıklama (EN)", key: "summary_en", lang: 'en'},
+      {label: "Açıklama", key: "description", type: "textarea", lang: 'tr'},
+      {label: "Açıklama (EN)", key: "description_en", type: "textarea", lang: 'en'},
       {label: "Canlı Link", key: "live_url"},
       {label: "Github Linki", key: "github_url"}
     ]} 
@@ -588,7 +641,8 @@ function TechnologiesAdmin({ data, refresh }) {
     columns={[{label: "TEKNOLOJİ", key: "name"}, {label: "KATEGORİ", key: "category"}]} 
     formFields={[
       {label: "Teknoloji Adı (Örn: React)", key: "name", required: true},
-      {label: "Kategori (Örn: Frontend)", key: "category"}
+      {label: "Kategori (Örn: Frontend)", key: "category", lang: 'tr'},
+      {label: "Kategori (EN)", key: "category_en", lang: 'en'}
     ]} 
   />;
 }
@@ -596,8 +650,10 @@ function ServicesAdmin({ data, refresh }) {
   return <GenericTableWithModal title="Hizmetlerim" dataList={data?.services||[]} refresh={refresh} endpoint="/admin/portfolio/services"
     columns={[{label: "BAŞLIK", key: "title"}, {label: "AÇIKLAMA", key: "description"}]} 
     formFields={[
-      {label: "Hizmet Başlığı", key: "title", required: true},
-      {label: "Açıklama", key: "description", type: "textarea"}
+      {label: "Hizmet Başlığı", key: "title", required: true, lang: 'tr'},
+      {label: "Hizmet Başlığı (EN)", key: "title_en", required: true, lang: 'en'},
+      {label: "Açıklama", key: "description", type: "textarea", lang: 'tr'},
+      {label: "Açıklama (EN)", key: "description_en", type: "textarea", lang: 'en'}
     ]} 
   />;
 }
@@ -605,8 +661,10 @@ function BannerAdmin({ data, refresh }) {
   return <GenericTableWithModal title="Banner" dataList={data?.banners||[]} refresh={refresh} endpoint="/admin/portfolio/banners"
     columns={[{label: "BAŞLIK", key: "title"}, {label: "ALT BAŞLIK", key: "subtitle"}]} 
     formFields={[
-      {label: "Ana Başlık", key: "title", required: true},
-      {label: "Alt Başlık", key: "subtitle"}
+      {label: "Ana Başlık", key: "title", required: true, lang: 'tr'},
+      {label: "Ana Başlık (EN)", key: "title_en", required: true, lang: 'en'},
+      {label: "Alt Başlık", key: "subtitle", lang: 'tr'},
+      {label: "Alt Başlık (EN)", key: "subtitle_en", lang: 'en'}
     ]} 
   />;
 }
@@ -615,8 +673,10 @@ function TestimonialsAdmin({ data, refresh }) {
     columns={[{label: "MÜŞTERİ", key: "client_name"}, {label: "YORUM", key: "content"}]} 
     formFields={[
       {label: "Müşteri Adı", key: "client_name", required: true},
-      {label: "Şirketi", key: "company"},
-      {label: "Yorumu", key: "content", type: "textarea", required: true}
+      {label: "Şirketi / Unvanı", key: "company", lang: 'tr'},
+      {label: "Şirketi / Unvanı (EN)", key: "client_title_en", lang: 'en'},
+      {label: "Yorumu", key: "content", type: "textarea", required: true, lang: 'tr'},
+      {label: "Yorumu (EN)", key: "content_en", type: "textarea", required: true, lang: 'en'}
     ]} 
   />;
 }
@@ -633,7 +693,8 @@ function SkillsAdmin({ data, refresh }) {
       )}
     ]} 
     formFields={[
-      {label: "Yetenek Adı", key: "name", required: true},
+      {label: "Yetenek Adı", key: "name", required: true, lang: 'tr'},
+      {label: "Yetenek Adı (EN)", key: "name_en", required: true, lang: 'en'},
       {label: "Aktif mi?", key: "is_active", type: "checkbox"}
     ]} 
   />;
@@ -764,11 +825,46 @@ function SettingsAdmin({ data, refresh, adminName }) {
 }
 
 function AboutAdmin({ data, refresh }) {
+  const [formLang, setFormLang] = useState('tr');
+  const [isTranslating, setIsTranslating] = useState(false);
+  
   const [formData, setFormData] = useState({
     full_name: data?.settings?.full_name || "",
     title: data?.settings?.title || "",
-    about_markdown: data?.settings?.about_markdown || ""
+    title_en: data?.settings?.title_en || "",
+    hero_subtitle: data?.settings?.hero_subtitle || "",
+    hero_subtitle_en: data?.settings?.hero_subtitle_en || "",
+    about_markdown: data?.settings?.about_markdown || "",
+    about_markdown_en: data?.settings?.about_markdown_en || ""
   });
+
+  const handleAutoTranslate = async () => {
+    const extractedTexts = {};
+    const fieldsToTranslate = ["full_name", "title", "hero_subtitle", "about_markdown"];
+    fieldsToTranslate.forEach(key => {
+      if (formData[key] && typeof formData[key] === 'string') {
+        extractedTexts[key] = formData[key];
+      }
+    });
+
+    if (Object.keys(extractedTexts).length === 0) {
+      toast.info("Çevrilecek metin bulunamadı.");
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const res = await axiosInstance.post("/translate", { texts: extractedTexts });
+      setFormData(prev => ({...prev, ...res.data}));
+      setFormLang('en');
+      toast.success("Otomatik çeviri tamamlandı.");
+    } catch(e) {
+      toast.error("Çeviri hatası.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+  
   const save = async () => {
     try {
       await axiosInstance.post("/admin/portfolio/settings", formData);
@@ -776,6 +872,7 @@ function AboutAdmin({ data, refresh }) {
       refresh();
     } catch(e){ toast.error("Hata"); }
   }
+  
   return (
     <div className="max-w-3xl">
       <h2 className="text-xl font-bold text-slate-800 mb-6">Firma/Profil Yönetimi</h2>
@@ -784,9 +881,37 @@ function AboutAdmin({ data, refresh }) {
           <h3 className="font-semibold text-sm">Hakkımda Ayarları</h3>
         </div>
         <div className="p-6 space-y-4">
+          <div className="flex mb-4 border-b border-gray-600 justify-between items-center">
+            <div className="flex">
+              <button type="button" onClick={() => setFormLang('tr')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'tr' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>Türkçe</button>
+              <button type="button" onClick={() => setFormLang('en')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'en' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>English</button>
+            </div>
+            <button 
+              type="button" 
+              onClick={handleAutoTranslate} 
+              disabled={isTranslating}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+              {isTranslating ? "Çevriliyor..." : "Auto-Translate"}
+            </button>
+          </div>
           <div><label className="block text-xs font-semibold text-slate-600 mb-1">Ad Soyad</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.full_name} onChange={e=>setFormData({...formData, full_name: e.target.value})} /></div>
-          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} /></div>
-          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-emerald-500 focus:outline-none" value={formData.about_markdown} onChange={e=>setFormData({...formData, about_markdown: e.target.value})}></textarea></div>
+          
+          {formLang === 'tr' ? (
+            <>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hero Alt Başlık</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.hero_subtitle} onChange={e=>setFormData({...formData, hero_subtitle: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-emerald-500 focus:outline-none" value={formData.about_markdown} onChange={e=>setFormData({...formData, about_markdown: e.target.value})}></textarea></div>
+            </>
+          ) : (
+            <>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan (EN)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.title_en} onChange={e=>setFormData({...formData, title_en: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hero Alt Başlık (EN)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.hero_subtitle_en} onChange={e=>setFormData({...formData, hero_subtitle_en: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı (EN)</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-emerald-500 focus:outline-none" value={formData.about_markdown_en} onChange={e=>setFormData({...formData, about_markdown_en: e.target.value})}></textarea></div>
+            </>
+          )}
+
           <button onClick={save} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">Kaydet</button>
         </div>
       </div>

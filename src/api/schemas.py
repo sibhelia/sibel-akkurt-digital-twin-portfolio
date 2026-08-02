@@ -71,8 +71,11 @@ class SiteKnowledgeRequest(BaseModel):
 class PortfolioSettingsUpdate(BaseModel):
     full_name: str
     title: str
+    title_en: Optional[str] = None
     hero_subtitle: Optional[str] = None
+    hero_subtitle_en: Optional[str] = None
     about_markdown: Optional[str] = None
+    about_markdown_en: Optional[str] = None
     contact_email: Optional[str] = None
     github_url: Optional[str] = None
     linkedin_url: Optional[str] = None
@@ -86,11 +89,13 @@ class PortfolioSettingsResponse(PortfolioSettingsUpdate):
 class ExperienceCreate(BaseModel):
     company: str
     position: str
+    position_en: Optional[str] = None
     location: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     is_current: bool = False
     description: Optional[str] = None
+    description_en: Optional[str] = None
     technologies: List[str] = Field(default_factory=list)
 
 
@@ -100,9 +105,12 @@ class ExperienceResponse(ExperienceCreate):
 
 class ProjectCreate(BaseModel):
     title: str
+    title_en: Optional[str] = None
     slug: Optional[str] = None
     summary: Optional[str] = None
+    summary_en: Optional[str] = None
     description: Optional[str] = None
+    description_en: Optional[str] = None
     technologies: List[str] = Field(default_factory=list)
     github_url: Optional[str] = None
     live_url: Optional[str] = None
@@ -116,7 +124,9 @@ class ProjectResponse(ProjectCreate):
 
 class CertificateCreate(BaseModel):
     title: str
+    title_en: Optional[str] = None
     issuer: str
+    issuer_en: Optional[str] = None
     issue_date: Optional[str] = None
     credential_id: Optional[str] = None
     credential_url: Optional[str] = None
@@ -126,23 +136,9 @@ class CertificateResponse(CertificateCreate):
     id: str
 
 
-class FullPortfolioContentResponse(BaseModel):
-    settings: Optional[PortfolioSettingsResponse] = None
-    experiences: List[ExperienceResponse] = Field(default_factory=list)
-    projects: List[ProjectResponse] = Field(default_factory=list)
-    certificates: List[CertificateResponse] = Field(default_factory=list)
-    skills: List[SkillResponse] = Field(default_factory=list)
-    education: List[EducationResponse] = Field(default_factory=list)
-    technologies: List[TechnologyResponse] = Field(default_factory=list)
-    services: List[ServiceResponse] = Field(default_factory=list)
-    testimonials: List[TestimonialResponse] = Field(default_factory=list)
-    messages: List[ContactMessageResponse] = Field(default_factory=list)
-    banners: List[BannerResponse] = Field(default_factory=list)
-
-
-
 class SkillCreate(BaseModel):
     name: str
+    name_en: Optional[str] = None
     is_active: bool = True
 
 class SkillResponse(SkillCreate):
@@ -150,10 +146,13 @@ class SkillResponse(SkillCreate):
 
 class EducationCreate(BaseModel):
     school: str
+    school_en: Optional[str] = None
     degree: str
+    degree_en: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     description: Optional[str] = None
+    description_en: Optional[str] = None
 
 class EducationResponse(EducationCreate):
     id: str
@@ -161,6 +160,7 @@ class EducationResponse(EducationCreate):
 class TechnologyCreate(BaseModel):
     name: str
     category: Optional[str] = None
+    category_en: Optional[str] = None
     icon_url: Optional[str] = None
 
 class TechnologyResponse(TechnologyCreate):
@@ -168,7 +168,9 @@ class TechnologyResponse(TechnologyCreate):
 
 class ServiceCreate(BaseModel):
     title: str
+    title_en: Optional[str] = None
     description: Optional[str] = None
+    description_en: Optional[str] = None
     icon_name: Optional[str] = None
 
 class ServiceResponse(ServiceCreate):
@@ -177,8 +179,10 @@ class ServiceResponse(ServiceCreate):
 class TestimonialCreate(BaseModel):
     client_name: str
     client_title: Optional[str] = None
+    client_title_en: Optional[str] = None
     company: Optional[str] = None
     content: str
+    content_en: Optional[str] = None
     is_approved: bool = True
 
 class TestimonialResponse(TestimonialCreate):
@@ -195,10 +199,25 @@ class ContactMessageResponse(ContactMessageCreate):
 
 class BannerCreate(BaseModel):
     title: str
+    title_en: Optional[str] = None
     subtitle: Optional[str] = None
+    subtitle_en: Optional[str] = None
     image_url: Optional[str] = None
     is_active: bool = True
 
 class BannerResponse(BannerCreate):
     id: str
 
+
+class FullPortfolioContentResponse(BaseModel):
+    settings: Optional[PortfolioSettingsResponse] = None
+    experiences: List[ExperienceResponse] = Field(default_factory=list)
+    projects: List[ProjectResponse] = Field(default_factory=list)
+    certificates: List[CertificateResponse] = Field(default_factory=list)
+    skills: List[SkillResponse] = Field(default_factory=list)
+    education: List[EducationResponse] = Field(default_factory=list)
+    technologies: List[TechnologyResponse] = Field(default_factory=list)
+    services: List[ServiceResponse] = Field(default_factory=list)
+    testimonials: List[TestimonialResponse] = Field(default_factory=list)
+    messages: List[ContactMessageResponse] = Field(default_factory=list)
+    banners: List[BannerResponse] = Field(default_factory=list)

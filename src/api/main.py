@@ -46,6 +46,13 @@ from src.api.schemas import (
 )
 from src.ingestion.pipeline import IngestionMetadata, ingest_text, ingest_file
 from src.rag.orchestration.graph import process_query
+import httpx
+from pydantic import BaseModel
+
+class TranslateRequest(BaseModel):
+    texts: dict[str, str]
+    source_lang: str = "tr"
+    target_lang: str = "en"
 
 
 
@@ -158,6 +165,27 @@ async def chat(request: ChatRequest):
         import traceback
         error_msg = traceback.format_exc()
         raise HTTPException(status_code=400, detail=f"Chat failed: {str(e)}\n\nTraceback:\n{error_msg}")
+
+@app.post("/api/v1/translate")
+async def translate_texts(req: TranslateRequest):
+    url = "https://translate.googleapis.com/translate_a/single"
+    results = {}
+    async with httpx.AsyncClient() as client:
+        for key, text in req.texts.items():
+            if not text or not text.strip():
+                continue
+            params = {
+                "client": "gtx", "sl": req.source_lang, "tl": req.target_lang, "dt": "t", "q": text
+            }
+            try:
+                resp = await client.get(url, params=params)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    translated = "".join([sentence[0] for sentence in data[0]])
+                    results[key + "_en"] = translated
+            except Exception as e:
+                print(f"Translation error for {key}: {e}")
+    return results
 
 
 @app.post("/api/v1/admin/knowledge/profile-entry", response_model=AdminIngestResponse, tags=["admin"])

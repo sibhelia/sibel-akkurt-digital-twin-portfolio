@@ -1,9 +1,54 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import { projects } from "../../data/portfolioData";
+import { useLanguage } from "@/context/LanguageContext";
 import { staggerContainer, fadeUp } from "../../utils/animations";
+import { localized } from "@/utils/localized";
 
-export default function Work() {
+export default function Work({ projects: apiProjects }) {
+  const { language, t } = useLanguage();
+
+  const defaultProjects = [
+    {
+      title: "Smart Memory AI (QABot)",
+      tag: "TÜBİTAK 2209-A & SAAS",
+      desc: t("project.smartMemory.desc"),
+      img: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+      link: t("project.link")
+    },
+    {
+      title: "StoreFlow ERP",
+      tag: "ASP.NET CORE",
+      desc: t("project.storeFlow.desc"),
+      img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+      link: t("project.link")
+    },
+    {
+      title: t("project.analytics.title"),
+      tag: t("project.analytics.tag"),
+      desc: t("project.analytics.desc"),
+      img: "https://images.unsplash.com/photo-1661956602116-aa6865609028?auto=format&fit=crop&w=800&q=80",
+      link: t("project.link")
+    },
+    {
+      title: t("project.warehouse.title"),
+      tag: t("project.warehouse.tag"),
+      desc: t("project.warehouse.desc"),
+      img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
+      link: t("project.link")
+    }
+  ];
+
+  const projects = apiProjects && apiProjects.length > 0
+    ? apiProjects.map((p) => ({
+        title: localized(p, 'title', language),
+        tag: localized(p, 'summary', language),
+        desc: localized(p, 'description', language),
+        img: p.image_url || "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+        link: p.github_url || p.live_url || t("project.link")
+      }))
+    : defaultProjects;
+
+
   return (
     <section
       id="work"
@@ -19,10 +64,10 @@ export default function Work() {
           viewport={{ once: true, margin: "-100px" }}
         >
           <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">
-            ÖNE ÇIKAN PROJELERİM
+            {t("work.tag")}
           </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            Harika <span className="text-purple-accent">Projelerim</span>
+            {t("work.heading1")} <span className="text-purple-accent">{t("work.heading2")}</span>
           </h2>
         </motion.div>
 

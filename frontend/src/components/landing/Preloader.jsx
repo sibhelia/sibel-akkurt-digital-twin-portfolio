@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Preloader({ onDone }) {
   const [progress, setProgress] = useState(0);
   const [leaving, setLeaving] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     let raf;
@@ -72,7 +74,7 @@ export default function Preloader({ onDone }) {
         </div>
 
         <div className="text-center">
-          <div className="text-xs uppercase tracking-[0.35em] text-white/45 mb-2">Yükleniyor</div>
+          <div className="text-xs uppercase tracking-[0.35em] text-white/45 mb-2">{t("preloader.loading")}</div>
           <div className="text-3xl font-extrabold tabular-nums">
             {progress}<span className="text-purple-accent">%</span>
           </div>

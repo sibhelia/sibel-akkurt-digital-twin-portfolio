@@ -218,8 +218,11 @@ class PortfolioSettings(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False, default="Sibel Akkurt")
     title: Mapped[str] = mapped_column(String(255), nullable=False, default="Full Stack Developer & AI Engineer")
+    title_en: Mapped[str | None] = mapped_column(String(255))
     hero_subtitle: Mapped[str | None] = mapped_column(Text)
+    hero_subtitle_en: Mapped[str | None] = mapped_column(Text)
     about_markdown: Mapped[str | None] = mapped_column(Text)
+    about_markdown_en: Mapped[str | None] = mapped_column(Text)
     contact_email: Mapped[str | None] = mapped_column(String(255))
     github_url: Mapped[str | None] = mapped_column(String(500))
     linkedin_url: Mapped[str | None] = mapped_column(String(500))
@@ -233,11 +236,13 @@ class Experience(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company: Mapped[str] = mapped_column(String(255), nullable=False)
     position: Mapped[str] = mapped_column(String(255), nullable=False)
+    position_en: Mapped[str | None] = mapped_column(String(255))
     location: Mapped[str | None] = mapped_column(String(255))
     start_date: Mapped[str | None] = mapped_column(String(50))
     end_date: Mapped[str | None] = mapped_column(String(50))
     is_current: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+    description_en: Mapped[str | None] = mapped_column(Text)
     technologies: Mapped[list[Any]] = mapped_column(JSONB, default=_json_default, nullable=False)
 
 
@@ -247,9 +252,12 @@ class Project(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    title_en: Mapped[str | None] = mapped_column(String(255))
     slug: Mapped[str | None] = mapped_column(String(255))
     summary: Mapped[str | None] = mapped_column(Text)
+    summary_en: Mapped[str | None] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
+    description_en: Mapped[str | None] = mapped_column(Text)
     technologies: Mapped[list[Any]] = mapped_column(JSONB, default=_json_default, nullable=False)
     github_url: Mapped[str | None] = mapped_column(String(500))
     live_url: Mapped[str | None] = mapped_column(String(500))
@@ -263,7 +271,9 @@ class Certificate(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    title_en: Mapped[str | None] = mapped_column(String(255))
     issuer: Mapped[str] = mapped_column(String(255), nullable=False)
+    issuer_en: Mapped[str | None] = mapped_column(String(255))
     issue_date: Mapped[str | None] = mapped_column(String(50))
     credential_id: Mapped[str | None] = mapped_column(String(255))
     credential_url: Mapped[str | None] = mapped_column(String(500))
@@ -274,6 +284,7 @@ class Skill(TimestampMixin, Base):
     __tablename__ = "skills"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    name_en: Mapped[str | None] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 
@@ -281,10 +292,13 @@ class Education(TimestampMixin, Base):
     __tablename__ = "education"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     school: Mapped[str] = mapped_column(String(255), nullable=False)
+    school_en: Mapped[str | None] = mapped_column(String(255))
     degree: Mapped[str] = mapped_column(String(255), nullable=False)
+    degree_en: Mapped[str | None] = mapped_column(String(255))
     start_date: Mapped[str | None] = mapped_column(String(50))
     end_date: Mapped[str | None] = mapped_column(String(50))
     description: Mapped[str | None] = mapped_column(Text)
+    description_en: Mapped[str | None] = mapped_column(Text)
 
 
 class Technology(TimestampMixin, Base):
@@ -292,6 +306,7 @@ class Technology(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     category: Mapped[str | None] = mapped_column(String(100))
+    category_en: Mapped[str | None] = mapped_column(String(100))
     icon_url: Mapped[str | None] = mapped_column(String(500))
 
 
@@ -299,7 +314,9 @@ class Service(TimestampMixin, Base):
     __tablename__ = "services"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    title_en: Mapped[str | None] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text)
+    description_en: Mapped[str | None] = mapped_column(Text)
     icon_name: Mapped[str | None] = mapped_column(String(100))
 
 
@@ -308,8 +325,10 @@ class Testimonial(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     client_name: Mapped[str] = mapped_column(String(255), nullable=False)
     client_title: Mapped[str | None] = mapped_column(String(255))
+    client_title_en: Mapped[str | None] = mapped_column(String(255))
     company: Mapped[str | None] = mapped_column(String(255))
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    content_en: Mapped[str | None] = mapped_column(Text)
     is_approved: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 
@@ -326,7 +345,9 @@ class Banner(TimestampMixin, Base):
     __tablename__ = "banners"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    title_en: Mapped[str | None] = mapped_column(String(255))
     subtitle: Mapped[str | None] = mapped_column(Text)
+    subtitle_en: Mapped[str | None] = mapped_column(Text)
     image_url: Mapped[str | None] = mapped_column(String(500))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 

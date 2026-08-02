@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, Briefcase } from "lucide-react";
-import { education, experience } from "../../data/portfolioData";
+import { useLanguage } from "@/context/LanguageContext";
 import { fadeUp, staggerContainer } from "../../utils/animations";
+import { localized } from "@/utils/localized";
 
 function Timeline({ items }) {
   return (
@@ -35,8 +36,58 @@ function Timeline({ items }) {
   );
 }
 
-export default function Resume() {
+export default function Resume({ education: apiEducation, experiences: apiExperiences }) {
+  const { language, t } = useLanguage();
   const [tab, setTab] = useState("edu");
+
+  const defaultEducation = [
+    {
+      period: t("education.1.period"),
+      title: t("education.1.title"),
+      place: t("education.1.place"),
+      desc: t("education.1.desc"),
+    },
+    {
+      period: t("education.2.period"),
+      title: t("education.2.title"),
+      place: t("education.2.place"),
+      desc: t("education.2.desc"),
+    },
+  ];
+
+  const defaultExperience = [
+    {
+      period: t("experience.1.period"),
+      title: t("experience.1.title"),
+      place: t("experience.1.place"),
+      desc: t("experience.1.desc"),
+    },
+    {
+      period: t("experience.2.period"),
+      title: t("experience.2.title"),
+      place: t("experience.2.place"),
+      desc: t("experience.2.desc"),
+    },
+  ];
+  const education = apiEducation && apiEducation.length > 0
+    ? apiEducation.map(ed => ({
+        period: ed.start_date ? `${ed.start_date} - ${ed.end_date || 'Present'}` : localized(ed, 'period', language) || '',
+        title: localized(ed, 'degree', language) || localized(ed, 'title', language),
+        place: localized(ed, 'school', language) || localized(ed, 'place', language),
+        desc: localized(ed, 'description', language),
+      }))
+    : defaultEducation;
+
+  const experience = apiExperiences && apiExperiences.length > 0
+    ? apiExperiences.map(ex => ({
+        period: ex.start_date ? `${ex.start_date} - ${ex.end_date || 'Present'}` : localized(ex, 'period', language) || '',
+        title: localized(ex, 'position', language) || localized(ex, 'title', language),
+        place: localized(ex, 'company', language) || localized(ex, 'place', language),
+        desc: localized(ex, 'description', language),
+      }))
+    : defaultExperience;
+
+
   return (
     <section
       id="resume"
@@ -51,9 +102,9 @@ export default function Resume() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
         >
-          <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">Eğitimim & Deneyimim</p>
+          <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">{t("resume.tag")}</p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            Benim <span className="text-purple-accent">CV / Özgeçmiş</span>
+            {t("resume.heading1")} <span className="text-purple-accent">{t("resume.heading2")}</span>
           </h2>
         </motion.div>
 
@@ -74,7 +125,7 @@ export default function Resume() {
                   : "bg-card-dark/50 border border-white/5 text-white/70 hover:text-white hover:bg-card-dark"
               }`}
             >
-              <GraduationCap className="w-5 h-5" /> Eğitim
+              <GraduationCap className="w-5 h-5" /> {t("resume.tab.education")}
             </button>
             <AnimatePresence mode="wait">
               {tab === "edu" && <Timeline key="edu" items={education} />}
@@ -97,7 +148,7 @@ export default function Resume() {
                   : "bg-card-dark/50 border border-white/5 text-white/70 hover:text-white hover:bg-card-dark"
               }`}
             >
-              <Briefcase className="w-5 h-5" /> Deneyim
+              <Briefcase className="w-5 h-5" /> {t("resume.tab.experience")}
             </button>
             <AnimatePresence mode="wait">
               {tab === "exp" && <Timeline key="exp" items={experience} />}

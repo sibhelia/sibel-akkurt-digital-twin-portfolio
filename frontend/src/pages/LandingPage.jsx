@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import Preloader from "@/components/landing/Preloader";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
@@ -11,6 +12,8 @@ import Contact from "@/components/landing/Contact";
 import Footer from "@/components/landing/Footer";
 import CursorDotTrail from "@/components/landing/CursorDotTrail";
 import Galaxy3D from "@/components/landing/Galaxy3D";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 // A sub-component to render the premium background effects
 function PremiumBackground() {
@@ -107,6 +110,13 @@ function PremiumBackground() {
 
 export default function LandingPage() {
   const [loading, setLoading] = useState(true);
+  const [portfolio, setPortfolio] = useState(null);
+
+  useEffect(() => {
+    axios.get(`${BACKEND_URL}/api/v1/portfolio/content`)
+      .then(res => setPortfolio(res.data))
+      .catch(err => console.error("Error fetching portfolio content:", err));
+  }, []);
 
   return (
     <div data-testid="landing-page" className="relative min-h-screen text-white overflow-hidden">
@@ -131,11 +141,11 @@ export default function LandingPage() {
         <Navbar />
         <main>
           <Hero />
-          <About />
-          <Services />
-          <Work />
-          <Resume />
-          <Testimonials />
+          <About settings={portfolio?.settings} skills={portfolio?.skills} />
+          <Services services={portfolio?.services} />
+          <Work projects={portfolio?.projects} />
+          <Resume education={portfolio?.education} experiences={portfolio?.experiences} />
+          <Testimonials testimonials={portfolio?.testimonials} />
           <Contact />
         </main>
         <Footer />
