@@ -73,7 +73,9 @@ async def close_db():
         await engine.dispose()
         logger.info("Database connections closed")
 
+from contextlib import asynccontextmanager
 
+@asynccontextmanager
 async def get_session() -> AsyncSession:
     """
     Get a database session.

@@ -35,9 +35,8 @@ export default function Contact() {
     >
       <div className="container-wide">
         <div className="text-center mb-12">
-          <p className="section-tag mb-3">{t("contact.tag")}</p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            {t("contact.heading1")} <span className="text-purple-accent">{t("contact.heading2")}</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-8 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)]">
+            {t("contact.heading")}
           </h2>
           <p className="text-gray-300 mt-4 max-w-2xl mx-auto">
             {t("contact.subtitle")}

@@ -47,11 +47,8 @@ export default function Testimonials({ testimonials: apiTestimonials }) {
     >
       <div className="container-wide">
         <div className="max-w-2xl mb-12">
-          <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">
-            {t("testimonials.tag")}
-          </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            {t("testimonials.heading1")} <span className="text-purple-accent">{t("testimonials.heading2")}</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)]">
+            {t("testimonials.heading")}
           </h2>
         </div>
 

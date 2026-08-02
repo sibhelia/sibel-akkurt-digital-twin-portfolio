@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowUpRight, Brain, Server, Database, Code, Globe, Cpu, Smartphone, Cloud, Shield, Layout, PenTool, Lightbulb, Activity } from "lucide-react";
+import { ArrowUpRight, Brain, Server, Database, Code, Globe, Cpu, Smartphone, Cloud, Shield, Layout, PenTool, Lightbulb, Activity, Camera } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { staggerContainer, fadeUp } from "../../utils/animations";
 import { localized } from "@/utils/localized";
@@ -20,6 +20,7 @@ const IconMapper = ({ name, className }) => {
     pentool: PenTool,
     lightbulb: Lightbulb,
     activity: Activity,
+    camera: Camera,
   };
   const IconComponent = iconMap[(name || "").toLowerCase()] || Brain; // Default to Brain if not found
   return <IconComponent className={className} />;
@@ -75,16 +76,13 @@ export default function Services({ services: apiServices }) {
           whileInView="visible"
           viewport={{ once: false, amount: 0.2 }}
         >
-          <div className="inline-flex items-center rounded-full border border-purple-500 bg-purple-accent px-4 py-2 mb-5 shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-             <h4 className="text-white font-bold text-sm tracking-wide">{t("services.tag")?.toLocaleUpperCase(language === 'tr' ? 'tr-TR' : 'en-US')}</h4>
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mt-2 text-white">
-            {t("services.heading1")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)]">{t("services.heading2")}</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-8 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)]">
+            {t("services.heading")}
           </h2>
         </motion.div>
 
         <motion.div 
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"

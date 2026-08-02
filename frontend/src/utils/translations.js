@@ -12,7 +12,7 @@ export const translations = {
   "nav.cta": { tr: "Bana Ulaş", en: "Contact Me" },
 
   // ─── About ───
-  "about.tag": { tr: "Hakkımda", en: "About Me" },
+  "about.heading": { tr: "Hakkımda", en: "About Me" },
   "about.bio": {
     tr: `Bilgisayar Mühendisiyim ve yazılım geliştirme ile yapay zekâ teknolojilerine tutkuyla ilgi duyuyorum. Kullanıcıların gerçek problemlerini çözen, ölçeklenebilir ve sürdürülebilir yazılımlar geliştirmeyi hedefliyorum.
 
@@ -36,9 +36,7 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   "about.stat3": { tr: "RAG Doğruluk", en: "RAG Accuracy" },
 
   // ─── Services ───
-  "services.tag": { tr: "SUNDUĞUM HİZMETLER", en: "SERVICES I OFFER" },
-  "services.heading1": { tr: "En İyi", en: "My Best" },
-  "services.heading2": { tr: "Hizmetlerim", en: "Services" },
+  "services.heading": { tr: "Sunduğum Hizmetler", en: "My Services" },
 
   // Service items
   "service.ai.title": { tr: "Yapay Zeka & RAG", en: "Artificial Intelligence & RAG" },
@@ -59,9 +57,7 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   "service.cta": { tr: "Detaylar", en: "Details" },
 
   // ─── Work / Projects ───
-  "work.tag": { tr: "ÖNE ÇIKAN PROJELERİM", en: "FEATURED PROJECTS" },
-  "work.heading1": { tr: "Harika", en: "Amazing" },
-  "work.heading2": { tr: "Projelerim", en: "Projects" },
+  "work.heading": { tr: "Projelerim", en: "My Projects" },
 
   // Project items
   "project.smartmemory.desc": {
@@ -87,9 +83,7 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   "project.link": { tr: "GitHub'da Gör", en: "View on GitHub" },
 
   // ─── Resume ───
-  "resume.tag": { tr: "Eğitimim & Deneyimim", en: "Education & Experience" },
-  "resume.heading1": { tr: "Benim", en: "My" },
-  "resume.heading2": { tr: "CV / Özgeçmiş", en: "CV / Resume" },
+  "resume.heading": { tr: "Özgeçmiş", en: "Resume" },
   "resume.tab.education": { tr: "Eğitim", en: "Education" },
   "resume.tab.experience": { tr: "Deneyim", en: "Experience" },
 
@@ -119,9 +113,7 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   },
 
   // ─── Testimonials ───
-  "testimonials.tag": { tr: "BİRLİKTE ÇALIŞTIKLARIMDAN", en: "FROM MY COLLEAGUES" },
-  "testimonials.heading1": { tr: "Hakkımda", en: "What They" },
-  "testimonials.heading2": { tr: "Ne Söylediler", en: "Said About Me" },
+  "testimonials.heading": { tr: "Hakkımda Ne Söylediler", en: "What They Said About Me" },
   "testimonials.prev": { tr: "Önceki", en: "Previous" },
   "testimonials.next": { tr: "Sonraki", en: "Next" },
   "testimonials.page": { tr: "Sayfa", en: "Page" },
@@ -141,9 +133,7 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   },
 
   // ─── Contact ───
-  "contact.tag": { tr: "İletişime Geçin", en: "Get In Touch" },
-  "contact.heading1": { tr: "Projelerinizi Birlikte", en: "Let's Bring Your Projects" },
-  "contact.heading2": { tr: "Hayata Geçirelim", en: "To Life Together" },
+  "contact.heading": { tr: "İletişime Geçin", en: "Get In Touch" },
   "contact.subtitle": {
     tr: "Yeni bir proje fikriniz mi var veya ekibinize değer katacak bir yazılım mühendisi mi arıyorsunuz? Aşağıdaki formu doldurarak benimle iletişime geçebilirsiniz.",
     en: "Do you have a new project idea or are you looking for a software engineer to add value to your team? Fill out the form below to get in touch with me.",

@@ -93,9 +93,9 @@ export default function About({ settings, skills: apiSkills }) {
 
           {/* Right: Content */}
           <motion.div variants={fadeUp} className="w-full pt-8 lg:pt-12">
-            <p className="tracking-widest text-3xl lg:text-4xl font-black text-purple-accent mb-8 drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]">
-              {t("about.tag").toLocaleUpperCase(language === 'tr' ? 'tr-TR' : 'en-US')}
-            </p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-8 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)] text-center">
+              {t("about.heading")}
+            </h2>
             
             <div className="font-normal tracking-wide leading-relaxed text-[13.5px] lg:text-[15px] mb-10 text-slate-200/90" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
               {typeof bio === 'string' 

@@ -7,7 +7,6 @@ import About from "@/components/landing/About";
 import Services from "@/components/landing/Services";
 import Work from "@/components/landing/Work";
 import Resume from "@/components/landing/Resume";
-import Testimonials from "@/components/landing/Testimonials";
 import Contact from "@/components/landing/Contact";
 import Footer from "@/components/landing/Footer";
 import CursorDotTrail from "@/components/landing/CursorDotTrail";
@@ -145,7 +144,6 @@ export default function LandingPage() {
           <Services services={portfolio?.services} />
           <Work projects={portfolio?.projects} />
           <Resume education={portfolio?.education} experiences={portfolio?.experiences} />
-          <Testimonials testimonials={portfolio?.testimonials} />
           <Contact />
         </main>
         <Footer />

@@ -1,23 +1,24 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, Briefcase } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { fadeUp, staggerContainer } from "../../utils/animations";
 import { localized } from "@/utils/localized";
 
-function Timeline({ items }) {
+function Timeline({ items, icon: Icon }) {
   return (
     <motion.div 
-      className="relative pl-7"
+      className="relative pl-14"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <div className="absolute left-2 top-1 bottom-1 w-px bg-white/10" />
-      <div className="space-y-6">
+      <div className="absolute left-[25px] top-2 bottom-2 w-px bg-purple-accent/20" />
+      <div className="space-y-8">
         {items.map((it, i) => (
           <motion.div key={i} className="relative" variants={fadeUp}>
-            <span className="absolute -left-[22px] top-2 w-3 h-3 rounded-full bg-purple-accent ring-4 ring-purple-accent/15 shadow-[0_0_10px_rgba(139,92,246,0.6)]" />
+            <div className="absolute -left-[51px] top-1 w-10 h-10 rounded-full bg-card-dark border border-purple-accent/40 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.3)] z-10">
+              {Icon && <Icon className="w-5 h-5 text-purple-accent" />}
+            </div>
             <motion.div 
               whileHover={{ x: 5 }}
               className="rounded-xl bg-card-dark/60 backdrop-blur-md border border-white/5 p-5 shadow-lg hover:border-purple-accent/30 hover:bg-card-dark/80 transition-colors"
@@ -38,7 +39,6 @@ function Timeline({ items }) {
 
 export default function Resume({ education: apiEducation, experiences: apiExperiences }) {
   const { language, t } = useLanguage();
-  const [tab, setTab] = useState("edu");
 
   const defaultEducation = [
     {
@@ -96,63 +96,46 @@ export default function Resume({ education: apiEducation, experiences: apiExperi
     >
       <div className="container-wide">
         <motion.div 
-          className="max-w-2xl mb-12"
+          className="max-w-2xl mx-auto text-center mb-12"
           variants={fadeUp}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
         >
-          <p className="section-tag uppercase tracking-widest text-xs font-semibold text-purple-accent mb-3">{t("resume.tag")}</p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            {t("resume.heading1")} <span className="text-purple-accent">{t("resume.heading2")}</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-8 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)] text-center">
+            {t("resume.heading")}
           </h2>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
-          {/* Education column */}
+        <div className="flex flex-col gap-16">
+          {/* Education Section */}
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
           >
-            <button
-              data-testid="resume-tab-education"
-              onClick={() => setTab("edu")}
-              className={`inline-flex items-center gap-2 mb-8 px-6 py-3 rounded-full text-sm font-bold transition-all shadow-md ${
-                tab === "edu"
-                  ? "bg-purple-accent text-white shadow-purple-500/25"
-                  : "bg-card-dark/50 border border-white/5 text-white/70 hover:text-white hover:bg-card-dark"
-              }`}
-            >
-              <GraduationCap className="w-5 h-5" /> {t("resume.tab.education")}
-            </button>
-            <AnimatePresence mode="wait">
-              {tab === "edu" && <Timeline key="edu" items={education} />}
-            </AnimatePresence>
+            <div className="flex items-center justify-start gap-3 mb-8 text-left w-full">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
+                {t("resume.tab.education")}
+              </h3>
+            </div>
+            <Timeline items={education} icon={GraduationCap} />
           </motion.div>
 
-          {/* Experience column */}
+          {/* Experience Section */}
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
           >
-            <button
-              data-testid="resume-tab-experience"
-              onClick={() => setTab("exp")}
-              className={`inline-flex items-center gap-2 mb-8 px-6 py-3 rounded-full text-sm font-bold transition-all shadow-md ${
-                tab === "exp"
-                  ? "bg-purple-accent text-white shadow-purple-500/25"
-                  : "bg-card-dark/50 border border-white/5 text-white/70 hover:text-white hover:bg-card-dark"
-              }`}
-            >
-              <Briefcase className="w-5 h-5" /> {t("resume.tab.experience")}
-            </button>
-            <AnimatePresence mode="wait">
-              {tab === "exp" && <Timeline key="exp" items={experience} />}
-            </AnimatePresence>
+            <div className="flex items-center justify-start gap-3 mb-8 text-left w-full">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
+                {t("resume.tab.experience")}
+              </h3>
+            </div>
+            <Timeline items={experience} icon={Briefcase} />
           </motion.div>
         </div>
       </div>
