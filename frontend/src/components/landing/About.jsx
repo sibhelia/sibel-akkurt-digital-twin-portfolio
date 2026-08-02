@@ -55,7 +55,13 @@ export default function About({ settings, skills: apiSkills }) {
         >
           
           {/* Left: Image & Stats */}
-          <motion.div variants={slideInLeft} className="relative mx-auto lg:mx-0 w-full max-w-[280px] lg:max-w-[360px] flex flex-col gap-10 pt-12 lg:pt-24">
+          <motion.div variants={slideInLeft} className="relative mx-auto lg:mx-0 w-full max-w-[280px] lg:max-w-[360px] flex flex-col gap-10 pt-4 lg:pt-24">
+            
+            {/* Mobile Heading */}
+            <h2 className="lg:hidden text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)] text-center mb-2">
+              {t("about.heading")}
+            </h2>
+
             {/* Image Container */}
             <div className="relative z-10">
               {/* Smooth Glow Behind */}
@@ -92,8 +98,8 @@ export default function About({ settings, skills: apiSkills }) {
           </motion.div>
 
           {/* Right: Content */}
-          <motion.div variants={fadeUp} className="w-full pt-8 lg:pt-12">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-8 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)] text-center">
+          <motion.div variants={fadeUp} className="w-full pt-4 lg:pt-12">
+            <h2 className="hidden lg:block text-5xl font-extrabold tracking-tight mb-8 pb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-accent drop-shadow-[0_0_15px_rgba(139,92,246,0.4)] text-center">
               {t("about.heading")}
             </h2>
             

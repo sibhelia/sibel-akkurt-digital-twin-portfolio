@@ -51,6 +51,18 @@ export default function Chatbot() {
     }
   }, [messages, loading]);
 
+  // Lock body scroll when fullscreen
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isFullscreen]);
+
   const send = async (text) => {
     const content = (text ?? input).trim();
     if (!content || loading) return;
@@ -106,16 +118,16 @@ export default function Chatbot() {
       {/* Header */}
       <div className="relative flex items-center gap-3 px-5 py-4 border-b border-white/5 shrink-0">
         <div className="relative mt-1">
-          <div className="w-20 h-20 flex items-center justify-center">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center">
             <img src="/chatbot-mascot.png" alt="Mascot" className="w-full h-full object-contain scale-110 drop-shadow-md" />
           </div>
-          <span className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-purple-600 ring-2 ring-card-darker" />
+          <span className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-purple-600 ring-2 ring-purple-950 shadow-[0_0_8px_rgba(147,51,234,0.4)]" />
         </div>
         <div className="flex-1 min-w-0 ml-2">
-          <div className="font-bold text-sm tracking-wide truncate">
+          <div className="text-white font-bold text-sm sm:text-base tracking-wide truncate" style={{ color: "#ffffff", textShadow: "0 0 2px rgba(255,255,255,0.2)" }}>
             {t("chatbot.title")}
           </div>
-          <div className="text-[11px] text-white/50 mt-0.5">Sibel Akkurt · {t("chatbot.subtitle")}</div>
+          <div className="text-[10px] sm:text-[11px] text-white/50 mt-0.5 truncate">Sibel Akkurt · {t("chatbot.subtitle")}</div>
         </div>
 
         {/* Fullscreen Toggle Button */}
@@ -143,7 +155,7 @@ export default function Chatbot() {
             }`}
           >
             {m.role === "assistant" && (
-              <div className="w-20 h-20 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center shrink-0">
                 <img src="/chatbot-mascot.png" alt="Mascot" className="w-full h-full object-contain scale-110 drop-shadow-sm" />
               </div>
             )}
@@ -164,11 +176,11 @@ export default function Chatbot() {
           </div>
         ))}
         {loading && (
-          <div className="flex items-start gap-3">
-            <div className="w-20 h-20 flex items-center justify-center shrink-0">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-16 sm:h-16 flex items-center justify-center shrink-0">
               <img src="/chatbot-mascot.png" alt="Mascot" className="w-full h-full object-contain scale-110 drop-shadow-sm" />
             </div>
-            <div className="bg-[#2a2a35] rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1 border border-white/5 mt-3">
+            <div className="bg-[#2a2a35] rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1 border border-white/5 mt-1 sm:mt-3">
               <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
               <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
               <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
@@ -179,16 +191,16 @@ export default function Chatbot() {
 
       {/* Suggestions */}
       {messages.length <= 1 && (
-        <div className="px-5 pb-3 grid grid-cols-3 gap-2.5 shrink-0 items-center justify-center w-full mx-auto">
+        <div className="px-4 pb-3 flex flex-wrap gap-2 items-center justify-center w-full mx-auto">
           {suggestions.map((s) => (
             <button
               key={s}
               data-testid={`chat-suggest-${s}`}
               onClick={() => send(s)}
-              className="w-full h-full min-h-[38px] text-[11px] leading-tight px-2 py-2 rounded-xl bg-[#2a2a35] border border-white/5 text-white/80 hover:border-purple-accent/50 hover:bg-purple-accent/15 hover:text-white transition-all font-medium text-center flex items-center justify-center shadow-sm"
+              className="flex-1 min-w-[30%] sm:flex-none text-[11px] leading-tight px-2.5 py-2 rounded-xl bg-[#2a2a35] border border-white/5 text-white/80 hover:border-purple-accent/50 hover:bg-purple-accent/15 hover:text-white transition-all font-medium text-center shadow-sm whitespace-nowrap overflow-hidden text-ellipsis sm:whitespace-normal sm:overflow-visible"
               title={s}
             >
-              <span className="truncate max-w-full text-center">{s}</span>
+              {s}
             </button>
           ))}
         </div>
@@ -267,7 +279,7 @@ export default function Chatbot() {
 
           {/* Fullscreen Backdrop Overlay */}
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 sm:p-8"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 sm:p-8"
             onClick={() => setIsFullscreen(false)}
           >
             {chatbotMainUI}

@@ -77,17 +77,17 @@ export default function Hero({ settings, skills = [] }) {
       >
         
         {/* Left - Chatbot */}
-        <motion.div variants={fadeUp} className="order-2 lg:order-1 relative">
+        <motion.div variants={fadeUp} className="order-1 lg:order-1 relative">
           <Chatbot />
         </motion.div>
 
         {/* Right - AI Core Animation (Option 3) */}
         <motion.div 
           variants={scaleUp} 
-          className="relative h-[260px] sm:h-[280px] lg:h-[360px] order-1 lg:order-2 flex items-center justify-center"
+          className="relative h-[220px] sm:h-[280px] lg:h-[360px] order-2 lg:order-2 flex items-center justify-center mt-6 lg:mt-0"
         >
           {/* AI Core Container */}
-          <div className="relative w-full max-w-[320px] lg:max-w-[360px] aspect-square flex items-center justify-center group cursor-crosshair">
+          <div className="relative w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[360px] aspect-square flex items-center justify-center group cursor-crosshair scale-75 sm:scale-100">
             
             {/* Orbital Rings - Enhanced and more dynamic */}
             {/* Inner Fast Ring */}

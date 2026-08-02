@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Globe } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -6,6 +6,23 @@ import { useLanguage } from "@/context/LanguageContext";
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { t, language, setLanguage } = useLanguage();
+  const headerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (headerRef.current && !headerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   const navLinks = [
     { label: t("nav.home"), href: "#home" },
@@ -17,16 +34,16 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#1a1a22]/85 border-b border-white/5">
+    <header ref={headerRef} className="sticky top-0 z-50 backdrop-blur-xl bg-[#1a1a22]/85 border-b border-white/5">
       <div className="container-wide flex items-center justify-between py-2">
-        <a href="#home" className="text-xl text-white font-bold tracking-tight flex items-center gap-3">
+        <a href="#home" className="text-xl text-white font-bold tracking-tight flex items-center gap-2 sm:gap-3">
           <img 
             src="/portfolio-logo.png" 
             alt="Sibel Akkurt Logo" 
-            className="w-20 h-auto object-contain drop-shadow-md"
+            className="w-14 sm:w-20 h-auto object-contain drop-shadow-md"
           />
           <span 
-            className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-purple-500 to-pink-400 tracking-widest drop-shadow-sm"
+            className="text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-purple-500 to-pink-400 tracking-widest drop-shadow-sm truncate"
             style={{ fontFamily: '"Arial Black", sans-serif', fontWeight: 900 }}
           >
             SİBEL AKKURT
