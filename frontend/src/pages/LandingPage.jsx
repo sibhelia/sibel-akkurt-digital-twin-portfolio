@@ -126,8 +126,8 @@ export default function LandingPage() {
         color="#d8b4fe" 
         spring={0.5}    
         friction={0.3}  
-        trailDuration={250} 
-        size={8} /* Reduced dot size */
+        trailDuration={450} 
+        size={8} 
       />
 
       {/* 1. Global Premium Background */}

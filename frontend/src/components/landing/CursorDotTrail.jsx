@@ -16,6 +16,7 @@ export default function CursorDotTrail({
   const canvasRef = useRef(null);
   
   const pointsRef = useRef([]);
+  const sparklesRef = useRef([]);
   const ballRef = useRef({ x: 0, y: 0 });
   const targetRef = useRef({ x: 0, y: 0 });
   const velocityRef = useRef({ x: 0, y: 0 });
@@ -146,6 +147,36 @@ export default function CursorDotTrail({
       if (fillOpacityRef.current > 0.01) {
         ctx.fillStyle = hexToRgba(currentColor, fillOpacityRef.current);
         ctx.fill();
+      }
+
+            // Sparkles logic
+      if (Math.abs(velocityRef.current.x) > 0.5 || Math.abs(velocityRef.current.y) > 0.5) {
+        let count = Math.floor(Math.random() * 3) + 1; // 1 to 3 sparkles per frame
+        for (let j = 0; j < count; j++) {
+            sparklesRef.current.push({
+              x: ballRef.current.x + (Math.random() - 0.5) * 20,
+              y: ballRef.current.y + (Math.random() - 0.5) * 20,
+              vx: (Math.random() - 0.5) * 2.5,
+              vy: (Math.random() - 0.5) * 2.5 + 0.8,
+              life: 1,
+              size: Math.random() * 1.5 + 0.5
+            });
+        }
+      }
+
+      for (let i = sparklesRef.current.length - 1; i >= 0; i--) {
+        let p = sparklesRef.current[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= dt * 0.0015;
+        if (p.life <= 0) {
+          sparklesRef.current.splice(i, 1);
+        } else {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+          ctx.fillStyle = hexToRgba("#8b5cf6", p.life * 0.9); // Theme purple
+          ctx.fill();
+        }
       }
 
       animRef.current = requestAnimationFrame(animate);
