@@ -33,8 +33,8 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-purple-500/30 p-8 rounded-2xl shadow-2xl max-w-md w-full backdrop-blur-xl">
         <div className="flex justify-center mb-6">
-          <div className="p-4 bg-purple-500/10 rounded-full border border-purple-500/30 text-purple-400">
-            <FiShield className="w-8 h-8" />
+          <div className="p-3 bg-purple-500/10 rounded-full border border-purple-500/30 flex items-center justify-center">
+            <img src="/portfolio-logo.png" alt="Sibel Akkurt Logo" className="w-10 h-10 object-contain" />
           </div>
         </div>
         <h2 className="text-2xl font-bold text-center text-white mb-2">ERP Admin Portal</h2>

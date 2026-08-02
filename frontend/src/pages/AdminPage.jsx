@@ -67,7 +67,7 @@ function Modal({ isOpen, onClose, title, children }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white">
           <h3 className="font-bold">{title}</h3>
           <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
         </div>
@@ -122,11 +122,11 @@ export default function AdminPage() {
       {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 h-full overflow-y-auto">
         <div className="flex flex-col items-center justify-center p-6 border-b border-slate-100">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
-             <img src="/chatbot-mascot.png" alt="Logo" className="w-12 h-12 object-contain" />
+          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3 border border-purple-200">
+             <img src="/portfolio-logo.png" alt="Sibel Akkurt Logo" className="w-10 h-10 object-contain drop-shadow-sm" />
           </div>
-          <h1 className="text-emerald-700 font-extrabold text-center text-sm leading-tight uppercase tracking-wide">
-            Digital Twin<br/>Yönetim Paneli
+          <h1 className="text-purple-700 font-extrabold text-center text-sm leading-tight uppercase tracking-wide">
+            Sibel Akkurt<br/>Yönetim Paneli
           </h1>
         </div>
         
@@ -144,11 +144,11 @@ export default function AdminPage() {
                       onClick={() => setActiveTab(item.id)}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
                         isActive 
-                          ? "bg-emerald-50 text-emerald-600 border-r-4 border-emerald-500" 
+                          ? "bg-purple-50 text-purple-600 border-r-4 border-purple-500" 
                           : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                       }`}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? "text-emerald-600" : "text-slate-400"}`} />
+                      <Icon className={`w-4 h-4 ${isActive ? "text-purple-600" : "text-slate-400"}`} />
                       {item.label}
                     </button>
                   );
@@ -178,19 +178,19 @@ export default function AdminPage() {
             <input 
               type="text" 
               placeholder="Talep, yayın veya modül ara..." 
-              className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
+              className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-purple-500 focus:bg-white transition-all"
             />
           </div>
           <div className="flex items-center gap-6">
-            <button className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold border border-emerald-200 hover:bg-emerald-100 transition-colors">
-              CHATBOT <span className="text-emerald-500">↗</span>
+            <button className="flex items-center gap-2 px-4 py-1.5 bg-purple-50 text-purple-600 rounded-full text-xs font-bold border border-purple-200 hover:bg-purple-100 transition-colors">
+              CHATBOT <span className="text-purple-500">↗</span>
             </button>
             <div className="flex items-center gap-4 text-slate-400">
               <Bell className="w-5 h-5 hover:text-slate-600 cursor-pointer" />
               <Settings className="w-5 h-5 hover:text-slate-600 cursor-pointer" />
             </div>
             <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-              <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              <div className="w-9 h-9 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
                 {adminName.split(' ').map(n => n[0]).join('').substring(0,2)}
               </div>
               <span className="text-sm font-bold text-slate-700">{adminName}</span>
@@ -201,7 +201,7 @@ export default function AdminPage() {
         <div className="flex-1 overflow-auto p-6 lg:p-8">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
             </div>
           ) : (
             <>
@@ -258,10 +258,10 @@ function DashboardAdmin({ data }) {
           <p className="text-[10px] text-slate-400 mt-2">Botun verdiği yanıtların doğruluğunu ve kullanıcı memnuniyet seviyesini gösterir.</p>
         </div>
         
-        <div className="bg-emerald-50/50 border border-emerald-100 p-5 rounded-xl shadow-sm">
+        <div className="bg-purple-50/50 border border-purple-100 p-5 rounded-xl shadow-sm">
           <div className="flex justify-between items-start mb-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500"><Clock className="w-4 h-4"/></div>
-            <span className="text-emerald-600 text-xs font-bold">↓ -0.3sn</span>
+            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-500"><Clock className="w-4 h-4"/></div>
+            <span className="text-purple-600 text-xs font-bold">↓ -0.3sn</span>
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ort. Yanıt Süresi</p>
           <h3 className="text-2xl font-black text-slate-800">{metrics.avgLatencySec} <span className="text-sm font-bold text-slate-500">sn</span></h3>
@@ -333,7 +333,7 @@ function DashboardAdmin({ data }) {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-2xl font-black text-slate-800">{satisfaction[0]?.value || 0}%</span>
-              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Başarı</span>
+              <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider">Başarı</span>
             </div>
           </div>
           
@@ -371,7 +371,7 @@ function ChatbotAnalytics() {
           <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
-                <tr className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11px] uppercase tracking-wider font-semibold">
+                <tr className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[11px] uppercase tracking-wider font-semibold">
                   <th className="py-3.5 px-4 w-12 text-center border-r border-white/10">#</th>
                   <th className="py-3.5 px-4 border-r border-white/10">OTURUM ID</th>
                   <th className="py-3.5 px-4 border-r border-white/10 text-center">MESAJ SAYISI</th>
@@ -384,10 +384,10 @@ function ChatbotAnalytics() {
                   <tr key={q.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
                     <td className="py-3 px-4 font-mono text-xs text-slate-600">{q.session_id.substring(0,12)}...</td>
-                    <td className="py-3 px-4 text-center font-bold text-emerald-600">{q.message_count}</td>
+                    <td className="py-3 px-4 text-center font-bold text-purple-600">{q.message_count}</td>
                     <td className="py-3 px-4 text-slate-500">{new Date(q.created_at).toLocaleString('tr-TR')}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-100 uppercase">
                         {q.status}
                       </span>
                     </td>
@@ -410,14 +410,14 @@ function TableHeader({ title, subtitle, count, activeCount, onAdd }) {
     <div className="p-5 border-b border-slate-100 flex items-center justify-between">
       <div>
         <h3 className="font-semibold flex items-center gap-2 text-sm text-slate-800">
-          <span className="text-emerald-500">⚡</span>
+          <span className="text-purple-500">⚡</span>
           {title}
         </h3>
         <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
       </div>
       <div className="flex items-center gap-3">
         {count !== undefined && (
-          <div className="px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold flex items-center gap-3 shadow-sm">
+          <div className="px-4 py-2.5 bg-purple-600 text-white rounded-lg text-xs font-semibold flex items-center gap-3 shadow-sm">
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-3 bg-white/50 rounded-full inline-block"></span> Toplam: {count}
             </span>
@@ -430,7 +430,7 @@ function TableHeader({ title, subtitle, count, activeCount, onAdd }) {
           </div>
         )}
         {onAdd && (
-          <button onClick={onAdd} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm">
+          <button onClick={onAdd} className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm">
             <Plus className="w-4 h-4" /> Yeni Ekle
           </button>
         )}
@@ -508,7 +508,7 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
           <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
-                <tr className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11px] uppercase tracking-wider font-semibold">
+                <tr className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[11px] uppercase tracking-wider font-semibold">
                   <th className="py-3.5 px-4 w-12 text-center border-r border-white/10">#</th>
                   {columns.map(c => <th key={c.key} className="py-3.5 px-4 border-r border-white/10">{c.label}</th>)}
                   <th className="py-3.5 px-4 w-24 text-right">İŞLEMLER</th>
@@ -540,16 +540,16 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Yeni ${title} Ekle`}>
         <div className="flex mb-4 border-b border-gray-600 justify-between items-center">
           <div className="flex">
-            <button type="button" onClick={() => setFormLang('tr')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'tr' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>Türkçe</button>
-            <button type="button" onClick={() => setFormLang('en')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'en' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>English</button>
+            <button type="button" onClick={() => setFormLang('tr')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'tr' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400'}`}>Türkçe</button>
+            <button type="button" onClick={() => setFormLang('en')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'en' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400'}`}>English</button>
           </div>
           <button 
             type="button" 
             onClick={handleAutoTranslate} 
             disabled={isTranslating}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-50 transition-colors"
           >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
             {isTranslating ? "Çevriliyor..." : "Auto-Translate"}
           </button>
         </div>
@@ -559,7 +559,7 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
               <label className="block text-xs font-semibold text-slate-600 mb-1">{field.label}</label>
               {field.type === 'textarea' ? (
                 <textarea 
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-purple-500"
                   value={form[field.key] || ''}
                   onChange={e => setForm({...form, [field.key]: e.target.value})}
                   rows={4}
@@ -568,7 +568,7 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
                 <div className="flex items-center gap-2">
                   <input 
                     type="checkbox" 
-                    className="w-4 h-4 text-emerald-600 rounded"
+                    className="w-4 h-4 text-purple-600 rounded"
                     checked={form[field.key] || false}
                     onChange={e => setForm({...form, [field.key]: e.target.checked})}
                   />
@@ -577,7 +577,7 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
               ) : (
                 <input 
                   type={field.type || 'text'}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-purple-500"
                   value={form[field.key] || ''}
                   onChange={e => setForm({...form, [field.key]: e.target.value})}
                   required={field.required}
@@ -585,7 +585,7 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
               )}
             </div>
           ))}
-          <button type="submit" disabled={submitting} className="w-full py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-emerald-700 disabled:opacity-50 mt-4">
+          <button type="submit" disabled={submitting} className="w-full py-2.5 bg-purple-600 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-purple-700 disabled:opacity-50 mt-4">
             {submitting ? "Ekleniyor..." : "Kaydet"}
           </button>
         </form>
@@ -691,7 +691,7 @@ function SkillsAdmin({ data, refresh }) {
     columns={[
       {label: "YETENEK ADI", key: "name"},
       {label: "DURUM", key: "is_active", render: (val) => val ? (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Aktif</span>
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-100"><CheckCircle2 className="w-3 h-3 mr-1"/> Aktif</span>
       ) : (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-500 border border-red-100"><XCircle className="w-3 h-3 mr-1"/> Pasif</span>
       )}
@@ -751,7 +751,7 @@ function MessagesAdmin() {
           <div className="border border-slate-200 rounded-lg overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11px] uppercase tracking-wider font-semibold">
+                <tr className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[11px] uppercase tracking-wider font-semibold">
                   <th className="py-3.5 px-4 w-12 text-center border-r border-white/10">#</th>
                   <th className="py-3.5 px-4 border-r border-white/10">AD-SOYAD</th>
                   <th className="py-3.5 px-4 border-r border-white/10">EMAIL</th>
@@ -766,7 +766,7 @@ function MessagesAdmin() {
                     <td className="py-3 px-4 font-medium text-slate-700">{m.full_name}</td>
                     <td className="py-3 px-4 text-slate-500">{m.email}</td>
                     <td className="py-3 px-4 text-center">
-                      <button onClick={() => toggleRead(m.id)} className={`px-3 py-1 rounded-full text-[11px] font-bold border ${m.is_read ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-500 border-red-100'}`}>
+                      <button onClick={() => toggleRead(m.id)} className={`px-3 py-1 rounded-full text-[11px] font-bold border ${m.is_read ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-red-50 text-red-500 border-red-100'}`}>
                         {m.is_read ? "Okundu" : "Okunmadı"}
                       </button>
                     </td>
@@ -821,18 +821,18 @@ function SettingsAdmin({ data, refresh, adminName }) {
     <div className="max-w-3xl">
       <h2 className="text-xl font-bold text-slate-800 mb-6">Sistem Ayarları</h2>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-5 text-white">
+        <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 p-5 text-white">
           <h3 className="font-semibold text-sm flex items-center gap-2">
             <Settings className="w-4 h-4" /> Profili Güncelle
           </h3>
           <p className="text-xs text-white/70 mt-1">Aşağıdaki formu doldurarak profil bilgisini güncelleyin.</p>
         </div>
         <div className="p-6 space-y-4">
-          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Kullanıcı Adı</label><input type="text" value={formData.username} onChange={e=>setFormData({...formData, username: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" /></div>
-          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Ad-Soyad</label><input type="text" value={formData.fullName} onChange={e=>setFormData({...formData, fullName: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" /></div>
-          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Yeni Şifre</label><input type="password" value={formData.password} onChange={e=>setFormData({...formData, password: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" /></div>
-          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Şifre Tekrar</label><input type="password" value={formData.passwordConfirm} onChange={e=>setFormData({...formData, passwordConfirm: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500" /></div>
-          <div className="pt-4"><button onClick={() => toast.success("Ayarlar başarıyla güncellendi (Mock)")} className="px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-700 transition-colors">Kaydet</button></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Kullanıcı Adı</label><input type="text" value={formData.username} onChange={e=>setFormData({...formData, username: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-purple-500" /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Ad-Soyad</label><input type="text" value={formData.fullName} onChange={e=>setFormData({...formData, fullName: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-purple-500" /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Yeni Şifre</label><input type="password" value={formData.password} onChange={e=>setFormData({...formData, password: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-purple-500" /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Şifre Tekrar</label><input type="password" value={formData.passwordConfirm} onChange={e=>setFormData({...formData, passwordConfirm: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-purple-500" /></div>
+          <div className="pt-4"><button onClick={() => toast.success("Ayarlar başarıyla güncellendi (Mock)")} className="px-5 py-2.5 bg-purple-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-purple-700 transition-colors">Kaydet</button></div>
         </div>
       </div>
     </div>
@@ -924,45 +924,45 @@ function AboutAdmin({ data, refresh }) {
     <div className="max-w-3xl">
       <h2 className="text-xl font-bold text-slate-800 mb-6">Firma/Profil Yönetimi</h2>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-5 text-white">
+        <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 p-5 text-white">
           <h3 className="font-semibold text-sm">Hakkımda Ayarları</h3>
         </div>
         <div className="p-6 space-y-4">
           <div className="flex mb-4 border-b border-gray-600 justify-between items-center">
             <div className="flex">
-              <button type="button" onClick={() => setFormLang('tr')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'tr' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>Türkçe</button>
-              <button type="button" onClick={() => setFormLang('en')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'en' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>English</button>
+              <button type="button" onClick={() => setFormLang('tr')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'tr' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400'}`}>Türkçe</button>
+              <button type="button" onClick={() => setFormLang('en')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'en' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400'}`}>English</button>
             </div>
             <button 
               type="button" 
               onClick={handleAutoTranslate} 
               disabled={isTranslating}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-50 transition-colors"
             >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
               {isTranslating ? "Çevriliyor..." : "Auto-Translate"}
             </button>
           </div>
-          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Ad Soyad</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.full_name} onChange={e=>setFormData({...formData, full_name: e.target.value})} /></div>
+          <div><label className="block text-xs font-semibold text-slate-600 mb-1">Ad Soyad</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.full_name} onChange={e=>setFormData({...formData, full_name: e.target.value})} /></div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">Profil Fotoğrafı URL (Veya Dosya Seçin)</label>
             <div className="flex gap-2">
-              <input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.avatar_url} onChange={e=>setFormData({...formData, avatar_url: e.target.value})} placeholder="https://resim-linki.com/foto.jpg" />
+              <input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.avatar_url} onChange={e=>setFormData({...formData, avatar_url: e.target.value})} placeholder="https://resim-linki.com/foto.jpg" />
               <input type="file" id="avatarUpload" className="hidden" accept="image/*" onChange={handleImageUpload} />
               <label htmlFor="avatarUpload" className="whitespace-nowrap cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold text-sm transition-colors">Dosya Seç</label>
             </div>
           </div>
           {formLang === 'tr' ? (
             <>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} /></div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hero Alt Başlık</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.hero_subtitle} onChange={e=>setFormData({...formData, hero_subtitle: e.target.value})} /></div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-emerald-500 focus:outline-none" value={formData.about_markdown} onChange={e=>setFormData({...formData, about_markdown: e.target.value})}></textarea></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hero Alt Başlık</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.hero_subtitle} onChange={e=>setFormData({...formData, hero_subtitle: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-purple-500 focus:outline-none" value={formData.about_markdown} onChange={e=>setFormData({...formData, about_markdown: e.target.value})}></textarea></div>
             </>
           ) : (
             <>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan (EN)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.title_en} onChange={e=>setFormData({...formData, title_en: e.target.value})} /></div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hero Alt Başlık (EN)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.hero_subtitle_en} onChange={e=>setFormData({...formData, hero_subtitle_en: e.target.value})} /></div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı (EN)</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-emerald-500 focus:outline-none" value={formData.about_markdown_en} onChange={e=>setFormData({...formData, about_markdown_en: e.target.value})}></textarea></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan (EN)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.title_en} onChange={e=>setFormData({...formData, title_en: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hero Alt Başlık (EN)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.hero_subtitle_en} onChange={e=>setFormData({...formData, hero_subtitle_en: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı (EN)</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-purple-500 focus:outline-none" value={formData.about_markdown_en} onChange={e=>setFormData({...formData, about_markdown_en: e.target.value})}></textarea></div>
             </>
           )}
 
@@ -970,19 +970,19 @@ function AboutAdmin({ data, refresh }) {
           <div className="mt-8 border-t border-slate-200 pt-6">
             <div className="flex justify-between items-center mb-4">
               <h4 className="font-bold text-slate-700">İstatistikler (Örn: 4+ Proje)</h4>
-              <button type="button" onClick={handleAddStat} className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-emerald-200">+ İstatistik Ekle</button>
+              <button type="button" onClick={handleAddStat} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-purple-200">+ İstatistik Ekle</button>
             </div>
             {(formData.stats || []).map((stat, idx) => (
               <div key={idx} className="flex gap-2 mb-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
-                <input type="text" placeholder="Değer (örn: 4+)" className="w-1/4 border rounded p-1.5 text-sm focus:border-emerald-500 focus:outline-none" value={stat.value} onChange={e=>handleStatChange(idx, 'value', e.target.value)} />
-                <input type="text" placeholder="TR Etiket (örn: Proje)" className="w-1/3 border rounded p-1.5 text-sm focus:border-emerald-500 focus:outline-none" value={stat.label_tr} onChange={e=>handleStatChange(idx, 'label_tr', e.target.value)} />
-                <input type="text" placeholder="EN Etiket (örn: Projects)" className="w-1/3 border rounded p-1.5 text-sm focus:border-emerald-500 focus:outline-none" value={stat.label_en} onChange={e=>handleStatChange(idx, 'label_en', e.target.value)} />
+                <input type="text" placeholder="Değer (örn: 4+)" className="w-1/4 border rounded p-1.5 text-sm focus:border-purple-500 focus:outline-none" value={stat.value} onChange={e=>handleStatChange(idx, 'value', e.target.value)} />
+                <input type="text" placeholder="TR Etiket (örn: Proje)" className="w-1/3 border rounded p-1.5 text-sm focus:border-purple-500 focus:outline-none" value={stat.label_tr} onChange={e=>handleStatChange(idx, 'label_tr', e.target.value)} />
+                <input type="text" placeholder="EN Etiket (örn: Projects)" className="w-1/3 border rounded p-1.5 text-sm focus:border-purple-500 focus:outline-none" value={stat.label_en} onChange={e=>handleStatChange(idx, 'label_en', e.target.value)} />
                 <button type="button" onClick={() => handleRemoveStat(idx)} className="text-red-500 hover:text-red-700 p-1">X</button>
               </div>
             ))}
           </div>
 
-          <button onClick={save} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">Kaydet</button>
+          <button onClick={save} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">Kaydet</button>
         </div>
       </div>
     </div>
