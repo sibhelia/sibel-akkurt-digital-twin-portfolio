@@ -18,7 +18,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#1a1a22]/85 border-b border-white/5">
-      <div className="container-wide flex items-center justify-between py-4">
+      <div className="container-wide flex items-center justify-between py-2">
         <a href="#home" className="text-xl text-white font-bold tracking-tight flex items-center gap-3">
           <img 
             src="/portfolio-logo.png" 
@@ -26,7 +26,7 @@ export default function Navbar() {
             className="w-20 h-auto object-contain drop-shadow-md"
           />
           <span 
-            className="text-2xl font-black uppercase text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-purple-500 to-pink-400 tracking-widest drop-shadow-sm"
+            className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-purple-500 to-pink-400 tracking-widest drop-shadow-sm"
             style={{ fontFamily: '"Arial Black", sans-serif', fontWeight: 900 }}
           >
             SİBEL AKKURT
@@ -48,13 +48,13 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
-          <div className="flex items-center bg-[#1a1a24] rounded-full p-1 border border-white/5">
+          <div className="flex items-center bg-[#2d2d38] rounded-full p-1 border border-white/10 shadow-inner">
             <button
               onClick={() => setLanguage("tr")}
               className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all ${
                 language === "tr"
                   ? "bg-purple-500 text-white shadow-sm"
-                  : "text-white/40 hover:text-white/70"
+                  : "text-white/60 hover:text-white"
               }`}
             >
               TR
@@ -64,7 +64,7 @@ export default function Navbar() {
               className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all ${
                 language === "en"
                   ? "bg-purple-500 text-white shadow-sm"
-                  : "text-white/40 hover:text-white/70"
+                  : "text-white/60 hover:text-white"
               }`}
             >
               EN

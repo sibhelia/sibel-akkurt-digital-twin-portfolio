@@ -14,8 +14,20 @@ export const translations = {
   // ─── About ───
   "about.tag": { tr: "Hakkımda", en: "About Me" },
   "about.bio": {
-    tr: "Balıkesir Üniversitesi Bilgisayar Mühendisliği son sınıf öğrencisiyim. Python ve .NET teknolojileriyle yapay zekâ destekli uygulamalar ve backend sistemleri geliştiriyorum; üretime hazır RAG mimarileri, kurumsal ERP modülleri ve ölçeklenebilir API çözümleri üzerinde çalışıyorum. ASP.NET Core, FastAPI, PostgreSQL, LangChain ve Docker ekosistemlerinde aktif deneyimim var.",
-    en: "I am a senior Computer Engineering student at Balıkesir University. I develop AI-powered applications and backend systems using Python and .NET technologies; working on production-ready RAG architectures, enterprise ERP modules, and scalable API solutions. I have hands-on experience in ASP.NET Core, FastAPI, PostgreSQL, LangChain, and Docker ecosystems.",
+    tr: `Bilgisayar Mühendisiyim ve yazılım geliştirme ile yapay zekâ teknolojilerine tutkuyla ilgi duyuyorum. Kullanıcıların gerçek problemlerini çözen, ölçeklenebilir ve sürdürülebilir yazılımlar geliştirmeyi hedefliyorum.
+
+Çalışmalarım ağırlıklı olarak .NET, C#, ASP.NET Core, React, Python ve modern web teknolojileri üzerine yoğunlaşıyor. Son dönemde ise özellikle Generative AI, Agentic AI, RAG (Retrieval-Augmented Generation) ve LLM tabanlı uygulamalar geliştirerek yapay zekâyı gerçek dünya projelerine entegre etmeye odaklanıyorum.
+
+Yazılım geliştirmeyi yalnızca kod yazmak olarak görmüyor; analiz etmeyi, doğru mimariyi kurmayı ve kullanıcı deneyimini önemseyen çözümler üretmeyi seviyorum. Sürekli öğrenmeye inanıyor, yeni teknolojileri yakından takip ediyor ve her projede kendimi bir adım daha ileri taşımayı hedefliyorum.
+
+Bu portföyde geliştirdiğim projeleri, kullandığım teknolojileri ve yazılım yolculuğum boyunca edindiğim deneyimleri bulabilirsiniz. Yeni fikirler üretmeye, farklı teknolojiler keşfetmeye ve değer katan projelerde yer almaya her zaman açığım.`,
+    en: `I am a Computer Engineer with a deep passion for software development and artificial intelligence technologies. I aim to build scalable, sustainable software that solves real-world user problems.
+
+My work mainly focuses on .NET, C#, ASP.NET Core, React, Python, and modern web technologies. Recently, I have been concentrating on Generative AI, Agentic AI, RAG (Retrieval-Augmented Generation), and LLM-based applications to integrate AI into real-world projects.
+
+I don't view software development merely as writing code; I love analyzing, building sound architectures, and crafting user-centric solutions. Believing in continuous learning, I closely follow emerging technologies and aim to take my skills a step further in every project.
+
+In this portfolio, you can explore the projects I've built, the technologies I use, and the experiences I've gained throughout my software journey. I am always open to generating new ideas, exploring different technologies, and participating in value-driven projects.`,
   },
   "about.skills_title": { tr: "Yetkinliklerim:", en: "My Skills:" },
   "about.cta": { tr: "Benimle İletişime Geç", en: "Get In Touch" },

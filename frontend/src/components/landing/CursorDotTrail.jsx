@@ -4,8 +4,8 @@ import { createPortal } from "react-dom";
 export default function CursorDotTrail({
   color = "#8b5cf6", // Default to our purple-accent
   colorInverted = "#FFFFFF",
-  size = 12,
-  hoverSize = 40,
+  size = 16,
+  hoverSize = 48,
   borderWidth = 2,
   spring = 0.15,
   friction = 0.5,
@@ -100,10 +100,20 @@ export default function CursorDotTrail({
       if (pointsRef.current.length > 1) {
         ctx.beginPath();
         ctx.moveTo(pointsRef.current[0].x, pointsRef.current[0].y);
-        for (let i = 1; i < pointsRef.current.length; i++) {
-          const p = pointsRef.current[i];
-          ctx.lineTo(p.x, p.y);
+        
+        // Smooth curve drawing
+        for (let i = 1; i < pointsRef.current.length - 1; i++) {
+          const p0 = pointsRef.current[i];
+          const p1 = pointsRef.current[i + 1];
+          const midX = (p0.x + p1.x) / 2;
+          const midY = (p0.y + p1.y) / 2;
+          ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
         }
+        
+        // Line to the very last point
+        const lastP = pointsRef.current[pointsRef.current.length - 1];
+        ctx.lineTo(lastP.x, lastP.y);
+        
         const oldest = pointsRef.current[0];
         const newest = pointsRef.current[pointsRef.current.length - 1];
         const oldestOpacity = 1 - oldest.age / trailDuration;

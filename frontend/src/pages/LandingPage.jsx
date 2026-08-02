@@ -140,7 +140,7 @@ export default function LandingPage() {
       <div className={`relative z-10 ${loading ? "opacity-0" : "opacity-100 transition-opacity duration-1000"}`}>
         <Navbar />
         <main>
-          <Hero />
+          <Hero settings={portfolio?.settings} skills={portfolio?.skills} />
           <About settings={portfolio?.settings} skills={portfolio?.skills} />
           <Services services={portfolio?.services} />
           <Work projects={portfolio?.projects} />

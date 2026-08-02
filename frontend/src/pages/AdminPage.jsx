@@ -835,8 +835,40 @@ function AboutAdmin({ data, refresh }) {
     hero_subtitle: data?.settings?.hero_subtitle || "",
     hero_subtitle_en: data?.settings?.hero_subtitle_en || "",
     about_markdown: data?.settings?.about_markdown || "",
-    about_markdown_en: data?.settings?.about_markdown_en || ""
+    about_markdown_en: data?.settings?.about_markdown_en || "",
+    avatar_url: data?.settings?.avatar_url || "",
+    stats: data?.settings?.stats || []
   });
+
+  const handleImageUpload = async (e) => {
+    if (!e.target.files[0]) return;
+    const file = e.target.files[0];
+    const formPayload = new FormData();
+    formPayload.append("file", file);
+    try {
+      const res = await axiosInstance.post("/admin/upload-image", formPayload);
+      setFormData(prev => ({ ...prev, avatar_url: res.data.image_url }));
+      toast.success("Fotoğraf yüklendi");
+    } catch(err) {
+      toast.error("Fotoğraf yüklenemedi");
+    }
+  };
+
+  const handleAddStat = () => {
+    setFormData(prev => ({ ...prev, stats: [...(prev.stats || []), { value: "", label_tr: "", label_en: "" }] }));
+  };
+
+  const handleStatChange = (index, field, val) => {
+    const newStats = [...(formData.stats || [])];
+    newStats[index][field] = val;
+    setFormData(prev => ({ ...prev, stats: newStats }));
+  };
+
+  const handleRemoveStat = (index) => {
+    const newStats = [...(formData.stats || [])];
+    newStats.splice(index, 1);
+    setFormData(prev => ({ ...prev, stats: newStats }));
+  };
 
   const handleAutoTranslate = async () => {
     const extractedTexts = {};
@@ -897,7 +929,14 @@ function AboutAdmin({ data, refresh }) {
             </button>
           </div>
           <div><label className="block text-xs font-semibold text-slate-600 mb-1">Ad Soyad</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.full_name} onChange={e=>setFormData({...formData, full_name: e.target.value})} /></div>
-          
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">Profil Fotoğrafı URL (Veya Dosya Seçin)</label>
+            <div className="flex gap-2">
+              <input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.avatar_url} onChange={e=>setFormData({...formData, avatar_url: e.target.value})} placeholder="https://resim-linki.com/foto.jpg" />
+              <input type="file" id="avatarUpload" className="hidden" accept="image/*" onChange={handleImageUpload} />
+              <label htmlFor="avatarUpload" className="whitespace-nowrap cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold text-sm transition-colors">Dosya Seç</label>
+            </div>
+          </div>
           {formLang === 'tr' ? (
             <>
               <div><label className="block text-xs font-semibold text-slate-600 mb-1">Unvan</label><input type="text" className="w-full border rounded-lg p-2 focus:border-emerald-500 focus:outline-none" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} /></div>
@@ -911,6 +950,22 @@ function AboutAdmin({ data, refresh }) {
               <div><label className="block text-xs font-semibold text-slate-600 mb-1">Hakkımda Yazısı (EN)</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-emerald-500 focus:outline-none" value={formData.about_markdown_en} onChange={e=>setFormData({...formData, about_markdown_en: e.target.value})}></textarea></div>
             </>
           )}
+
+          
+          <div className="mt-8 border-t border-slate-200 pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="font-bold text-slate-700">İstatistikler (Örn: 4+ Proje)</h4>
+              <button type="button" onClick={handleAddStat} className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-emerald-200">+ İstatistik Ekle</button>
+            </div>
+            {(formData.stats || []).map((stat, idx) => (
+              <div key={idx} className="flex gap-2 mb-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                <input type="text" placeholder="Değer (örn: 4+)" className="w-1/4 border rounded p-1.5 text-sm focus:border-emerald-500 focus:outline-none" value={stat.value} onChange={e=>handleStatChange(idx, 'value', e.target.value)} />
+                <input type="text" placeholder="TR Etiket (örn: Proje)" className="w-1/3 border rounded p-1.5 text-sm focus:border-emerald-500 focus:outline-none" value={stat.label_tr} onChange={e=>handleStatChange(idx, 'label_tr', e.target.value)} />
+                <input type="text" placeholder="EN Etiket (örn: Projects)" className="w-1/3 border rounded p-1.5 text-sm focus:border-emerald-500 focus:outline-none" value={stat.label_en} onChange={e=>handleStatChange(idx, 'label_en', e.target.value)} />
+                <button type="button" onClick={() => handleRemoveStat(idx)} className="text-red-500 hover:text-red-700 p-1">X</button>
+              </div>
+            ))}
+          </div>
 
           <button onClick={save} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">Kaydet</button>
         </div>

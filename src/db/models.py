@@ -227,6 +227,7 @@ class PortfolioSettings(TimestampMixin, Base):
     github_url: Mapped[str | None] = mapped_column(String(500))
     linkedin_url: Mapped[str | None] = mapped_column(String(500))
     avatar_url: Mapped[str | None] = mapped_column(String(500))
+    stats: Mapped[list[Any]] = mapped_column(JSONB, default=_json_default, nullable=False)
 
 
 class Experience(TimestampMixin, Base):

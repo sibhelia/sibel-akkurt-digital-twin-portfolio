@@ -80,6 +80,7 @@ class PortfolioSettingsUpdate(BaseModel):
     github_url: Optional[str] = None
     linkedin_url: Optional[str] = None
     avatar_url: Optional[str] = None
+    stats: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
 
 
 class PortfolioSettingsResponse(PortfolioSettingsUpdate):

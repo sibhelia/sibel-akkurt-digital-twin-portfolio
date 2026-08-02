@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Sparkles, Bot, User as UserIcon, Globe } from "lucide-react";
+import { Send, Sparkles, Bot, User as UserIcon, Globe, Maximize2, Minimize2 } from "lucide-react";
 import axios from "axios";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -7,17 +7,15 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const API = `${BACKEND_URL}/api/v1`;
 
 const SUGGESTIONS_TR = [
-  "Teknik yetkinlikleriniz nelerdir?",
-  "Hangi projelerde yer aldınız?",
-  "Hangi teknolojilerde uzmansınız?",
-  "Kariyer hedefiniz nedir?",
+  "Teknik uzmanlığınız ve rolünüz nedir?",
+  "Ekip çalışmasına yaklaşımınız nasıldır?",
+  "Kariyer hedefleriniz ve vizyonunuz nedir?",
 ];
 
 const SUGGESTIONS_EN = [
-  "What are your technical skills?",
-  "What projects have you worked on?",
-  "Which technologies do you specialize in?",
-  "What is your career goal?",
+  "What is your technical expertise & role?",
+  "How do you approach teamwork?",
+  "What are your career goals & vision?",
 ];
 
 const GREETING_TR = {
@@ -37,6 +35,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([language === 'en' ? GREETING_EN : GREETING_TR]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const scrollRef = useRef(null);
 
   const suggestions = language === "en" ? SUGGESTIONS_EN : SUGGESTIONS_TR;
@@ -91,10 +90,15 @@ export default function Chatbot() {
     }
   };
 
-  return (
+  const chatbotMainUI = (
     <div
       data-testid="hero-chatbot"
-      className="relative w-full h-[480px] lg:h-[520px] flex flex-col rounded-3xl border border-purple-accent/20 bg-card-dark/80 backdrop-blur-xl overflow-hidden shadow-[0_0_40px_rgba(124,92,255,0.35)]"
+      className={
+        isFullscreen
+          ? "w-full max-w-5xl h-[85vh] flex flex-col rounded-3xl border border-purple-500/50 bg-[#161620] backdrop-blur-2xl overflow-hidden shadow-[0_0_90px_rgba(168,85,247,0.6)] z-10"
+          : "relative w-full h-[460px] lg:h-[520px] flex flex-col rounded-3xl border border-purple-500/40 bg-card-dark/85 backdrop-blur-xl overflow-hidden shadow-[0_0_45px_rgba(168,85,247,0.38)]"
+      }
+      onClick={(e) => isFullscreen && e.stopPropagation()}
     >
       {/* glow border accent */}
       <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-purple-accent/40 via-transparent to-transparent pointer-events-none" />
@@ -113,6 +117,16 @@ export default function Chatbot() {
           </div>
           <div className="text-[11px] text-white/50 mt-0.5">Sibel Akkurt · Digital Twin</div>
         </div>
+
+        {/* Fullscreen Toggle Button */}
+        <button
+          type="button"
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          title={isFullscreen ? "Küçült" : "Tam Ekran Yap"}
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4 text-purple-300" /> : <Maximize2 className="w-4 h-4 text-purple-300" />}
+        </button>
       </div>
 
       {/* Messages */}
@@ -165,15 +179,16 @@ export default function Chatbot() {
 
       {/* Suggestions */}
       {messages.length <= 1 && (
-        <div className="px-5 pb-3 flex flex-wrap gap-2 shrink-0">
+        <div className="px-5 pb-3 grid grid-cols-3 gap-2.5 shrink-0 items-center justify-center w-full mx-auto">
           {suggestions.map((s) => (
             <button
               key={s}
               data-testid={`chat-suggest-${s}`}
               onClick={() => send(s)}
-              className="text-xs px-3.5 py-2 rounded-full bg-[#2a2a35] border border-white/5 text-white/75 hover:border-purple-accent/50 hover:bg-purple-accent/10 hover:text-white transition-all font-medium"
+              className="w-full h-full min-h-[38px] text-[11px] leading-tight px-2 py-2 rounded-xl bg-[#2a2a35] border border-white/5 text-white/80 hover:border-purple-accent/50 hover:bg-purple-accent/15 hover:text-white transition-all font-medium text-center flex items-center justify-center shadow-sm"
+              title={s}
             >
-              {s}
+              <span className="truncate max-w-full text-center">{s}</span>
             </button>
           ))}
         </div>
@@ -201,6 +216,66 @@ export default function Chatbot() {
           </button>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <div className="relative w-full">
+      {/* 4-Point Star Purple Sparkles around the Chatbot Frame (only when normal mode) */}
+      {!isFullscreen && (
+        <div className="absolute -inset-4 pointer-events-none z-20 overflow-visible">
+          <div className="absolute -top-3 left-[12%] animate-twinkle text-purple-300 drop-shadow-[0_0_8px_#c084fc]" style={{ animationDuration: '2.5s', animationDelay: '0s' }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute -top-2 left-[48%] animate-twinkle text-fuchsia-300 drop-shadow-[0_0_6px_#e879f9]" style={{ animationDuration: '2s', animationDelay: '0.4s' }}>
+            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute -top-4 right-[20%] animate-twinkle text-purple-400 drop-shadow-[0_0_10px_#a855f7]" style={{ animationDuration: '3s', animationDelay: '0.8s' }}>
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute top-[25%] -left-3 animate-twinkle text-purple-300 drop-shadow-[0_0_6px_#d8b4fe]" style={{ animationDuration: '2.2s', animationDelay: '0.2s' }}>
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute top-[60%] -left-4 animate-twinkle text-fuchsia-400 drop-shadow-[0_0_8px_#e879f9]" style={{ animationDuration: '2.7s', animationDelay: '0.6s' }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute -bottom-3 left-[22%] animate-twinkle text-purple-400 drop-shadow-[0_0_8px_#a855f7]" style={{ animationDuration: '2.4s', animationDelay: '0.3s' }}>
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute -bottom-4 left-[58%] animate-twinkle text-fuchsia-300 drop-shadow-[0_0_10px_#e879f9]" style={{ animationDuration: '3.2s', animationDelay: '0.9s' }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute -bottom-3 right-[18%] animate-twinkle text-purple-300 drop-shadow-[0_0_8px_#d8b4fe]" style={{ animationDuration: '2.1s', animationDelay: '0.5s' }}>
+            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute top-[35%] -right-3 animate-twinkle text-purple-400 drop-shadow-[0_0_8px_#c084fc]" style={{ animationDuration: '2.6s', animationDelay: '0.7s' }}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+          <div className="absolute top-[75%] -right-3 animate-twinkle text-fuchsia-400 drop-shadow-[0_0_6px_#e879f9]" style={{ animationDuration: '2.3s', animationDelay: '1.1s' }}>
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l1.5 8.5L22 10l-8.5 1.5L12 20l-1.5-8.5L2 10l8.5-1.5z" /></svg>
+          </div>
+        </div>
+      )}
+
+      {isFullscreen ? (
+        <>
+          {/* Layout placeholder in Hero grid so grid doesn't collapse */}
+          <div className="w-full h-[460px] lg:h-[520px] rounded-3xl border border-purple-500/20 bg-purple-950/20 backdrop-blur-md flex flex-col items-center justify-center text-white/40 gap-2">
+            <Maximize2 className="w-6 h-6 animate-pulse text-purple-400" />
+            <span className="text-xs font-semibold">Chatbot Tam Ekran Açık</span>
+          </div>
+
+          {/* Fullscreen Backdrop Overlay */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 sm:p-8"
+            onClick={() => setIsFullscreen(false)}
+          >
+            {chatbotMainUI}
+          </div>
+        </>
+      ) : (
+        chatbotMainUI
+      )}
     </div>
   );
 }
