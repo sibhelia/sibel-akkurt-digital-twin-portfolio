@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { ArrowUpRight, Brain, Server, Database, Code, Globe, Cpu, Smartphone, Cloud, Shield, Layout, PenTool, Lightbulb, Activity, Camera } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { ArrowUpRight, Brain, Server, Database, Code, Globe, Cpu, Smartphone, Cloud, Shield, Layout, PenTool, Lightbulb, Activity, Camera, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { staggerContainer, fadeUp } from "../../utils/animations";
 import { localized } from "@/utils/localized";
@@ -28,6 +29,23 @@ const IconMapper = ({ name, className }) => {
 
 export default function Services({ services: apiServices }) {
   const { language, t } = useLanguage();
+  const [selectedService, setSelectedService] = useState(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (selectedService) {
+        setSelectedService(null);
+      }
+    };
+    
+    if (selectedService) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    }
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [selectedService]);
 
   const defaultServices = [
     {
@@ -53,16 +71,18 @@ export default function Services({ services: apiServices }) {
           icon_name: svc.icon_name || "brain",
           title: localized(svc, 'title', language),
           desc: localized(svc, 'description', language),
+          detailed_desc: localized(svc, 'detailed_description', language),
         };
       })
     : defaultServices;
 
 
   return (
+    <>
     <section
       id="services"
       data-testid="services-section"
-      className="py-20 lg:py-32 relative z-10 overflow-hidden"
+      className="py-10 lg:py-16 relative z-10 overflow-hidden"
     >
       {/* Ambient Background Glows for Theme Matching */}
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-purple-accent/10 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 -z-10" />
@@ -115,19 +135,95 @@ export default function Services({ services: apiServices }) {
                   {s.desc}
                 </p>
                 
-                <a
-                  href="#contact"
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedService(s);
+                  }}
                   data-testid={`service-cta-${i}`}
                   className="inline-flex items-center gap-2 text-sm font-semibold mt-auto w-fit text-purple-300 group-hover:text-purple-200 transition-colors relative z-10"
                 >
-                  {t("service.cta")}
+                  {t("service.cta") || "Detaylar"}
                   <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                </a>
+                </button>
               </motion.div>
             );
           })}
         </motion.div>
       </div>
     </section>
+
+      {/* Service Details Modal */}
+      <AnimatePresence>
+        {selectedService && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+            onClick={() => setSelectedService(null)}
+          >
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-none"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-md h-[400px] md:h-[450px] bg-card-dark border border-purple-500/30 rounded-2xl shadow-[0_0_40px_rgba(139,92,246,0.2)] overflow-hidden z-10 flex flex-col"
+            >
+              <div className="flex flex-col h-full p-0">
+                {/* Purple Banner */}
+                <div className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 px-4 py-3 border-b border-purple-400/30 overflow-hidden shrink-0 flex items-center gap-3">
+                   <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent pointer-events-none"></div>
+                   
+                   <div className="relative z-10 w-8 h-8 shrink-0 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-md text-white border border-white/20 shadow-sm">
+                     <IconMapper name={selectedService.icon_name} className="w-4 h-4" />
+                   </div>
+                   
+                   <h3 className="relative z-10 text-lg font-bold text-white drop-shadow-sm m-0">{selectedService.title}</h3>
+                   
+                   <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedService(null);
+                    }}
+                    className="relative z-20 ml-auto p-1.5 text-white/70 hover:text-white hover:bg-white/20 rounded-full transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Content Area */}
+                <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1 bg-card-dark">
+                  <div className="space-y-3">
+                    {selectedService.detailed_desc ? (
+                      <div className="text-[13px] sm:text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                        {selectedService.detailed_desc}
+                      </div>
+                    ) : (
+                      <div className="text-[13px] sm:text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                        {selectedService.desc}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                  
+                {/* Fixed Footer */}
+                <div className="p-4 sm:p-5 border-t border-white/10 flex justify-end shrink-0 bg-card-dark mt-auto">
+                  <button 
+                    onClick={() => setSelectedService(null)}
+                    className="px-4 py-2 text-sm rounded-lg bg-white/5 hover:bg-white/10 text-white font-medium transition-colors border border-white/10 hover:border-white/20"
+                  >
+                    Kapat
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

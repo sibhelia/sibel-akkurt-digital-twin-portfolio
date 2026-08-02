@@ -172,6 +172,8 @@ class ServiceCreate(BaseModel):
     title_en: Optional[str] = None
     description: Optional[str] = None
     description_en: Optional[str] = None
+    detailed_description: Optional[str] = None
+    detailed_description_en: Optional[str] = None
     icon_name: Optional[str] = None
 
 class ServiceResponse(ServiceCreate):

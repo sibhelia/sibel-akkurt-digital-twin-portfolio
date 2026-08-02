@@ -4,7 +4,9 @@ import { translations } from "@/utils/translations";
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState("tr");
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem("app_lang") || "tr";
+  });
 
   const t = useCallback((key) => {
     const entry = translations[key];
@@ -13,7 +15,11 @@ export function LanguageProvider({ children }) {
   }, [language]);
 
   const toggleLanguage = useCallback(() => {
-    setLanguage((prev) => (prev === "tr" ? "en" : "tr"));
+    setLanguage((prev) => {
+      const nextLang = prev === "tr" ? "en" : "tr";
+      localStorage.setItem("app_lang", nextLang);
+      return nextLang;
+    });
   }, []);
 
   return (

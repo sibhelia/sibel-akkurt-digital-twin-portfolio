@@ -105,17 +105,17 @@ export default function Chatbot() {
 
       {/* Header */}
       <div className="relative flex items-center gap-3 px-5 py-4 border-b border-white/5 shrink-0">
-        <div className="relative">
-          <div className="w-14 h-14 flex items-center justify-center">
+        <div className="relative mt-1">
+          <div className="w-20 h-20 flex items-center justify-center">
             <img src="/chatbot-mascot.png" alt="Mascot" className="w-full h-full object-contain scale-110 drop-shadow-md" />
           </div>
-          <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 ring-2 ring-card-darker" />
+          <span className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-purple-600 ring-2 ring-card-darker" />
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 ml-2">
           <div className="font-bold text-sm tracking-wide truncate">
             {t("chatbot.title")}
           </div>
-          <div className="text-[11px] text-white/50 mt-0.5">Sibel Akkurt · Digital Twin</div>
+          <div className="text-[11px] text-white/50 mt-0.5">Sibel Akkurt · {t("chatbot.subtitle")}</div>
         </div>
 
         {/* Fullscreen Toggle Button */}
@@ -132,7 +132,7 @@ export default function Chatbot() {
       {/* Messages */}
       <div
         ref={scrollRef}
-        className="relative px-5 py-5 flex-1 overflow-y-auto space-y-4"
+        className="relative px-5 py-5 flex-1 overflow-y-auto space-y-4 custom-scrollbar"
       >
         {messages.map((m, i) => (
           <div
@@ -143,7 +143,7 @@ export default function Chatbot() {
             }`}
           >
             {m.role === "assistant" && (
-              <div className="w-14 h-14 flex items-center justify-center shrink-0">
+              <div className="w-20 h-20 flex items-center justify-center shrink-0">
                 <img src="/chatbot-mascot.png" alt="Mascot" className="w-full h-full object-contain scale-110 drop-shadow-sm" />
               </div>
             )}
@@ -165,10 +165,10 @@ export default function Chatbot() {
         ))}
         {loading && (
           <div className="flex items-start gap-3">
-            <div className="w-14 h-14 flex items-center justify-center shrink-0">
+            <div className="w-20 h-20 flex items-center justify-center shrink-0">
               <img src="/chatbot-mascot.png" alt="Mascot" className="w-full h-full object-contain scale-110 drop-shadow-sm" />
             </div>
-            <div className="bg-[#2a2a35] rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1 border border-white/5">
+            <div className="bg-[#2a2a35] rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1 border border-white/5 mt-3">
               <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
               <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
               <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />

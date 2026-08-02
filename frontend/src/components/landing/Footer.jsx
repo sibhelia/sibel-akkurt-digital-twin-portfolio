@@ -1,52 +1,100 @@
-import SmartContact from "./SmartContact";
 import { useLanguage } from "@/context/LanguageContext";
+import { FaGithub, FaLinkedin, FaMedium, FaEnvelope } from "react-icons/fa";
 
 export default function Footer() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  const socialLinks = [
+    { icon: FaLinkedin, href: "https://linkedin.com/in/sibelakkurt", label: "LinkedIn" },
+    { icon: FaGithub, href: "https://github.com/sibelakkurt", label: "GitHub" },
+    { icon: FaMedium, href: "https://medium.com/@sibelakkurt", label: "Medium" },
+    { icon: FaEnvelope, href: "mailto:sibelakk23@gmail.com", label: "Email" },
+  ];
+
   return (
-    <footer data-testid="footer" className="bg-[#0a0a0c] text-white border-t border-white/5 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-px bg-gradient-to-r from-transparent via-purple-accent/50 to-transparent" />
+    <footer data-testid="footer" className="bg-gradient-to-br from-[#1b0830] via-[#0d0217] to-black text-white border-t border-purple-500/20 relative overflow-hidden mt-10">
+      {/* Top glowing line */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-purple-accent to-transparent opacity-70" />
       
-      <div className="container-wide py-16 lg:py-24 grid md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8">
-        <div className="lg:col-span-5">
-          <h3 className="text-3xl font-extrabold mb-4">{t("footer.heading1")}<br/>{t("footer.heading2")}</h3>
-          <p className="text-white/60 text-sm leading-relaxed max-w-sm mb-8">
+      {/* Ambient background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-48 bg-purple-600/20 blur-[120px] pointer-events-none" />
+
+      <div className="container-wide py-10 grid grid-cols-1 md:grid-cols-12 gap-8 relative z-10">
+        
+        {/* Brand Column */}
+        <div className="md:col-span-5 flex flex-col items-start justify-center">
+          <div className="flex items-center gap-4 mb-4">
+            <img 
+              src="/portfolio-logo-white.png" 
+              alt="Sibel Akkurt Logo" 
+              className="h-16 sm:h-20 w-auto object-contain mix-blend-screen drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+            />
+            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-purple-accent to-purple-300 drop-shadow-[0_0_10px_rgba(139,92,246,0.3)]">Sibel Akkurt</h3>
+          </div>
+          <p className="text-white/70 text-sm leading-relaxed max-w-sm">
             {t("footer.desc")}
           </p>
-          
-          <div className="flex flex-wrap gap-3">
-            <SmartContact type="email" label="Email" value="sibelakk23@gmail.com" link="mailto:sibelakk23@gmail.com" />
-            <SmartContact type="linkedin" label="LinkedIn" value="sibelakkurt" link="https://linkedin.com/in/sibelakkurt" />
-            <SmartContact type="github" label="GitHub" value="sibelakkurt" link="https://github.com/sibelakkurt" />
-            <SmartContact type="twitter" label="X Account" value="@sibelakkurt" link="https://x.com/sibelakkurt" />
+        </div>
+
+        {/* Menu Column */}
+        <div className="md:col-span-4 md:col-start-6 flex flex-col items-center md:items-center justify-center">
+          <h4 className="font-bold mb-4 text-xs uppercase tracking-widest text-purple-400 text-center">{t("footer.menu")}</h4>
+          <ul className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm text-slate-300 font-medium">
+            <li>
+              <a href="#home" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.home")}</a>
+            </li>
+            <li>
+              <a href="#work" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.projects")}</a>
+            </li>
+            <li>
+              <a href="#about" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.about")}</a>
+            </li>
+            <li>
+              <a href="#resume" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.resume")}</a>
+            </li>
+            <li>
+              <a href="#services" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.services")}</a>
+            </li>
+            <li>
+              <a href="#contact" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.contact")}</a>
+            </li>
+          </ul>
+        </div>
+
+        {/* Social Links Column */}
+        <div className="md:col-span-3 flex flex-col items-center md:items-center justify-center mt-6 md:mt-0">
+          <h4 className="font-bold mb-4 text-xs uppercase tracking-widest text-purple-400 text-center">
+            {language === 'tr' ? 'Bağlantılar' : 'Links'}
+          </h4>
+          <div className="flex gap-4 justify-center">
+            {socialLinks.map((social) => {
+              const Icon = social.icon;
+              return (
+                <a 
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:bg-purple-500 hover:text-white hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:-translate-y-1 transition-all duration-300"
+                  aria-label={social.label}
+                >
+                  <Icon className="w-[18px] h-[18px]" />
+                </a>
+              );
+            })}
           </div>
         </div>
 
-        <div className="lg:col-span-2 lg:col-start-8">
-          <h4 className="font-bold mb-6 text-xs uppercase tracking-widest text-purple-accent">{t("footer.menu")}</h4>
-          <ul className="space-y-3 text-sm text-white/60">
-            <li><a href="#home" className="hover:text-white transition-colors">{t("nav.home")}</a></li>
-            <li><a href="#about" className="hover:text-white transition-colors">{t("nav.about")}</a></li>
-            <li><a href="#services" className="hover:text-white transition-colors">{t("nav.services")}</a></li>
-            <li><a href="#work" className="hover:text-white transition-colors">{t("footer.portfolio")}</a></li>
-          </ul>
-        </div>
-
-        <div className="lg:col-span-2">
-          <h4 className="font-bold mb-6 text-xs uppercase tracking-widest text-purple-accent">{t("footer.links")}</h4>
-          <ul className="space-y-3 text-sm text-white/60">
-            <li><a href="#resume" className="hover:text-white transition-colors">{t("nav.resume")}</a></li>
-            <li><a href="#contact" className="hover:text-white transition-colors">{t("footer.contact_form")}</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">{t("footer.privacy")}</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">{t("footer.terms")}</a></li>
-          </ul>
-        </div>
       </div>
 
-      <div className="border-t border-white/5 bg-black/20">
-        <div className="container-wide py-6 text-xs text-white/40 flex flex-col md:flex-row gap-2 justify-between items-center">
-          <span>© {new Date().getFullYear()} Sibel Akkurt. {t("footer.rights")}</span>
-          <span>{t("footer.attribution")}</span>
+      {/* Bottom Bar */}
+      <div className="border-t border-white/5 py-6 bg-black/20">
+        <div className="container-wide flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
+          <p>© {new Date().getFullYear()} Sibel Akkurt. {t("footer.rights")}</p>
+          <div className="flex items-center gap-6">
+            <a href="#" className="hover:text-white transition-colors">{t("footer.privacy")}</a>
+            <a href="#" className="hover:text-white transition-colors">{t("footer.terms")}</a>
+          </div>
         </div>
       </div>
     </footer>

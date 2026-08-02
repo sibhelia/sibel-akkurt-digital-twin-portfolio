@@ -318,6 +318,8 @@ class Service(TimestampMixin, Base):
     title_en: Mapped[str | None] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text)
     description_en: Mapped[str | None] = mapped_column(Text)
+    detailed_description: Mapped[str | None] = mapped_column(Text)
+    detailed_description_en: Mapped[str | None] = mapped_column(Text)
     icon_name: Mapped[str | None] = mapped_column(String(100))
 
 

@@ -44,3 +44,27 @@ body {
 .animate-wave { animation: wave-move 20s linear infinite; }
 .animate-twinkle { animation: twinkle 3s ease-in-out infinite; }
 
+/* Custom Scrollbar for modern dark theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(165, 145, 185, 0.5); /* grayish lilac */
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(165, 145, 185, 0.8);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(165, 145, 185, 0.5) rgba(0, 0, 0, 0.2);
+}

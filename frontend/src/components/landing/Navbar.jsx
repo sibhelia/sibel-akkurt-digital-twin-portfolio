@@ -48,10 +48,17 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
-          <div className="flex items-center bg-[#2d2d38] rounded-full p-1 border border-white/10 shadow-inner">
+          <Button
+            data-testid="desktop-hire-btn"
+            className="bg-purple-600 hover:bg-purple-700 text-white rounded-full h-10 px-6 font-semibold transition-all shadow-[0_0_15px_rgba(147,51,234,0.4)] hover:shadow-[0_0_25px_rgba(147,51,234,0.6)]"
+            asChild
+          >
+            <a href="#contact">{t("nav.cta")}</a>
+          </Button>
+          <div className="flex items-center bg-[#2d2d38] rounded-full p-0.5 border border-white/10 shadow-inner">
             <button
               onClick={() => setLanguage("tr")}
-              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all ${
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-all ${
                 language === "tr"
                   ? "bg-purple-500 text-white shadow-sm"
                   : "text-white/60 hover:text-white"
@@ -61,7 +68,7 @@ export default function Navbar() {
             </button>
             <button
               onClick={() => setLanguage("en")}
-              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all ${
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-all ${
                 language === "en"
                   ? "bg-purple-500 text-white shadow-sm"
                   : "text-white/60 hover:text-white"
@@ -70,13 +77,6 @@ export default function Navbar() {
               EN
             </button>
           </div>
-          <Button
-            data-testid="desktop-hire-btn"
-            className="bg-purple-600 hover:bg-purple-700 text-white rounded-full h-10 px-6 font-semibold transition-all shadow-[0_0_15px_rgba(147,51,234,0.4)] hover:shadow-[0_0_25px_rgba(147,51,234,0.6)]"
-            asChild
-          >
-            <a href="#contact">{t("nav.cta")}</a>
-          </Button>
         </div>
 
         {/* Mobile Toggle */}

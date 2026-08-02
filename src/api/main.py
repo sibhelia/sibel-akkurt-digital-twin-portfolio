@@ -4,7 +4,10 @@ Main FastAPI application entry point.
 Initializes the API server with all middleware, routes, and services.
 """
 
-from fastapi import Depends, FastAPI, Header, HTTPException, File, UploadFile, Form
+from fastapi import Depends, FastAPI, Header, HTTPException, File, UploadFile, Form, BackgroundTasks
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
@@ -14,11 +17,14 @@ import uuid
 from pathlib import Path
 from sqlalchemy import select
 
+from sqlalchemy.orm import selectinload
+
 from src.config import settings
 from src.db.session import init_db, close_db, get_session
 from src.db.models import (
     PortfolioSettings, Experience, Project, Certificate,
-    Skill, Education, Technology, Service, Testimonial, ContactMessage, Banner
+    Skill, Education, Technology, Service, Testimonial, ContactMessage, Banner,
+    Conversation
 )
 from src.cache.redis_manager import redis_manager
 from src.api.schemas import (
@@ -361,9 +367,6 @@ async def get_full_portfolio_content():
         testi_result = await session.execute(select(Testimonial).order_by(Testimonial.created_at.desc()))
         testimonials = testi_result.scalars().all()
 
-        msg_result = await session.execute(select(ContactMessage).order_by(ContactMessage.created_at.desc()))
-        messages = msg_result.scalars().all()
-
         ban_result = await session.execute(select(Banner).order_by(Banner.created_at.desc()))
         banners = ban_result.scalars().all()
 
@@ -384,11 +387,13 @@ async def get_full_portfolio_content():
                     id=str(e.id),
                     company=e.company,
                     position=e.position,
+                    position_en=e.position_en,
                     location=e.location,
                     start_date=e.start_date,
                     end_date=e.end_date,
                     is_current=e.is_current,
                     description=e.description,
+                    description_en=e.description_en,
                     technologies=e.technologies or [],
                 ) for e in experiences
             ],
@@ -396,9 +401,12 @@ async def get_full_portfolio_content():
                 ProjectResponse(
                     id=str(p.id),
                     title=p.title,
+                    title_en=p.title_en,
                     slug=p.slug,
                     summary=p.summary,
+                    summary_en=p.summary_en,
                     description=p.description,
+                    description_en=p.description_en,
                     technologies=p.technologies or [],
                     github_url=p.github_url,
                     live_url=p.live_url,
@@ -410,39 +418,41 @@ async def get_full_portfolio_content():
                 CertificateResponse(
                     id=str(c.id),
                     title=c.title,
+                    title_en=c.title_en,
                     issuer=c.issuer,
+                    issuer_en=c.issuer_en,
                     issue_date=c.issue_date,
                     credential_id=c.credential_id,
                     credential_url=c.credential_url,
                 ) for c in certificates
             ],
             skills=[
-                SkillResponse(id=str(s.id), name=s.name, is_active=s.is_active) for s in skills
+                SkillResponse(id=str(s.id), name=s.name, name_en=s.name_en, is_active=s.is_active) for s in skills
             ],
             education=[
                 EducationResponse(
-                    id=str(ed.id), school=ed.school, degree=ed.degree, 
-                    start_date=ed.start_date, end_date=ed.end_date, description=ed.description
+                    id=str(ed.id), school=ed.school, school_en=ed.school_en, degree=ed.degree, degree_en=ed.degree_en,
+                    start_date=ed.start_date, end_date=ed.end_date, description=ed.description, description_en=ed.description_en
                 ) for ed in education
             ],
             technologies=[
-                TechnologyResponse(id=str(t.id), name=t.name, category=t.category, icon_url=t.icon_url) for t in technologies
+                TechnologyResponse(id=str(t.id), name=t.name, category=t.category, category_en=t.category_en, icon_url=t.icon_url) for t in technologies
             ],
             services=[
-                ServiceResponse(id=str(s.id), title=s.title, description=s.description, icon_name=s.icon_name) for s in services
+                ServiceResponse(
+                    id=str(s.id), title=s.title, title_en=s.title_en, 
+                    description=s.description, description_en=s.description_en, 
+                    detailed_description=s.detailed_description, detailed_description_en=s.detailed_description_en,
+                    icon_name=s.icon_name
+                ) for s in services
             ],
             testimonials=[
                 TestimonialResponse(
-                    id=str(t.id), client_name=t.client_name, client_title=t.client_title, 
-                    company=t.company, content=t.content, is_approved=t.is_approved
+                    id=str(t.id), client_name=t.client_name, client_title=t.client_title, client_title_en=t.client_title_en,
+                    company=t.company, content=t.content, content_en=t.content_en, is_approved=t.is_approved
                 ) for t in testimonials
             ],
-            messages=[
-                ContactMessageResponse(
-                    id=str(m.id), full_name=m.full_name, email=m.email, 
-                    content=m.content, is_read=m.is_read
-                ) for m in messages
-            ],
+            messages=[], # No longer exposing messages to public frontend
             banners=[
                 BannerResponse(
                     id=str(b.id), title=b.title, subtitle=b.subtitle, 
@@ -702,14 +712,79 @@ async def delete_testimonial(id: str, _: None = Depends(require_admin)):
         await session.commit()
         return {"status": "success"}
 
+def send_notification_email(name: str, email: str, message: str):
+    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+        return
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = settings.SMTP_USER
+        msg['To'] = settings.NOTIFY_EMAIL
+        msg['Subject'] = f"Portfolyo Yeni Mesaj: {name}"
+        
+        body = f"Yeni bir iletişim formu mesajı aldınız.\n\nGönderen: {name}\nE-posta: {email}\n\nMesaj:\n{message}"
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        
+        server = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT)
+        server.starttls()
+        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        logger.error(f"Error sending email: {e}")
+
+# --- Admin Analytics / Logs ---
+@app.get("/api/v1/admin/portfolio/messages", tags=["admin"])
+async def get_admin_messages(_: None = Depends(require_admin)):
+    async with get_session() as session:
+        msg_result = await session.execute(select(ContactMessage).order_by(ContactMessage.created_at.desc()))
+        messages = msg_result.scalars().all()
+        return [
+            {
+                "id": str(msg.id), "full_name": msg.full_name, "email": msg.email,
+                "content": msg.content, "is_read": msg.is_read, "created_at": msg.created_at
+            }
+            for msg in messages
+        ]
+
+@app.get("/api/v1/admin/conversations", tags=["admin"])
+async def get_admin_conversations(_: None = Depends(require_admin)):
+    async with get_session() as session:
+        result = await session.execute(
+            select(Conversation)
+            .options(selectinload(Conversation.messages))
+            .order_by(Conversation.created_at.desc())
+        )
+        convs = result.scalars().unique().all()
+        return [
+            {
+                "id": str(c.id),
+                "session_id": c.session_id,
+                "created_at": c.created_at,
+                "status": c.status,
+                "messages": [
+                    {
+                        "id": str(m.id),
+                        "role": m.role,
+                        "content": m.content,
+                        "created_at": m.created_at
+                    }
+                    for m in sorted(c.messages, key=lambda x: x.message_index)
+                ]
+            }
+            for c in convs
+        ]
+
 # --- ContactMessage Endpoints ---
 @app.post("/api/v1/portfolio/messages", response_model=ContactMessageResponse, tags=["portfolio"])
-async def create_message(payload: ContactMessageCreate):
+async def create_message(payload: ContactMessageCreate, background_tasks: BackgroundTasks):
     async with get_session() as session:
         msg = ContactMessage(**payload.dict())
         session.add(msg)
         await session.commit()
         await session.refresh(msg)
+        
+        background_tasks.add_task(send_notification_email, payload.full_name, payload.email, payload.content)
+        
         return ContactMessageResponse(id=str(msg.id), **payload.dict())
 
 @app.delete("/api/v1/admin/portfolio/messages/{id}", tags=["admin"])

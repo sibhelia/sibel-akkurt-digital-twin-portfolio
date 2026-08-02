@@ -20,18 +20,35 @@ export default function Contact() {
       return;
     }
     setLoading(true);
-    // Frontend-only demo: simulate async
-    await new Promise((r) => setTimeout(r, 700));
-    setLoading(false);
-    toast.success(t("contact.success"));
-    setForm({ name: "", email: "", message: "" });
+    
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/portfolio/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: form.name,
+          email: form.email,
+          content: form.message
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to send message");
+      
+      toast.success(t("contact.success"));
+      setForm({ name: "", email: "", message: "" });
+    } catch (error) {
+      console.error("Contact API error:", error);
+      toast.error("Bir hata oluştu, mesaj gönderilemedi. / An error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <section
       id="contact"
       data-testid="contact-section"
-      className="py-20 lg:py-28 relative z-10"
+      className="pt-4 pb-16 lg:pt-8 lg:pb-20 relative z-10"
     >
       <div className="container-wide">
         <div className="text-center mb-12">
@@ -45,7 +62,7 @@ export default function Contact() {
 
         <div className="relative w-full">
           {/* Floating rocket / illustration accent */}
-          <div className="hidden lg:flex absolute -top-10 -right-6 w-24 h-24 rounded-full bg-purple-accent items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.6)] floaty">
+          <div className="hidden lg:flex absolute -top-10 -right-6 z-20 w-24 h-24 rounded-full bg-purple-accent items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.6)] floaty pointer-events-none">
             <Rocket className="w-10 h-10 text-white -rotate-12" />
           </div>
 
@@ -90,7 +107,7 @@ export default function Contact() {
                 value={form.message}
                 onChange={update("message")}
                 placeholder={t("contact.message_placeholder")}
-                rows={7}
+                rows={5}
                 className="bg-card-darker/80 border-white/10 text-white rounded-xl focus-visible:ring-purple-accent focus-visible:border-purple-accent placeholder:text-white/30 resize-none text-base p-4"
               />
             </div>
@@ -100,7 +117,7 @@ export default function Contact() {
                 data-testid="contact-submit"
                 type="submit"
                 disabled={loading}
-                className="btn-purple rounded-full h-12 px-7 text-sm font-semibold inline-flex items-center gap-2"
+                className="bg-purple-600 hover:bg-purple-700 text-white rounded-full h-12 px-7 text-sm font-semibold inline-flex items-center gap-2 transition-colors"
               >
                 {loading ? t("contact.sending") : <>{t("contact.send")} <Send className="w-4 h-4" /></>}
               </Button>

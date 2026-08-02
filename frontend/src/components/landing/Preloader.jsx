@@ -12,7 +12,7 @@ export default function Preloader({ onDone }) {
     const tick = () => {
       // Smooth easing toward 100
       const target = 100;
-      p += (target - p) * 0.045 + 0.4;
+      p += (target - p) * 0.02 + 0.15;
       if (p >= 99.5) p = 100;
       setProgress(Math.round(p));
       if (p < 100) {
@@ -21,7 +21,7 @@ export default function Preloader({ onDone }) {
         setTimeout(() => {
           setLeaving(true);
           setTimeout(() => onDone && onDone(), 650);
-        }, 350);
+        }, 800);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -65,10 +65,16 @@ export default function Preloader({ onDone }) {
             <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/70" />
           </div>
 
-          {/* Center monogram */}
+          {/* Center Logo */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-2xl font-extrabold tracking-tight">
-              S<span className="text-purple-accent">A</span>
+            <div className="relative">
+              {/* Premium backglow for logo */}
+              <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full scale-150 animate-pulse" />
+              <img 
+                src="/portfolio-logo-white.png" 
+                alt="Logo" 
+                className="relative z-10 w-16 h-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.4)] mix-blend-screen" 
+              />
             </div>
           </div>
         </div>

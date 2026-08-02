@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
   LayoutDashboard, Image as ImageIcon, Code2, Briefcase, GraduationCap, FolderDot, 
-  Layers, Wrench, User, MessageSquare, Mail, Settings, LogOut, 
+  Layers, Wrench, User, MessageSquare, Mail, Settings, LogOut, MessageCircle,
   Search, Bell, Plus, Trash2, CheckCircle2, XCircle, Eye, X,
   Activity, BarChart3, Clock, ShieldCheck, ShieldAlert, Sparkles
 } from "lucide-react";
@@ -48,7 +48,8 @@ const MENU_GROUPS = [
     title: "İletişim & Analiz",
     items: [
       { id: "testimonials", label: "Yorumlar", icon: MessageSquare },
-      { id: "messages", label: "Gelen Mesajlar", icon: Mail },
+      { id: "messages", label: "İletişim Mesajları", icon: Mail },
+      { id: "conversations", label: "Sohbet Kayıtları", icon: MessageCircle },
     ]
   },
   {
@@ -215,7 +216,8 @@ export default function AdminPage() {
               {activeTab === "services" && <ServicesAdmin data={portfolioData} refresh={fetchPortfolioData} />}
               {activeTab === "about" && <AboutAdmin data={portfolioData} refresh={fetchPortfolioData} />}
               {activeTab === "testimonials" && <TestimonialsAdmin data={portfolioData} refresh={fetchPortfolioData} />}
-              {activeTab === "messages" && <MessagesAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "messages" && <MessagesAdmin />}
+              {activeTab === "conversations" && <ConversationsAdmin />}
               {activeTab === "settings" && <SettingsAdmin data={portfolioData} refresh={fetchPortfolioData} adminName={adminName} />}
             </>
           )}
@@ -631,8 +633,8 @@ function ProjectsAdmin({ data, refresh }) {
       {label: "Özet Açıklama (EN)", key: "summary_en", lang: 'en'},
       {label: "Açıklama", key: "description", type: "textarea", lang: 'tr'},
       {label: "Açıklama (EN)", key: "description_en", type: "textarea", lang: 'en'},
-      {label: "Canlı Link", key: "live_url"},
-      {label: "Github Linki", key: "github_url"}
+      {label: "Github Linki", key: "github_url", required: true},
+      {label: "Canlı Link", key: "live_url"}
     ]} 
   />;
 }
@@ -648,12 +650,14 @@ function TechnologiesAdmin({ data, refresh }) {
 }
 function ServicesAdmin({ data, refresh }) {
   return <GenericTableWithModal title="Hizmetlerim" dataList={data?.services||[]} refresh={refresh} endpoint="/admin/portfolio/services"
-    columns={[{label: "BAŞLIK", key: "title"}, {label: "AÇIKLAMA", key: "description"}]} 
+    columns={[{label: "BAŞLIK", key: "title"}, {label: "ÖZET AÇIKLAMA", key: "description"}]} 
     formFields={[
       {label: "Hizmet Başlığı", key: "title", required: true, lang: 'tr'},
       {label: "Hizmet Başlığı (EN)", key: "title_en", required: true, lang: 'en'},
-      {label: "Açıklama", key: "description", type: "textarea", lang: 'tr'},
-      {label: "Açıklama (EN)", key: "description_en", type: "textarea", lang: 'en'}
+      {label: "Özet Açıklama (Kart)", key: "description", type: "textarea", lang: 'tr'},
+      {label: "Özet Açıklama (Kart EN)", key: "description_en", type: "textarea", lang: 'en'},
+      {label: "Detaylı Açıklama (Popup)", key: "detailed_description", type: "textarea", lang: 'tr'},
+      {label: "Detaylı Açıklama (Popup EN)", key: "detailed_description_en", type: "textarea", lang: 'en'}
     ]} 
   />;
 }
@@ -700,15 +704,26 @@ function SkillsAdmin({ data, refresh }) {
   />;
 }
 
-function MessagesAdmin({ data, refresh }) {
-  const msgs = data?.messages || [];
+function MessagesAdmin() {
+  const [msgs, setMsgs] = useState([]);
   const [selectedMsg, setSelectedMsg] = useState(null);
   
+  const fetchMessages = async () => {
+    try {
+      const res = await axiosInstance.get("/admin/portfolio/messages");
+      setMsgs(res.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => { fetchMessages(); }, []);
+
   const toggleRead = async (id) => {
     try {
       await axiosInstance.put(`/admin/portfolio/messages/${id}/read`);
       toast.success("Mesaj durumu güncellendi");
-      refresh();
+      fetchMessages();
     } catch (e) {
       toast.error("Hata oluştu");
     }
@@ -719,7 +734,7 @@ function MessagesAdmin({ data, refresh }) {
     try {
       await axiosInstance.delete(`/admin/portfolio/messages/${id}`);
       toast.success("Mesaj silindi");
-      refresh();
+      fetchMessages();
     } catch (e) {
       toast.error("Hata oluştu");
     }

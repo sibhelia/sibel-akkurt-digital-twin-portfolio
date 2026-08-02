@@ -4,8 +4,8 @@ import { staggerContainer, fadeUp, scaleUp, viewPortConfig } from "@/utils/anima
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Hero({ settings, skills = [] }) {
-  const coreContent = settings?.avatar_url || "AI";
-  const isImageCore = coreContent.startsWith("http") || coreContent.startsWith("data:") || coreContent.startsWith("/");
+  const coreContent = "/portfolio-logo-white.png";
+  const isImageCore = true;
   const { language, localized } = useLanguage();
   
   // Distribute skills into 3 orbital rings
@@ -113,7 +113,7 @@ export default function Hero({ settings, skills = [] }) {
               {/* Core symbol/icon */}
               <div className="relative z-20 text-white font-black tracking-widest text-lg sm:text-xl opacity-90 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] flex items-center justify-center w-full h-full">
                 {isImageCore ? (
-                  <img src={coreContent} alt="Core" className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-full border-2 border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
+                  <img src={coreContent} alt="Core Logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_4px_rgba(255,255,255,0.25)] mix-blend-screen opacity-95" />
                 ) : (
                   <span>{coreContent}</span>
                 )}

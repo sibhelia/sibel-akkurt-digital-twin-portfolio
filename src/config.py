@@ -70,6 +70,13 @@ class Settings(BaseSettings):
     ADMIN_USERS: str = os.getenv("ADMIN_USERS", "")
     ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "")
     
+    # Email Settings
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    NOTIFY_EMAIL: str = os.getenv("NOTIFY_EMAIL", "sibelakk23@gmail.com")
+    
     # Features
     ENABLE_DEBUG_ENDPOINT: bool = DEBUG
     ENABLE_ADMIN_ENDPOINTS: bool = True

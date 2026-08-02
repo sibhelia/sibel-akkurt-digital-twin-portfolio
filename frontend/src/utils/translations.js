@@ -156,8 +156,8 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   },
 
   // ─── Footer ───
-  "footer.heading1": { tr: "Dijital İkizine", en: "Say Hello To" },
-  "footer.heading2": { tr: "Merhaba De!", en: "My Digital Twin!" },
+  "footer.heading1": { tr: "Sibel", en: "Sibel" },
+  "footer.heading2": { tr: "Akkurt", en: "Akkurt" },
   "footer.desc": {
     tr: "Yeni projeler ve heyecan verici işbirlikleri için her zaman buradayım. Hadi birlikte harika şeyler inşa edelim.",
     en: "I'm always here for new projects and exciting collaborations. Let's build amazing things together.",
@@ -176,6 +176,7 @@ In this portfolio, you can explore the projects I've built, the technologies I u
 
   // ─── Chatbot ───
   "chatbot.title": { tr: "Yapay Zeka Asistanı", en: "AI Assistant" },
+  "chatbot.subtitle": { tr: "Bilgisayar Mühendisi", en: "Computer Engineer" },
   "chatbot.placeholder": {
     tr: "Kariyerim ve projelerim hakkında soru sorun...",
     en: "Ask about my career and projects...",
