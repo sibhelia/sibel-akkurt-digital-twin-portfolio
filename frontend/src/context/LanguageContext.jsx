@@ -5,7 +5,9 @@ const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem("app_lang") || "tr";
+    const savedLang = localStorage.getItem("app_lang") || "tr";
+    document.documentElement.lang = savedLang;
+    return savedLang;
   });
 
   const t = useCallback((key) => {
@@ -18,6 +20,7 @@ export function LanguageProvider({ children }) {
     setLanguage((prev) => {
       const nextLang = prev === "tr" ? "en" : "tr";
       localStorage.setItem("app_lang", nextLang);
+      document.documentElement.lang = nextLang;
       return nextLang;
     });
   }, []);
