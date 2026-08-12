@@ -17,6 +17,7 @@ export const translations = {
   "nav.services": { tr: "Hizmetler", en: "Services" },
   "nav.projects": { tr: "Projeler", en: "Projects" },
   "nav.resume": { tr: "Özgeçmiş", en: "Resume" },
+  "nav.certificates": { tr: "Sertifikalar", en: "Certificates" },
   "nav.contact": { tr: "İletişim", en: "Contact" },
   "nav.cta": { tr: "Bana Ulaş", en: "Contact Me" },
 
@@ -203,6 +204,7 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   "admin.menu.experience": { tr: "Deneyimlerim", en: "My Experiences" },
   "admin.menu.education": { tr: "Eğitimlerim", en: "My Education" },
   "admin.menu.projects": { tr: "Projelerim", en: "My Projects" },
+  "admin.menu.certificates": { tr: "Sertifikalar", en: "Certificates" },
   "admin.menu.services": { tr: "Hizmetlerim", en: "My Services" },
   "admin.menu.communication": { tr: "İletişim & Analiz", en: "Communication & Analysis" },
   "admin.menu.testimonials": { tr: "Yorumlar", en: "Testimonials" },

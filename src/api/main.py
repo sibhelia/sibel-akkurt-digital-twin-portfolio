@@ -607,6 +607,27 @@ if __name__ == "__main__":
     )
 
 
+# --- Certificate Endpoints ---
+@app.post("/api/v1/admin/portfolio/certificates", response_model=CertificateResponse, tags=["admin"])
+async def create_certificate(payload: CertificateCreate, _: None = Depends(require_admin)):
+    async with get_session() as session:
+        cert = Certificate(**payload.dict())
+        session.add(cert)
+        await session.commit()
+        await session.refresh(cert)
+        return CertificateResponse(id=str(cert.id), **payload.dict())
+
+@app.delete("/api/v1/admin/portfolio/certificates/{id}", tags=["admin"])
+async def delete_certificate(id: str, _: None = Depends(require_admin)):
+    async with get_session() as session:
+        result = await session.execute(select(Certificate).where(Certificate.id == id))
+        cert = result.scalars().first()
+        if not cert:
+            raise HTTPException(status_code=404, detail="Certificate not found")
+        await session.delete(cert)
+        await session.commit()
+        return {"status": "success"}
+
 # --- Skill Endpoints ---
 @app.post("/api/v1/admin/portfolio/skills", response_model=SkillResponse, tags=["admin"])
 async def create_skill(payload: SkillCreate, _: None = Depends(require_admin)):

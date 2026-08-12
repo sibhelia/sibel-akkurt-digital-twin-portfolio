@@ -47,6 +47,9 @@ export default function Footer() {
               <a href="#work" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.projects")}</a>
             </li>
             <li>
+              <a href="#certificates" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.certificates")}</a>
+            </li>
+            <li>
               <a href="#about" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t("nav.about")}</a>
             </li>
             <li>

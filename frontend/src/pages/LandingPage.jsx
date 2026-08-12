@@ -6,6 +6,7 @@ import Hero from "@/components/landing/Hero";
 import About from "@/components/landing/About";
 import Services from "@/components/landing/Services";
 import Work from "@/components/landing/Work";
+import Certificates from "@/components/landing/Certificates";
 import Resume from "@/components/landing/Resume";
 import Contact from "@/components/landing/Contact";
 import Footer from "@/components/landing/Footer";
@@ -143,6 +144,7 @@ export default function LandingPage() {
           <About settings={portfolio?.settings} skills={portfolio?.skills} />
           <Services services={portfolio?.services} />
           <Work projects={portfolio?.projects} />
+          <Certificates certificates={portfolio?.certificates} />
           <Resume education={portfolio?.education} experiences={portfolio?.experiences} />
           <Contact />
         </main>

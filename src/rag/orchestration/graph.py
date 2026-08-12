@@ -166,7 +166,7 @@ async def node_memory_injector(state: OrchestrationState) -> OrchestrationState:
     if history:
         history_lines = [
             f"{item.get('role')}: {item.get('content')}"
-            for item in history[-5:]
+            for item in history[-20:]
         ]
         context = "\n\n".join(["Conversation history:"] + history_lines + [context])
     return {**state, "context": context}
@@ -298,6 +298,15 @@ async def process_query(query: str, session_id: str, user_id: str, language: str
         "latencies": {},
     }
     final_state = await orchestration_graph.ainvoke(initial_state)
+    
+    old_history = final_state.get("conversation_history") or []
+    new_history = old_history + [
+        {"role": "user", "content": query},
+        {"role": "assistant", "content": final_state.get("response", "")}
+    ]
+    new_history = new_history[-20:]
+    await redis_manager.update_session(session_id, {"history": new_history})
+
     return {
         "response": final_state.get("response", ""),
         "citations": final_state.get("citations", []),

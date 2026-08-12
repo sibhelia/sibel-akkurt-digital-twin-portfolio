@@ -4,7 +4,7 @@ import axios from "axios";
 import { 
   LayoutDashboard, Image as ImageIcon, Code2, Briefcase, GraduationCap, FolderDot, 
   Layers, Wrench, User, MessageSquare, Mail, Settings, LogOut, MessageCircle,
-  Search, Bell, Plus, Trash2, CheckCircle2, XCircle, Eye, X,
+  Search, Bell, Plus, Trash2, CheckCircle2, XCircle, Eye, X, Award, Download, RefreshCw, Calendar,
   Activity, BarChart3, Clock, ShieldCheck, ShieldAlert, Sparkles, ArrowUpRight,
   Menu, ChevronDown, ChevronRight, ChevronUp, MoreVertical, Edit2, ChevronLeft
 } from "lucide-react";
@@ -43,6 +43,7 @@ const getMenuGroups = (t) => [
       { id: "experience", label: t("admin.menu.experience"), icon: Briefcase },
       { id: "education", label: t("admin.menu.education"), icon: GraduationCap },
       { id: "projects", label: t("admin.menu.projects"), icon: FolderDot },
+      { id: "certificates", label: t("admin.menu.certificates"), icon: Award },
       { id: "services", label: t("admin.menu.services"), icon: Wrench },
     ]
   },
@@ -69,7 +70,7 @@ function Modal({ isOpen, onClose, title, children }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 text-slate-800">
           <h3 className="font-bold">{title}</h3>
           <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
         </div>
@@ -90,6 +91,8 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [portfolioData, setPortfolioData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+
   const [openGroups, setOpenGroups] = useState({[t("admin.menu.main")]: true, [t("admin.menu.chatbot")]: true});
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -531,6 +534,30 @@ function ChatbotAnalytics() {
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+
+  const filteredQueries = queries.filter(q => {
+    const matchesSearch = Object.values(q).some(val => 
+      String(val).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    let matchesDate = true;
+    if (q.created_at) {
+      const d = new Date(q.created_at);
+      if (dateRange.start && new Date(dateRange.start) > d) matchesDate = false;
+      if (dateRange.end && new Date(dateRange.end) < d) matchesDate = false;
+    }
+    return matchesSearch && matchesDate;
+  });
+  
+  const analyticsColumns = [
+    { label: "Oturum ID", key: "session_id" },
+    { label: "Mesaj Sayısı", key: "message_count" },
+    { label: "Tarih", key: "created_at" },
+    { label: "Durum", key: "status" }
+  ];
+
+
   useEffect(() => {
     axiosInstance.get("/admin/chatbot/queries")
       .then(res => setQueries(res.data))
@@ -544,19 +571,37 @@ function ChatbotAnalytics() {
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
         <TableHeader title={t("admin.analytics.queries_title")} subtitle={t("admin.analytics.queries_subtitle")} count={queries.length} />
         <div className="p-5">
-          <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+          <TableToolbar 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          onRefresh={refresh}
+          onExport={() => exportToCSV(filteredData, columns, title)}
+          recordCount={filteredData.length}
+        />
+        <TableToolbar 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          onRefresh={fetchAnalytics}
+          onExport={() => exportToCSV(filteredQueries, analyticsColumns, "ChatbotAnalytics")}
+          recordCount={filteredQueries.length}
+        />
+        <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
-                <tr className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[11px] uppercase tracking-wider font-semibold">
-                  <th className="py-3.5 px-4 w-12 text-center border-r border-white/10">#</th>
-                  <th className="py-3.5 px-4 border-r border-white/10">{t("admin.analytics.session_id")}</th>
-                  <th className="py-3.5 px-4 border-r border-white/10 text-center">{t("admin.analytics.msg_count")}</th>
-                  <th className="py-3.5 px-4 border-r border-white/10">{t("admin.analytics.date")}</th>
-                  <th className="py-3.5 px-4 w-32 text-center">{t("admin.analytics.status")}</th>
+                <tr className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-slate-200">
+                  <th className="py-4 px-4 w-12 text-center ">#</th>
+                  <th className="py-4 px-4 ">{t("admin.analytics.session_id")}</th>
+                  <th className="py-4 px-4  text-center">{t("admin.analytics.msg_count")}</th>
+                  <th className="py-4 px-4 ">{t("admin.analytics.date")}</th>
+                  <th className="py-4 px-4 w-32 text-center">{t("admin.analytics.status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {loading ? <tr><td colSpan="5" className="py-8 text-center text-slate-400">{t("admin.loading")}</td></tr> : queries.map((q, i) => (
+                {loading ? <tr><td colSpan="5" className="py-8 text-center text-slate-400">{t("admin.loading")}</td></tr> : filteredQueries.map((q, i) => (
                   <tr key={q.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
                     <td className="py-3 px-4 font-mono text-xs text-slate-600">{q.session_id.substring(0,12)}...</td>
@@ -569,7 +614,7 @@ function ChatbotAnalytics() {
                     </td>
                   </tr>
                 ))}
-                {!loading && queries.length === 0 && <tr><td colSpan="5" className="py-8 text-center text-slate-400">{t("admin.analytics.no_queries")}</td></tr>}
+                {!loading && filteredQueries.length === 0 && <tr><td colSpan="5" className="py-8 text-center text-slate-400">{t("admin.analytics.no_queries")}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -618,6 +663,93 @@ function TableHeader({ title, subtitle, count, activeCount, onAdd }) {
   );
 }
 
+
+function exportToCSV(dataList, columns, filename) {
+  if (!dataList || dataList.length === 0) return;
+  
+  // Try to use label or fallback to key if it's a string, else skip
+  const validColumns = columns.filter(c => typeof c.label === 'string' || typeof c.key === 'string');
+  const headers = validColumns.map(c => c.label || c.key).join(",");
+  
+  const rows = dataList.map(item => {
+    return validColumns.map(c => {
+      let val = item[c.key] || "";
+      if (typeof val === 'string') {
+        val = val.replace(/"/g, '""');
+      }
+      return `"${val}"`;
+    }).join(",");
+  }).join("\n");
+  
+  const csv = `${headers}\n${rows}`;
+  const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+function TableToolbar({ searchTerm, setSearchTerm, dateRange, setDateRange, onRefresh, onExport, recordCount }) {
+  return (
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4 bg-white p-3 rounded-lg border border-slate-200">
+      <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input 
+            type="text" 
+            placeholder="İçeriklerde ara..." 
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full md:w-64"
+          />
+        </div>
+        
+        <div className="flex items-center gap-2 border border-slate-200 rounded-md px-3 py-2 bg-white hidden sm:flex">
+          <Calendar className="w-4 h-4 text-slate-400" />
+          <input 
+            type="date" 
+            value={dateRange.start}
+            onChange={e => setDateRange(prev => ({...prev, start: e.target.value}))}
+            className="text-sm outline-none text-slate-600 bg-transparent"
+          />
+          <span className="text-slate-300">-</span>
+          <input 
+            type="date" 
+            value={dateRange.end}
+            onChange={e => setDateRange(prev => ({...prev, end: e.target.value}))}
+            className="text-sm outline-none text-slate-600 bg-transparent"
+          />
+        </div>
+
+        <div className="bg-slate-50 border border-slate-200 text-emerald-600 text-[11px] font-bold tracking-wider px-3 py-2 rounded-md flex items-center">
+          {recordCount} KAYIT FİLTRELENDİ
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 w-full md:w-auto">
+        <button 
+          onClick={onExport}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-emerald-600 bg-white border border-emerald-500 rounded-md hover:bg-emerald-50 transition-colors w-full md:w-auto justify-center uppercase tracking-wide"
+        >
+          <Download className="w-4 h-4" />
+          EXCEL EXPORT
+        </button>
+        <button 
+          onClick={onRefresh}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-emerald-500 rounded-md hover:bg-emerald-600 transition-colors w-full md:w-auto justify-center uppercase tracking-wide"
+        >
+          <RefreshCw className="w-4 h-4" />
+          YENİLE
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function GenericTableWithModal({ title, dataList, columns, endpoint, formFields, refresh }) {
   const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -626,6 +758,28 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
   const [formLang, setFormLang] = useState('tr');
   const [isTranslating, setIsTranslating] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+
+  const filteredData = (dataList || []).filter(item => {
+    // Search term filter
+    const matchesSearch = Object.values(item).some(val => 
+      String(val).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    // Date filter
+    let matchesDate = true;
+    const itemDate = item.created_at || item.start_date || item.date;
+    if (itemDate) {
+      const d = new Date(itemDate);
+      if (dateRange.start && new Date(dateRange.start) > d) matchesDate = false;
+      if (dateRange.end && new Date(dateRange.end) < d) matchesDate = false;
+    }
+    
+    return matchesSearch && matchesDate;
+  });
+
 
   const handleAutoTranslate = async () => {
     const extractedTexts = {};
@@ -686,10 +840,20 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
         <TableHeader title={title} subtitle={`${title} ${t("admin.modal.list_management")}`} count={dataList.length} onAdd={() => setIsModalOpen(true)} />
         <div className="p-5">
-          <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+          <TableToolbar 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          onRefresh={refresh}
+          onExport={() => exportToCSV(filteredData, columns, title)}
+          recordCount={filteredData.length}
+        />
+
+        <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
-                <tr className="text-slate-400 text-[10px] uppercase tracking-wider font-bold border-b-2 border-slate-100">
+                <tr className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-slate-200">
                   <th className="py-4 px-4 w-12 text-center">#</th>
                   {columns.map(c => <th key={c.key} className="py-4 px-4">{c.label}</th>)}
                   <th className="py-4 px-4 w-24 text-right">{t("admin.table.actions")}</th>
@@ -805,7 +969,7 @@ function ExperienceAdmin({ data, refresh }) {
 function EducationAdmin({ data, refresh }) {
   const { t } = useLanguage();
   return <GenericTableWithModal title={t("admin.menu.education")} dataList={data?.education||[]} refresh={refresh} endpoint="/admin/portfolio/education"
-    columns={[{label: t("admin.col.school"), key: "school"}, {label: t("admin.col.degree"), key: "degree"}]} 
+    columns={[{label: t("admin.col.school"), key: "school"}, {label: t("admin.col.degree"), key: "degree"}, {label: t("admin.col.date"), key: "duration"}]} 
     formFields={[
       {label: t("admin.field.school_name"), key: "school", required: true, lang: 'tr'},
       {label: t("admin.field.school_name_en"), key: "school_en", required: true, lang: 'en'},
@@ -818,11 +982,43 @@ function EducationAdmin({ data, refresh }) {
     ]} 
   />;
 }
+
+function CertificatesAdmin({ data, refresh }) {
+  const { t } = useLanguage();
+  const items = data?.certificates || [];
+
+  const columns = [
+    { key: "title", label: t("admin.col.title") },
+    { key: "issuer", label: t("admin.col.issuer") },
+    { key: "issue_date", label: t("admin.col.issue_date") },
+    { key: "credential_url", label: t("admin.col.credential_url") }
+  ];
+
+  const formFields = [
+    { key: "title", label: t("admin.col.title") + " (TR)", type: "text", required: true },
+    { key: "title_en", label: t("admin.col.title") + " (EN)", type: "text" },
+    { key: "issuer", label: t("admin.col.issuer") + " (TR)", type: "text", required: true },
+    { key: "issuer_en", label: t("admin.col.issuer") + " (EN)", type: "text" },
+    { key: "issue_date", label: t("admin.col.issue_date"), type: "text", required: true },
+    { key: "credential_id", label: "Credential ID", type: "text" },
+    { key: "credential_url", label: t("admin.col.credential_url"), type: "text" }
+  ];
+
+  return <GenericTableWithModal title={t("admin.menu.certificates")} dataList={items} refresh={refresh} endpoint="/admin/portfolio/certificates" columns={columns} formFields={formFields} />
+}
+
 function ProjectsAdmin({ data, refresh }) {
   const { t } = useLanguage();
   return <GenericTableWithModal title={t("admin.menu.projects")} dataList={data?.projects||[]} refresh={refresh} endpoint="/admin/portfolio/projects"
-    columns={[{label: t("admin.col.project_name"), key: "title"}, {label: t("admin.col.summary"), key: "summary"}]} 
+    columns={[
+      {label: "Foto", key: "image_url", render: (url) => url ? <img src={url} className="w-8 h-8 rounded-md object-cover border border-slate-200" alt="img" /> : <div className="w-8 h-8 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center text-xs text-slate-400">Yok</div>},
+      {label: t("admin.col.project_name"), key: "title"}, 
+      {label: t("admin.col.summary"), key: "summary"},
+      {label: "GitHub", key: "github_url", render: (val) => val ? <a href={val} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Link</a> : "-"},
+      {label: "Live", key: "live_url", render: (val) => val ? <a href={val} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Link</a> : "-"}
+    ]} 
     formFields={[
+      {label: "Görsel URL (Fotoğraf)", key: "image_url"},
       {label: t("admin.field.project_name"), key: "title", required: true, lang: 'tr'},
       {label: t("admin.field.project_name_en"), key: "title_en", required: true, lang: 'en'},
       {label: t("admin.field.summary"), key: "summary", lang: 'tr'},
@@ -848,7 +1044,7 @@ function TechnologiesAdmin({ data, refresh }) {
 function ServicesAdmin({ data, refresh }) {
   const { t } = useLanguage();
   return <GenericTableWithModal title={t("admin.menu.services")} dataList={data?.services||[]} refresh={refresh} endpoint="/admin/portfolio/services"
-    columns={[{label: t("admin.col.title"), key: "title"}, {label: t("admin.col.summary_desc"), key: "description"}]} 
+    columns={[{label: "İkon", key: "icon_name"}, {label: t("admin.col.title"), key: "title"}, {label: t("admin.col.summary_desc"), key: "description", render: (val) => (typeof val === "string") ? val.substring(0,40)+"..." : (val || "-")}]} 
     formFields={[
       {label: t("admin.field.service_title"), key: "title", required: true, lang: 'tr'},
       {label: t("admin.field.service_title_en"), key: "title_en", required: true, lang: 'en'},
@@ -874,8 +1070,14 @@ function BannerAdmin({ data, refresh }) {
 function TestimonialsAdmin({ data, refresh }) {
   const { t } = useLanguage();
   return <GenericTableWithModal title={t("admin.menu.testimonials")} dataList={data?.testimonials||[]} refresh={refresh} endpoint="/admin/portfolio/testimonials"
-    columns={[{label: t("admin.col.client"), key: "client_name"}, {label: t("admin.col.comment"), key: "content"}]} 
+    columns={[
+      {label: "Foto", key: "image_url", render: (url) => url ? <img src={url} className="w-8 h-8 rounded-full object-cover border border-slate-200" alt="img" /> : <div className="w-8 h-8 bg-slate-100 rounded-full border border-slate-200 flex items-center justify-center text-xs text-slate-400">Yok</div>},
+      {label: t("admin.col.client"), key: "client_name"}, 
+      {label: t("admin.field.client_title"), key: "company"},
+      {label: t("admin.col.comment"), key: "content", render: (val) => (typeof val === "string") ? val.substring(0, 40) + "..." : (val || "")}
+    ]} 
     formFields={[
+      {label: "Profil Fotoğrafı URL", key: "image_url"},
       {label: t("admin.field.client_name"), key: "client_name", required: true},
       {label: t("admin.field.client_title"), key: "company", lang: 'tr'},
       {label: t("admin.field.client_title_en"), key: "client_title_en", lang: 'en'},
@@ -905,10 +1107,54 @@ function SkillsAdmin({ data, refresh }) {
   />;
 }
 
+
+function ConversationsAdmin() {
+  const { t } = useLanguage();
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 text-slate-800">
+        <h3 className="font-bold flex items-center gap-2">
+          <MessageCircle className="w-5 h-5 text-purple-500" />
+          {t("admin.menu.conversations")}
+        </h3>
+      </div>
+      <div className="p-8 text-center text-slate-500">
+        <MessageCircle className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+        <p>Sohbet kayıtları modülü yapım aşamasındadır.</p>
+      </div>
+    </div>
+  );
+}
+
 function MessagesAdmin() {
   const { t } = useLanguage();
   const [msgs, setMsgs] = useState([]);
   const [selectedMsg, setSelectedMsg] = useState(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+
+  const filteredMsgs = msgs.filter(m => {
+    const matchesSearch = Object.values(m).some(val => 
+      String(val).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    let matchesDate = true;
+    if (m.created_at) {
+      const d = new Date(m.created_at);
+      if (dateRange.start && new Date(dateRange.start) > d) matchesDate = false;
+      if (dateRange.end && new Date(dateRange.end) < d) matchesDate = false;
+    }
+    return matchesSearch && matchesDate;
+  });
+  
+  const msgColumns = [
+    { label: "Ad Soyad", key: "name" },
+    { label: "E-posta", key: "email" },
+    { label: "Şirket", key: "company" },
+    { label: "Tarih", key: "created_at" },
+    { label: "Durum", key: "status" }
+  ];
+
   
   const fetchMessages = async () => {
     try {
@@ -950,19 +1196,28 @@ function MessagesAdmin() {
         <TableHeader title={t("admin.messages.title")} subtitle={t("admin.messages.subtitle")} count={msgs.length} />
         
         <div className="p-5">
-          <div className="border border-slate-200 rounded-lg overflow-hidden">
+          <TableToolbar 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          onRefresh={fetchMessages}
+          onExport={() => exportToCSV(filteredMsgs, msgColumns, "Iletisim_Mesajlari")}
+          recordCount={filteredMsgs.length}
+        />
+        <div className="border border-slate-200 rounded-lg overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[11px] uppercase tracking-wider font-semibold">
-                  <th className="py-3.5 px-4 w-12 text-center border-r border-white/10">#</th>
-                  <th className="py-3.5 px-4 border-r border-white/10">{t("admin.messages.name_surname")}</th>
-                  <th className="py-3.5 px-4 border-r border-white/10">{t("admin.messages.email")}</th>
-                  <th className="py-3.5 px-4 border-r border-white/10 text-center w-32">{t("admin.analytics.status")}</th>
-                  <th className="py-3.5 px-4 w-28 text-center">{t("admin.table.actions")}</th>
+                <tr className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-slate-200">
+                  <th className="py-4 px-4 w-12 text-center ">#</th>
+                  <th className="py-4 px-4 ">{t("admin.messages.name_surname")}</th>
+                  <th className="py-4 px-4 ">{t("admin.messages.email")}</th>
+                  <th className="py-4 px-4  text-center w-32">{t("admin.analytics.status")}</th>
+                  <th className="py-4 px-4 w-28 text-center">{t("admin.table.actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {msgs.map((m, i) => (
+                {filteredMsgs.map((m, i) => (
                   <tr key={m.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
                     <td className="py-3 px-4 font-medium text-slate-700">{m.full_name}</td>
@@ -984,7 +1239,7 @@ function MessagesAdmin() {
                     </td>
                   </tr>
                 ))}
-                {msgs.length === 0 && <tr><td colSpan="6" className="py-8 text-center text-slate-400">{t("admin.messages.no_messages")}</td></tr>}
+                {filteredMsgs.length === 0 && <tr><td colSpan="6" className="py-8 text-center text-slate-400">{t("admin.messages.no_messages")}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -1024,7 +1279,7 @@ function SettingsAdmin({ data, refresh, adminName }) {
     <div className="w-full">
       <h2 className="text-xl font-bold text-slate-800 mb-6">{t("admin.menu.settings")}</h2>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 p-5 text-white">
+        <div className="bg-slate-50 border-b border-slate-100 p-5 text-slate-800">
           <h3 className="font-semibold text-sm flex items-center gap-2">
             <Settings className="w-4 h-4" /> {t("admin.settings.update_profile")}
           </h3>
@@ -1128,7 +1383,7 @@ function AboutAdmin({ data, refresh }) {
     <div className="w-full">
       <h2 className="text-xl font-bold text-slate-800 mb-6">{t("admin.menu.about")}</h2>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 p-5 text-white">
+        <div className="bg-slate-50 border-b border-slate-100 p-5 text-slate-800">
           <h3 className="font-semibold text-sm">{t("admin.about.settings_title")}</h3>
         </div>
         <div className="p-6 space-y-4">
