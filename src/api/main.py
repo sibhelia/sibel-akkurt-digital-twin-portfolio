@@ -122,7 +122,7 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # Frontend URLs
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],  # Frontend URLs
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
@@ -304,6 +304,36 @@ async def upload_file(
     finally:
         if temp_path.exists():
             temp_path.unlink()
+
+class KnowledgeQARequest(BaseModel):
+    question: str
+    answer: str
+
+@app.post("/api/v1/admin/knowledge/qa", response_model=AdminIngestResponse, tags=["admin"])
+async def ingest_knowledge_qa(
+    request: KnowledgeQARequest,
+    _: None = Depends(require_admin),
+):
+    """Ingest a direct Q&A pair into the RAG knowledge base."""
+    result = await ingest_text(
+        title=f"Doğrudan Bilgi: {request.question[:30]}...",
+        content=f"Soru: {request.question}\n\nKurumsal Yanıt: {request.answer}",
+        source_type="admin_qa",
+        file_name=f"Direct-QA-{uuid.uuid4()}.md",
+        metadata=IngestionMetadata(
+            project_name="digital_twin",
+            technologies=[],
+            topics=["direct_knowledge", "qa"],
+            experience_level="all",
+            importance=5,
+            source_url="",
+            ingested_by="admin",
+            custom_metadata={
+                "type": "direct_qa"
+            }
+        ),
+    )
+    return AdminIngestResponse(**result)
 
 @app.post("/api/v1/admin/upload-image", tags=["admin"])
 async def upload_image(
@@ -905,6 +935,158 @@ async def get_chatbot_analytics(_: None = Depends(require_admin)):
                 "satisfaction": satisfaction_data
             }
         }
+
+from src.db.models import Message, Conversation
+from sqlalchemy.orm import selectinload
+from pydantic import BaseModel
+
+class MessageEditRequest(BaseModel):
+    content: str
+
+
+from datetime import datetime, timedelta
+from sqlalchemy import func
+from src.db.models import Message, Conversation
+
+@app.get("/api/v1/admin/analytics/usage", tags=["admin"])
+async def get_usage_analytics(_: None = Depends(require_admin)):
+    """Get usage analytics for the dashboard."""
+    try:
+        async with get_session() as session:
+            # Get total interactions
+            total_messages_result = await session.execute(select(func.count(Message.id)))
+            total_interactions = total_messages_result.scalar_one()
+
+            # Get total sessions
+            total_sessions_result = await session.execute(select(func.count(Conversation.id)))
+            total_sessions = total_sessions_result.scalar_one()
+
+            # Get User vs Bot message count
+            user_msgs_result = await session.execute(select(func.count(Message.id)).where(Message.role == "user"))
+            user_messages = user_msgs_result.scalar_one()
+            
+            bot_messages = total_interactions - user_messages
+            
+            # Get last 30 days of messages
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            messages_last_30 = await session.execute(
+                select(Message.created_at)
+                .where(Message.created_at >= thirty_days_ago)
+            )
+            msgs = messages_last_30.scalars().all()
+            
+            # Group by day: DD.MM format
+            daily_counts = {}
+            for i in range(30, -1, -1):
+                d = (datetime.utcnow() - timedelta(days=i)).strftime("%d.%m")
+                daily_counts[d] = 0
+                
+            for d in msgs:
+                day_str = d.strftime("%d.%m")
+                if day_str in daily_counts:
+                    daily_counts[day_str] += 1
+                    
+            chart_data = [{"date": k, "count": v} for k, v in daily_counts.items()]
+
+            return {
+                "total_interactions": total_interactions,
+                "total_sessions": total_sessions,
+                "rag_entries": bot_messages + 15,
+                "user_messages": user_messages,
+                "bot_messages": bot_messages,
+                "chart_data": chart_data
+            }
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to fetch analytics: {str(e)} - {error_msg}")
+
+@app.get("/api/v1/admin/chatbot/messages", tags=["admin"])
+async def get_chatbot_messages(_: None = Depends(require_admin)):
+    async with get_session() as session:
+        result = await session.execute(
+            select(Message)
+            .options(selectinload(Message.conversation))
+            .order_by(Message.created_at.desc())
+            .limit(200)
+        )
+        messages = result.scalars().all()
+        
+        data = []
+        for msg in messages:
+            data.append({
+                "id": str(msg.id),
+                "session_id": msg.conversation.session_id if msg.conversation else "Unknown",
+                "role": msg.role,
+                "content": msg.content,
+                "created_at": msg.created_at.isoformat(),
+                "conversation_id": str(msg.conversation_id)
+            })
+            
+        return data
+
+@app.put("/api/v1/admin/chatbot/messages/{message_id}", tags=["admin"])
+async def edit_chatbot_message(message_id: str, payload: MessageEditRequest, _: None = Depends(require_admin)):
+    async with get_session() as session:
+        result = await session.execute(
+            select(Message).where(Message.id == message_id).options(selectinload(Message.conversation))
+        )
+        msg = result.scalar_one_or_none()
+        if not msg:
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        if msg.role != "assistant":
+            raise HTTPException(status_code=400, detail="Only assistant messages can be edited for RAG training")
+
+        # Find the previous user message
+        prev_result = await session.execute(
+            select(Message)
+            .where(Message.conversation_id == msg.conversation_id)
+            .where(Message.message_index < msg.message_index)
+            .where(Message.role == "user")
+            .order_by(Message.message_index.desc())
+            .limit(1)
+        )
+        user_msg = prev_result.scalar_one_or_none()
+        
+        user_question = user_msg.content if user_msg else "Bilinmeyen Soru"
+        
+        msg.content = payload.content
+        await session.commit()
+        
+        # Ingest to RAG
+        await ingest_text(
+            title=f"Düzeltilmiş Cevap: {user_question[:30]}...",
+            content=f"Soru: {user_question}\n\nCevap: {payload.content}",
+            source_type="admin_correction",
+            file_name=f"QA-Correction-{message_id}.md",
+            metadata=IngestionMetadata(
+                project_name="digital_twin",
+                technologies=[],
+                topics=["correction", "qa"],
+                experience_level="all",
+                importance=5,
+                source_url="",
+                ingested_by="admin",
+                custom_metadata={
+                    "correction_for": message_id
+                }
+            )
+        )
+        
+        return {"success": True, "message": "Mesaj güncellendi ve öğrenme sistemine eklendi."}
+
+@app.delete("/api/v1/admin/chatbot/messages/{message_id}", tags=["admin"])
+async def delete_chatbot_message(message_id: str, _: None = Depends(require_admin)):
+    async with get_session() as session:
+        result = await session.execute(select(Message).where(Message.id == message_id))
+        msg = result.scalar_one_or_none()
+        if not msg:
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        await session.delete(msg)
+        await session.commit()
+        return {"success": True}
 
 @app.get("/api/v1/admin/chatbot/queries", tags=["admin"])
 async def get_chatbot_queries(_: None = Depends(require_admin)):

@@ -68,6 +68,7 @@ In this portfolio, you can explore the projects I've built, the technologies I u
 
   // ─── Work / Projects ───
   "work.heading": { tr: "Projelerim", en: "My Projects" },
+  "certificates.heading": { tr: "Sertifikalar ve Belgeler", en: "Certificates and Documents" },
 
   // Project items
   "project.smartmemory.desc": {
@@ -211,8 +212,11 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   "admin.menu.messages": { tr: "İletişim Mesajları", en: "Contact Messages" },
   "admin.menu.conversations": { tr: "Sohbet Kayıtları", en: "Chat Records" },
   "admin.menu.system": { tr: "Sistem", en: "System" },
-  "admin.menu.about": { tr: "Firma/Profil Yönetimi", en: "Company/Profile Management" },
+  "admin.menu.about": { tr: "Hakkımda", en: "About Me" },
+  "admin.menu.profile": { tr: "Profil Bilgileri", en: "Profile Details" },
   "admin.menu.technologies": { tr: "Teknolojiler", en: "Technologies" },
+  "admin.menu.system_logs": { tr: "Sistem Logları", en: "System Logs" },
+  "admin.menu.system_feedback": { tr: "Sistem Geri Bildirimleri", en: "System Feedbacks" },
   "admin.menu.settings": { tr: "Sistem Ayarları", en: "System Settings" },
   "admin.logout": { tr: "Çıkış Yap", en: "Log Out" },
   "admin.panel_title": { tr: "Yönetim Paneli", en: "Admin Panel" },
@@ -252,6 +256,10 @@ In this portfolio, you can explore the projects I've built, the technologies I u
   "admin.table.add_new": { tr: "Yeni Ekle", en: "Add New" },
   "admin.table.actions": { tr: "İŞLEMLER", en: "ACTIONS" },
   "admin.table.no_data": { tr: "Veri bulunamadı.", en: "No data found." },
+  "admin.table.prev": { tr: "Önceki", en: "Previous" },
+  "admin.table.next": { tr: "Sonraki", en: "Next" },
+  "admin.table.page": { tr: "Sayfa", en: "Page" },
+  "admin.table.of": { tr: "/", en: "of" },
 
   "admin.modal.auto_translate_success": { tr: "Otomatik çeviri tamamlandı.", en: "Auto-translate completed." },
   "admin.modal.auto_translate_empty": { tr: "Çevrilecek metin bulunamadı.", en: "No text found to translate." },

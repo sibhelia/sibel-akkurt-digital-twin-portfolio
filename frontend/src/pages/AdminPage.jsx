@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
@@ -6,7 +6,8 @@ import {
   Layers, Wrench, User, MessageSquare, Mail, Settings, LogOut, MessageCircle,
   Search, Bell, Plus, Trash2, CheckCircle2, XCircle, Eye, X, Award, Download, RefreshCw, Calendar,
   Activity, BarChart3, Clock, ShieldCheck, ShieldAlert, Sparkles, ArrowUpRight,
-  Menu, ChevronDown, ChevronRight, ChevronUp, MoreVertical, Edit2, ChevronLeft
+  Menu, ChevronDown, ChevronRight, ChevronUp, MoreVertical, Edit2, ChevronLeft,
+  UploadCloud, BookOpen, FileText, MessageSquarePlus, Terminal, Megaphone
 } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -33,33 +34,37 @@ const getMenuGroups = (t) => [
     title: t("admin.menu.chatbot"),
     items: [
       { id: "chatbot_analytics", label: t("admin.menu.chatbot_analytics"), icon: Activity },
+      { id: "knowledge_management", label: "Veri & Bilgi Yönetimi", icon: BookOpen },
+      { id: "usage_analytics", label: "Kullanım Analizi", icon: BarChart3 },
     ]
   },
   {
     title: t("admin.menu.content"),
     items: [
-      { id: "banner", label: t("admin.menu.banner"), icon: ImageIcon },
-      { id: "skills", label: t("admin.menu.skills"), icon: Code2 },
-      { id: "experience", label: t("admin.menu.experience"), icon: Briefcase },
-      { id: "education", label: t("admin.menu.education"), icon: GraduationCap },
+      { id: "profile", label: t("admin.menu.profile"), icon: User },
+      { id: "about", label: t("admin.menu.about"), icon: FileText },
+      { id: "services", label: t("admin.menu.services"), icon: Wrench },
       { id: "projects", label: t("admin.menu.projects"), icon: FolderDot },
       { id: "certificates", label: t("admin.menu.certificates"), icon: Award },
-      { id: "services", label: t("admin.menu.services"), icon: Wrench },
+      { id: "experience", label: t("admin.menu.experience"), icon: Briefcase },
+      { id: "education", label: t("admin.menu.education"), icon: GraduationCap },
+      { id: "skills", label: t("admin.menu.skills"), icon: Code2 },
+      { id: "messages", label: t("admin.menu.messages"), icon: Mail },
     ]
   },
   {
     title: t("admin.menu.communication"),
     items: [
       { id: "testimonials", label: t("admin.menu.testimonials"), icon: MessageSquare },
-      { id: "messages", label: t("admin.menu.messages"), icon: Mail },
       { id: "conversations", label: t("admin.menu.conversations"), icon: MessageCircle },
     ]
   },
   {
     title: t("admin.menu.system"),
     items: [
-      { id: "about", label: t("admin.menu.about"), icon: User },
       { id: "technologies", label: t("admin.menu.technologies"), icon: Layers },
+      { id: "system_logs", label: t("admin.menu.system_logs"), icon: Terminal },
+      { id: "system_feedback", label: t("admin.menu.system_feedback"), icon: Megaphone },
       { id: "settings", label: t("admin.menu.settings"), icon: Settings },
     ]
   }
@@ -97,6 +102,7 @@ export default function AdminPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [menuSearchTerm, setMenuSearchTerm] = useState("");
 
   const fetchPortfolioData = async () => {
     try {
@@ -156,6 +162,8 @@ export default function AdminPage() {
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input 
                   type="text" 
+                  value={menuSearchTerm}
+                  onChange={(e) => setMenuSearchTerm(e.target.value)}
                   placeholder="Menüde ara..." 
                   className="w-full h-9 pl-9 pr-4 rounded-lg bg-slate-50 text-[13px] border border-slate-100 focus:outline-none focus:border-purple-300 focus:bg-white transition-all text-slate-600 placeholder:text-slate-400"
                 />
@@ -164,9 +172,22 @@ export default function AdminPage() {
           </div>
           
           <nav className={`py-4 space-y-4 transition-all duration-300 ${sidebarCollapsed ? "px-2" : "px-4"}`}>
-          {getMenuGroups(t).map((group, idx) => {
+          {getMenuGroups(t)
+            .map(group => {
+              // Filter items within the group
+              if (!menuSearchTerm) return group;
+              const term = menuSearchTerm.toLowerCase();
+              const filteredItems = group.items.filter(item => 
+                item.label.toLowerCase().includes(term) || 
+                (group.title && group.title.toLowerCase().includes(term))
+              );
+              return { ...group, items: filteredItems };
+            })
+            .filter(group => group.items.length > 0) // Hide empty groups
+            .map((group, idx) => {
             const hasTitle = Boolean(group.title);
-            const isOpen = !hasTitle || openGroups[group.title] !== false; 
+            // If searching, auto-expand groups
+            const isOpen = menuSearchTerm ? true : (!hasTitle || openGroups[group.title] !== false);
             return (
               <div key={idx} className="mb-2">
                 {hasTitle && !sidebarCollapsed && (
@@ -178,8 +199,9 @@ export default function AdminPage() {
                     {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />}
                   </button>
                 )}
-                {(!hasTitle || isOpen || sidebarCollapsed) && (
-                  <div className={hasTitle && !sidebarCollapsed ? "space-y-1 mt-3" : "space-y-1"}>
+                
+                {(isOpen || sidebarCollapsed) && (
+                  <div className="space-y-1">
                     {group.items.map((item) => {
                       const isActive = activeTab === item.id;
                       const Icon = item.icon;
@@ -363,7 +385,9 @@ export default function AdminPage() {
             <>
               {activeTab === "dashboard" && <DashboardAdmin data={portfolioData} />}
               {activeTab === "chatbot_analytics" && <ChatbotAnalytics />}
-              {activeTab === "banner" && <BannerAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "knowledge_management" && <KnowledgeManagementAdmin />}
+              {activeTab === "usage_analytics" && <UsageAnalyticsAdmin />}
+
               {activeTab === "skills" && <SkillsAdmin data={portfolioData} refresh={fetchPortfolioData} />}
               {activeTab === "experience" && <ExperienceAdmin data={portfolioData} refresh={fetchPortfolioData} />}
               {activeTab === "education" && <EducationAdmin data={portfolioData} refresh={fetchPortfolioData} />}
@@ -371,9 +395,12 @@ export default function AdminPage() {
               {activeTab === "technologies" && <TechnologiesAdmin data={portfolioData} refresh={fetchPortfolioData} />}
               {activeTab === "services" && <ServicesAdmin data={portfolioData} refresh={fetchPortfolioData} />}
               {activeTab === "about" && <AboutAdmin data={portfolioData} refresh={fetchPortfolioData} />}
+              {activeTab === "profile" && <ProfileAdmin data={portfolioData} refresh={fetchPortfolioData} />}
               {activeTab === "testimonials" && <TestimonialsAdmin data={portfolioData} refresh={fetchPortfolioData} />}
               {activeTab === "messages" && <MessagesAdmin />}
               {activeTab === "conversations" && <ConversationsAdmin />}
+              {activeTab === "system_logs" && <SystemLogsAdmin />}
+              {activeTab === "system_feedback" && <SystemFeedbackAdmin />}
               {activeTab === "settings" && <SettingsAdmin data={portfolioData} refresh={fetchPortfolioData} adminName={adminName} />}
             </>
           )}
@@ -529,15 +556,501 @@ function DashboardAdmin({ data }) {
   );
 }
 
+
+
+function UsageAnalyticsAdmin() {
+  const { t } = useLanguage();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAnalytics = () => {
+    setLoading(true);
+    axiosInstance.get("/admin/analytics/usage")
+      .then(res => setData(res.data))
+      .catch(e => toast.error("Analitik verileri yüklenemedi."))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  if (loading || !data) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  // Calculate percentages for pie chart
+  const totalQA = data.user_messages + data.bot_messages;
+  const userRatio = totalQA > 0 ? (data.user_messages / totalQA * 100).toFixed(1) : 0;
+  const botRatio = totalQA > 0 ? (data.bot_messages / totalQA * 100).toFixed(1) : 0;
+  const avgMsgPerSession = data.total_sessions > 0 ? (data.total_interactions / data.total_sessions).toFixed(1) : 0;
+
+  const pieData = [
+    { name: 'Ziyaretçi Soruları', value: data.user_messages, color: '#ec4899' }, // pink
+    { name: 'Bot Yanıtları', value: data.bot_messages, color: '#8b5cf6' } // purple
+  ];
+
+  return (
+    <div className="w-full relative space-y-6">
+      {/* Top Header */}
+      <div>
+        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide">
+          <BarChart3 className="w-6 h-6 text-purple-600" />
+          Kullanım Analizi
+        </h2>
+        <p className="text-sm text-slate-500 mt-1">Chatbot etkileşimleri, trafik yoğunluğu ve kullanıcı deneyimi metrikleri.</p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-blue-50/60 rounded-xl shadow-sm border border-blue-100 p-6 flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <MessageSquare className="w-24 h-24 text-blue-500" />
+          </div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">TOPLAM ETKİLEŞİM</span>
+          </div>
+          <div className="flex items-end gap-3 mb-1">
+            <span className="text-4xl font-bold text-slate-800">{data.total_interactions}</span>
+            <span className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">KAYIT</span>
+          </div>
+          <p className="text-xs text-slate-400">Sisteme gönderilen toplam mesaj sayısı.</p>
+        </div>
+
+        <div className="bg-emerald-50/60 rounded-xl shadow-sm border border-emerald-100 p-6 flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <User className="w-24 h-24 text-emerald-500" />
+          </div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">TOPLAM OTURUM</span>
+          </div>
+          <div className="flex items-end gap-3 mb-1">
+            <span className="text-4xl font-bold text-slate-800">{data.total_sessions}</span>
+            <span className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">ADET</span>
+          </div>
+          <p className="text-xs text-slate-400">Sistemi kullanan tekil kullanıcı ziyareti.</p>
+        </div>
+
+        <div className="bg-orange-50/60 rounded-xl shadow-sm border border-orange-100 p-6 flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <Activity className="w-24 h-24 text-orange-500" />
+          </div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">ORT. MESAJ / OTURUM</span>
+          </div>
+          <div className="flex items-end gap-3 mb-1">
+            <span className="text-4xl font-bold text-slate-800">{avgMsgPerSession}</span>
+            <span className="text-xs text-slate-500 mb-1 font-bold uppercase tracking-wider">ADET</span>
+          </div>
+          <p className="text-xs text-slate-400">Her bir oturumda gerçekleşen ortalama mesaj.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Line Chart */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 lg:col-span-2 flex flex-col">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-slate-800 tracking-wider">KULLANIM YOĞUNLUK GRAFİĞİ</h3>
+              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5">CHATBOT KULLANIM TRAFİĞİ — GÜNLÜK</p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
+               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+               <span className="text-[10px] font-bold tracking-wider">CANLI VERİ</span>
+            </div>
+          </div>
+          <div className="p-6 flex-1 min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data.chart_data}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#94a3b8' }} 
+                  dy={10} 
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#94a3b8' }} 
+                  dx={-10}
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  labelStyle={{ fontWeight: 'bold', color: '#1e293b' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="count" 
+                  stroke="#a855f7" 
+                  strokeWidth={3} 
+                  dot={{ r: 4, strokeWidth: 2, fill: '#fff', stroke: '#a855f7' }} 
+                  activeDot={{ r: 6, fill: '#a855f7', stroke: '#fff', strokeWidth: 2 }} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Pie Chart */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+          <div className="p-6 border-b border-slate-100">
+            <h3 className="font-bold text-slate-800 tracking-wider text-sm">KULLANICI DENEYİMİ</h3>
+            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5">SİSTEM ETKİLEŞİM DAĞILIMI</p>
+          </div>
+          <div className="p-6 flex-1 flex flex-col">
+            <div className="h-[200px] relative flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-2xl font-bold text-slate-800">{botRatio}%</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">BOT YANITI</span>
+              </div>
+            </div>
+            
+            <div className="mt-8 space-y-3 flex-1">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-pink-500"></div>
+                  <span className="font-bold text-slate-600 uppercase tracking-wider">ZİYARETÇİ</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-800">{data.user_messages}</span>
+                  <span className="text-[10px] text-slate-400">({userRatio}%)</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-purple-500"></div>
+                  <span className="font-bold text-slate-600 uppercase tracking-wider">YAPAY ZEKA</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-800">{data.bot_messages}</span>
+                  <span className="text-[10px] text-slate-400">({botRatio}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KnowledgeManagementAdmin() {
+  const { t } = useLanguage();
+  const [qaForm, setQaForm] = useState({ question: "", answer: "" });
+  const [isQaSubmitting, setIsQaSubmitting] = useState(false);
+  
+  const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = React.useRef(null);
+
+  const handleQaSubmit = async () => {
+    if (!qaForm.question.trim() || !qaForm.answer.trim()) {
+      toast.error("Lütfen soru ve yanıt alanlarını doldurunuz.");
+      return;
+    }
+    setIsQaSubmitting(true);
+    try {
+      await axiosInstance.post("/admin/knowledge/qa", qaForm);
+      toast.success("Bilgi bankasına başarıyla eklendi!");
+      setQaForm({ question: "", answer: "" });
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hata oluştu.");
+    } finally {
+      setIsQaSubmitting(false);
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleChange = (e) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  const handleFileUpload = async (file) => {
+    const validTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/markdown", "text/plain"];
+    if (!validTypes.includes(file.type) && !file.name.endsWith('.md')) {
+      toast.error("Sadece PDF, DOCX ve MD uzantılı dosyalar desteklenmektedir.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("project_name", "Knowledge Base");
+    formData.append("importance", "5");
+
+    setIsUploading(true);
+    try {
+      await axiosInstance.post("/admin/knowledge/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      toast.success("Belge sisteme dahil edildi!");
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Yükleme sırasında hata oluştu.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="w-full relative">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide">
+          <BookOpen className="w-6 h-6 text-purple-600" />
+          Veri & Bilgi Yönetimi
+        </h2>
+        <p className="text-sm text-slate-500 mt-1">Yapay zeka asistanınızın kurumsal hafızasını belgelerle zenginleştirin veya doğrudan bilgi tanımlayın.</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Document Upload Box */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800 tracking-wider">BELGE YÜKLEME</h3>
+              <p className="text-[10px] uppercase font-bold text-purple-500 tracking-widest mt-0.5">TOPLU BİLGİ HAVUZU</p>
+            </div>
+          </div>
+          <div className="p-4 flex-1 flex flex-col">
+            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+              Kurumunuza ait PDF veya DOCX formatındaki belgeleri sisteme dahil ederek yapay zekayı kurum dilinde eğitebilirsiniz.
+            </p>
+            
+            <div 
+              className={`flex-1 min-h-[160px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-6 transition-colors text-center relative ${dragActive ? "border-purple-400 bg-purple-50" : "border-slate-200 bg-slate-50 hover:bg-slate-100/50"}`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                className="hidden" 
+                accept=".pdf,.docx,.md,.txt"
+                onChange={handleChange}
+              />
+              <div className="w-12 h-12 bg-white shadow-sm rounded-xl flex items-center justify-center text-purple-600 mb-3 border border-purple-100">
+                <UploadCloud className="w-6 h-6" />
+              </div>
+              <p className="font-bold text-slate-700 tracking-wider mb-2">DOSYA SEÇİN VEYA BIRAKIN</p>
+              <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold">PDF, DOCX DESTEKLENİR</p>
+            </div>
+          </div>
+          <div className="p-4 bg-slate-50 border-t border-slate-100">
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold uppercase tracking-wider text-xs rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {isUploading ? <RefreshCw className="w-4 h-4 animate-spin"/> : null}
+              {isUploading ? "YÜKLENİYOR..." : "BELGEYİ SİSTEME DAHİL ET"}
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Q&A Box */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg">
+              <MessageSquarePlus className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800 tracking-wider">HIZLI SORU-CEVAP</h3>
+              <p className="text-[10px] uppercase font-bold text-purple-500 tracking-widest mt-0.5">DOĞRUDAN BİLGİ TANIMLAMA</p>
+            </div>
+          </div>
+          <div className="p-4 flex-1 flex flex-col">
+            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+              Spesifik sorular için asistanın vereceği kesin ve kurumsal yanıtları buradan nokta atışı olarak tanımlayabilirsiniz.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">SORU / PROBLEM</label>
+                <textarea 
+                  placeholder="Kullanıcı asistanımıza ne sorabilir?"
+                  value={qaForm.question}
+                  onChange={e => setQaForm({...qaForm, question: e.target.value})}
+                  className="w-full h-20 p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400 transition-colors resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">KURUMSAL YANIT</label>
+                <textarea 
+                  placeholder="Asistanın vermesi gereken en doğru yanıt nedir?"
+                  value={qaForm.answer}
+                  onChange={e => setQaForm({...qaForm, answer: e.target.value})}
+                  className="w-full h-24 p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400 transition-colors resize-none"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="p-4 border-t border-slate-100">
+            <button 
+              disabled={isQaSubmitting}
+              onClick={handleQaSubmit}
+              className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white shadow-sm shadow-purple-200 font-bold uppercase tracking-wider text-xs rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {isQaSubmitting ? <RefreshCw className="w-4 h-4 animate-spin"/> : null}
+              {isQaSubmitting ? "KAYDEDİLİYOR..." : "BİLGİ BANKASINA EKLE ->"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ChatbotAnalytics() {
   const { t } = useLanguage();
-  const [queries, setQueries] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  
+  const [editingMsg, setEditingMsg] = useState(null);
+  const [editContent, setEditContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredQueries = queries.filter(q => {
+  const fetchMessages = () => {
+    setLoading(true);
+    axiosInstance.get("/admin/chatbot/messages")
+      .then(res => setMessages(res.data))
+      .catch(e => toast.error("Mesajlar yüklenemedi."))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  const handleEditSave = async () => {
+    if (!editingMsg) return;
+    setIsSubmitting(true);
+    try {
+      await axiosInstance.put(`/admin/chatbot/messages/${editingMsg.id}`, { content: editContent });
+      toast.success("Mesaj RAG sistemine öğretildi!");
+      setEditingMsg(null);
+      fetchMessages();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hata oluştu.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Silmek istediğinize emin misiniz?")) return;
+    try {
+      await axiosInstance.delete(`/admin/chatbot/messages/${id}`);
+      toast.success("Mesaj silindi.");
+      fetchMessages();
+    } catch (e) {
+      toast.error("Hata oluştu.");
+    }
+  };
+
+  const qaPairs = React.useMemo(() => {
+    const pairs = [];
+    const byConv = {};
+    messages.forEach(m => {
+      if (!byConv[m.conversation_id]) byConv[m.conversation_id] = [];
+      byConv[m.conversation_id].push(m);
+    });
+
+    Object.values(byConv).forEach(convMsgs => {
+      // Sort older to newer for pairing
+      const sorted = [...convMsgs].sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+      for (let i = 0; i < sorted.length; i++) {
+        if (sorted[i].role === 'user') {
+          const pair = {
+            id: sorted[i].id,
+            session_id: sorted[i].session_id,
+            userMsg: sorted[i].content,
+            botMsg: "",
+            botMsgId: null,
+            created_at: sorted[i].created_at
+          };
+          if (i + 1 < sorted.length && sorted[i+1].role === 'assistant') {
+            pair.botMsg = sorted[i+1].content;
+            pair.botMsgId = sorted[i+1].id;
+            i++; 
+          }
+          pairs.push(pair);
+        } else if (sorted[i].role === 'assistant') {
+           pairs.push({
+            id: sorted[i].id,
+            session_id: sorted[i].session_id,
+            userMsg: "",
+            botMsg: sorted[i].content,
+            botMsgId: sorted[i].id,
+            created_at: sorted[i].created_at
+          });
+        }
+      }
+    });
+
+    // Sort newest pairs first
+    return pairs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  }, [messages]);
+
+  const filteredPairs = qaPairs.filter(q => {
     const matchesSearch = Object.values(q).some(val => 
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -550,86 +1063,206 @@ function ChatbotAnalytics() {
     return matchesSearch && matchesDate;
   });
   
+  const sessionColors = [
+    "bg-emerald-500/10", 
+    "bg-blue-500/10",
+    "bg-purple-500/10",
+    "bg-orange-500/10",
+    "bg-pink-500/10",
+    "bg-cyan-500/10",
+    "bg-yellow-500/10",
+    "bg-indigo-500/10",
+    "bg-rose-500/10",
+    "bg-teal-500/10",
+  ];
+  
+  const sessionColorMap = {};
+  let colorIndex = 0;
+  
+  qaPairs.forEach(pair => {
+    if (!sessionColorMap[pair.session_id]) {
+      sessionColorMap[pair.session_id] = sessionColors[colorIndex % 10];
+      colorIndex++;
+    }
+  });
+
   const analyticsColumns = [
     { label: "Oturum ID", key: "session_id" },
-    { label: "Mesaj Sayısı", key: "message_count" },
     { label: "Tarih", key: "created_at" },
-    { label: "Durum", key: "status" }
+    { label: "Ziyaretçi Sorusu", key: "userMsg" },
+    { label: "Bot Cevabı", key: "botMsg" }
   ];
 
-
-  useEffect(() => {
-    axiosInstance.get("/admin/chatbot/queries")
-      .then(res => setQueries(res.data))
-      .catch(e => toast.error(t("admin.analytics.error")))
-      .finally(() => setLoading(false));
-  }, []);
-
   return (
-    <div className="w-full">
-      <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-2">{t("admin.menu.chatbot_analytics")}</h2>
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
-        <TableHeader title={t("admin.analytics.queries_title")} subtitle={t("admin.analytics.queries_subtitle")} count={queries.length} />
+    <div className="w-full relative">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide">
+          <Activity className="w-6 h-6 text-purple-600" />
+          Sorgu & Diyalog Analitiği
+        </h2>
+        <p className="text-sm text-slate-500 mt-1">Chatbot'a sorulan soruları, botun verdiği yanıtları ve oturum bazlı diyalog geçmişini yönetin.</p>
+      </div>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <TableHeader 
+          title="Mesajlar ve RAG Eğitimi" 
+          subtitle="Botun cevaplarını buradan düzeltip tekrar öğretebilirsiniz." 
+          count={qaPairs.length} 
+          onExport={() => exportToCSV(filteredPairs, analyticsColumns, "ChatbotQA")} 
+          onRefresh={fetchMessages} 
+        />
         <div className="p-5">
           <TableToolbar 
-          searchTerm={searchTerm} 
-          setSearchTerm={setSearchTerm}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          onRefresh={refresh}
-          onExport={() => exportToCSV(filteredData, columns, title)}
-          recordCount={filteredData.length}
-        />
-        <TableToolbar 
-          searchTerm={searchTerm} 
-          setSearchTerm={setSearchTerm}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          onRefresh={fetchAnalytics}
-          onExport={() => exportToCSV(filteredQueries, analyticsColumns, "ChatbotAnalytics")}
-          recordCount={filteredQueries.length}
-        />
-        <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            recordCount={filteredPairs.length}
+            totalCount={qaPairs.length}
+          />
+          <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[1000px] table-fixed">
               <thead>
                 <tr className="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-slate-200">
-                  <th className="py-4 px-4 w-12 text-center ">#</th>
-                  <th className="py-4 px-4 ">{t("admin.analytics.session_id")}</th>
-                  <th className="py-4 px-4  text-center">{t("admin.analytics.msg_count")}</th>
-                  <th className="py-4 px-4 ">{t("admin.analytics.date")}</th>
-                  <th className="py-4 px-4 w-32 text-center">{t("admin.analytics.status")}</th>
+                  <th className="py-4 px-4 w-[16.66%]">İşlemler</th>
+                  <th className="py-4 px-4 w-[16.66%]">Oturum ID</th>
+                  <th className="py-4 px-4 w-[16.66%]">Tarih</th>
+                  <th className="py-4 px-4 w-[16.66%]">Saat</th>
+                  <th className="py-4 px-4 w-[16.66%]">Soru</th>
+                  <th className="py-4 px-4 w-[16.66%]">Cevap</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm">
-                {loading ? <tr><td colSpan="5" className="py-8 text-center text-slate-400">{t("admin.loading")}</td></tr> : filteredQueries.map((q, i) => (
-                  <tr key={q.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
-                    <td className="py-3 px-4 font-mono text-xs text-slate-600">{q.session_id.substring(0,12)}...</td>
-                    <td className="py-3 px-4 text-center font-bold text-purple-600">{q.message_count}</td>
-                    <td className="py-3 px-4 text-slate-500">{new Date(q.created_at).toLocaleString('tr-TR')}</td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-100 uppercase">
-                        {q.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {!loading && filteredQueries.length === 0 && <tr><td colSpan="5" className="py-8 text-center text-slate-400">{t("admin.analytics.no_queries")}</td></tr>}
+              <tbody className="divide-y divide-slate-100/50 text-sm">
+                {loading ? <tr><td colSpan="6" className="py-8 text-center text-slate-400">{t("admin.loading")}</td></tr> : (() => {
+                  const totalPages = Math.ceil(filteredPairs.length / ITEMS_PER_PAGE);
+                  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+                  const paginatedData = filteredPairs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+                  return paginatedData.map((q, i) => {
+                    const d = new Date(q.created_at);
+                    const dateStr = d.toLocaleDateString('tr-TR');
+                    const timeStr = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    const rowColor = sessionColorMap[q.session_id];
+                    
+                    return (
+                    <tr key={q.id} className={`${rowColor} hover:brightness-95 transition-all`}>
+                      <td className="py-3 px-4 align-top">
+                         <div className="flex items-center gap-2">
+                           {q.botMsgId && (
+                             <button onClick={() => { setEditingMsg({id: q.botMsgId}); setEditContent(q.botMsg); }} className="p-1.5 bg-white text-blue-600 rounded shadow-sm hover:bg-blue-50 border border-slate-200" title="Cevabı Düzenle ve Öğret">
+                               <Edit2 className="w-3.5 h-3.5" />
+                             </button>
+                           )}
+                           <button onClick={() => handleDelete(q.botMsgId || q.id)} className="p-1.5 bg-white text-red-600 rounded shadow-sm hover:bg-red-50 border border-slate-200" title="Sil">
+                             <Trash2 className="w-3.5 h-3.5" />
+                           </button>
+                         </div>
+                      </td>
+                      <td className="py-3 px-4 align-top font-mono text-[10px] text-slate-600" title={q.session_id}>{q.session_id.substring(0,8)}...</td>
+                      <td className="py-3 px-4 align-top text-xs text-slate-600">{dateStr}</td>
+                      <td className="py-3 px-4 align-top text-xs text-slate-600 font-mono">{timeStr}</td>
+                      <td className="py-3 px-4 align-top text-xs text-slate-800 break-words">{q.userMsg || "-"}</td>
+                      <td className="py-3 px-4 align-top text-xs text-slate-800 break-words">{q.botMsg || "-"}</td>
+                    </tr>
+                  )})}
+                )()}
+                {!loading && filteredPairs.length === 0 && <tr><td colSpan="6" className="py-8 text-center text-slate-400">{t("admin.analytics.no_queries")}</td></tr>}
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {(() => {
+            const totalPages = Math.ceil(filteredPairs.length / ITEMS_PER_PAGE);
+            if (totalPages <= 1) return null;
+            return (
+              <div className="flex items-center justify-between mt-4 px-1 border-t border-slate-100 pt-4">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  {t("admin.table.prev")}
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors ${
+                        currentPage === page
+                          ? "bg-purple-600 text-white shadow-sm"
+                          : "text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  {t("admin.table.next")}
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })()}
         </div>
       </div>
+      {editingMsg && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 text-slate-800">
+              <h3 className="font-bold flex items-center gap-2"><Edit2 className="w-4 h-4 text-purple-600"/> Bot Cevabını Düzelt (RAG Eğitim)</h3>
+              <button onClick={() => setEditingMsg(null)} className="p-1 hover:bg-black/5 rounded-lg"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6">
+              <div className="bg-blue-50 border border-blue-100 text-blue-800 p-3 rounded-lg text-xs mb-4 flex gap-2">
+                <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
+                <p>Bu mesajı düzenleyip kaydettiğinizde, sistem arka planda önceki kullanıcı sorusunu ve sizin yazdığınız bu doğru cevabı vektör veri tabanına (Knowledge Base) kaydedecek. Bot, gelecekteki benzer sorularda bu düzeltmeyi referans alacaktır.</p>
+              </div>
+              <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">Doğru Cevap İçeriği</label>
+              <textarea 
+                value={editContent}
+                onChange={e => setEditContent(e.target.value)}
+                className="w-full h-48 p-3 border border-slate-200 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-sm"
+              />
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
+               <button onClick={() => setEditingMsg(null)} className="px-4 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors uppercase tracking-wider shadow-sm">İptal</button>
+               <button disabled={isSubmitting} onClick={handleEditSave} className="px-4 py-2.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-2 transition-colors uppercase tracking-wider shadow-sm shadow-purple-200 disabled:opacity-80">
+                 {isSubmitting ? <RefreshCw className="w-4 h-4 animate-spin"/> : <CheckCircle2 className="w-4 h-4" />}
+                 Kaydet ve Öğret
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // --- REUSABLE COMPONENTS --- //
 
-function TableHeader({ title, subtitle, count, activeCount, onAdd }) {
+function TableHeader({ title, subtitle, count, activeCount, onAdd, onExport, onRefresh }) {
   const { t } = useLanguage();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      setIsRefreshing(true);
+      try {
+        await onRefresh();
+      } finally {
+        setTimeout(() => setIsRefreshing(false), 500); // Visual feedback for at least 500ms
+      }
+    }
+  };
+
   return (
-    <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+    <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <h3 className="font-semibold flex items-center gap-2 text-sm text-slate-800 uppercase">
           <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100">
@@ -639,19 +1272,25 @@ function TableHeader({ title, subtitle, count, activeCount, onAdd }) {
         </h3>
         <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
       </div>
-      <div className="flex items-center gap-3">
-        {count !== undefined && (
-          <div className="px-4 py-2.5 bg-purple-600 text-white rounded-lg text-xs font-semibold flex items-center gap-3 shadow-sm">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-3 bg-white/50 rounded-full inline-block"></span> {t("admin.table.total")} {count}
-            </span>
-            {activeCount !== undefined && (
-              <>
-                <span className="text-white/30">|</span>
-                <span className="flex items-center gap-1">{t("admin.table.active")} {activeCount}</span>
-              </>
-            )}
-          </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        {onExport && (
+          <button 
+            onClick={onExport}
+            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-purple-600 bg-white border-2 border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 uppercase tracking-wider shadow-sm"
+          >
+            <Download className="w-4 h-4" />
+            Excel Export
+          </button>
+        )}
+        {onRefresh && (
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-all duration-200 uppercase tracking-wider shadow-sm shadow-purple-200 disabled:opacity-80"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Yenile
+          </button>
         )}
         {onAdd && (
           <button onClick={onAdd} className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm">
@@ -693,58 +1332,54 @@ function exportToCSV(dataList, columns, filename) {
   document.body.removeChild(link);
 };
 
-function TableToolbar({ searchTerm, setSearchTerm, dateRange, setDateRange, onRefresh, onExport, recordCount }) {
+function TableToolbar({ searchTerm, setSearchTerm, dateRange, setDateRange, recordCount, totalCount }) {
+  const { t } = useLanguage();
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4 bg-white p-3 rounded-lg border border-slate-200">
-      <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+      {/* Left: Search + Date */}
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
           <input 
             type="text" 
             placeholder="İçeriklerde ara..." 
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full md:w-64"
+            className="pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-300 bg-white placeholder:text-slate-400 transition-all w-80"
           />
         </div>
         
-        <div className="flex items-center gap-2 border border-slate-200 rounded-md px-3 py-2 bg-white hidden sm:flex">
-          <Calendar className="w-4 h-4 text-slate-400" />
+        <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-white hover:border-purple-200 transition-colors">
+          <Calendar className="w-4 h-4 text-purple-400" />
           <input 
             type="date" 
             value={dateRange.start}
             onChange={e => setDateRange(prev => ({...prev, start: e.target.value}))}
-            className="text-sm outline-none text-slate-600 bg-transparent"
+            className="text-sm outline-none text-slate-600 bg-transparent accent-purple-600 [&::-webkit-calendar-picker-indicator]:brightness-50 [&::-webkit-calendar-picker-indicator]:hue-rotate-[270deg]"
           />
-          <span className="text-slate-300">-</span>
+          <span className="text-purple-300 font-medium">—</span>
           <input 
             type="date" 
             value={dateRange.end}
             onChange={e => setDateRange(prev => ({...prev, end: e.target.value}))}
-            className="text-sm outline-none text-slate-600 bg-transparent"
+            className="text-sm outline-none text-slate-600 bg-transparent accent-purple-600 [&::-webkit-calendar-picker-indicator]:brightness-50 [&::-webkit-calendar-picker-indicator]:hue-rotate-[270deg]"
           />
-        </div>
-
-        <div className="bg-slate-50 border border-slate-200 text-emerald-600 text-[11px] font-bold tracking-wider px-3 py-2 rounded-md flex items-center">
-          {recordCount} KAYIT FİLTRELENDİ
         </div>
       </div>
 
-      <div className="flex items-center gap-3 w-full md:w-auto">
-        <button 
-          onClick={onExport}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-emerald-600 bg-white border border-emerald-500 rounded-md hover:bg-emerald-50 transition-colors w-full md:w-auto justify-center uppercase tracking-wide"
-        >
-          <Download className="w-4 h-4" />
-          EXCEL EXPORT
-        </button>
-        <button 
-          onClick={onRefresh}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-emerald-500 rounded-md hover:bg-emerald-600 transition-colors w-full md:w-auto justify-center uppercase tracking-wide"
-        >
-          <RefreshCw className="w-4 h-4" />
-          YENİLE
-        </button>
+      {/* Right: Total + Filtered badges */}
+      <div className="flex items-center gap-2">
+        {totalCount !== undefined && (
+          <div className="bg-purple-600 text-white text-[11px] font-bold tracking-wider px-3 py-2.5 rounded-lg flex items-center gap-2 shadow-sm">
+            <span className="w-1.5 h-1.5 bg-white/50 rounded-full" />
+            {t("admin.table.total")} {totalCount}
+          </div>
+        )}
+
+        <div className="bg-purple-50 border border-purple-100 text-purple-700 text-[11px] font-bold tracking-wider px-3 py-2.5 rounded-lg flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse" />
+          {recordCount} Kayıt Filtrelendi
+        </div>
       </div>
     </div>
   );
@@ -761,6 +1396,8 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
 
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const filteredData = (dataList || []).filter(item => {
     // Search term filter
@@ -838,16 +1475,15 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
     <div className="w-full">
       <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-2">{title}</h2>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
-        <TableHeader title={title} subtitle={`${title} ${t("admin.modal.list_management")}`} count={dataList.length} onAdd={() => setIsModalOpen(true)} />
+        <TableHeader title={title} subtitle={`${title} ${t("admin.modal.list_management")}`} count={dataList.length} onAdd={() => setIsModalOpen(true)} onExport={() => exportToCSV(filteredData, columns, title)} onRefresh={refresh} />
         <div className="p-5">
           <TableToolbar 
           searchTerm={searchTerm} 
           setSearchTerm={setSearchTerm}
           dateRange={dateRange}
           setDateRange={setDateRange}
-          onRefresh={refresh}
-          onExport={() => exportToCSV(filteredData, columns, title)}
           recordCount={filteredData.length}
+          totalCount={dataList.length}
         />
 
         <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
@@ -860,9 +1496,13 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {dataList.map((row, i) => (
+                {(() => {
+                  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+                  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+                  const paginatedData = filteredData.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+                  return paginatedData.map((row, i) => (
                   <tr key={row.id} className="hover:bg-slate-50 transition-colors border-b border-slate-50">
-                    <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
+                    <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{startIdx + i + 1}</td>
                     {columns.map(c => (
                       <td key={c.key} className="py-3 px-4 text-slate-600 truncate max-w-[200px]">
                         {c.render ? c.render(row[c.key], row) : String(row[c.key] || '')}
@@ -886,11 +1526,52 @@ function GenericTableWithModal({ title, dataList, columns, endpoint, formFields,
                       )}
                     </td>
                   </tr>
-                ))}
+                ))})()}
                 {dataList.length === 0 && <tr><td colSpan={columns.length+2} className="py-8 text-center text-slate-400">{t("admin.table.no_data")}</td></tr>}
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {(() => {
+            const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+            if (totalPages <= 1) return null;
+            return (
+              <div className="flex items-center justify-between mt-4 px-1 border-t border-slate-100 pt-4">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  {t("admin.table.prev")}
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors ${
+                        currentPage === page
+                          ? "bg-purple-600 text-white shadow-sm"
+                          : "text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  {t("admin.table.next")}
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -1055,18 +1736,7 @@ function ServicesAdmin({ data, refresh }) {
     ]} 
   />;
 }
-function BannerAdmin({ data, refresh }) {
-  const { t } = useLanguage();
-  return <GenericTableWithModal title={t("admin.menu.banner")} dataList={data?.banners||[]} refresh={refresh} endpoint="/admin/portfolio/banners"
-    columns={[{label: t("admin.col.title"), key: "title"}, {label: t("admin.col.subtitle"), key: "subtitle"}]} 
-    formFields={[
-      {label: t("admin.field.main_title"), key: "title", required: true, lang: 'tr'},
-      {label: t("admin.field.main_title_en"), key: "title_en", required: true, lang: 'en'},
-      {label: t("admin.field.subtitle"), key: "subtitle", lang: 'tr'},
-      {label: t("admin.field.subtitle_en"), key: "subtitle_en", lang: 'en'}
-    ]} 
-  />;
-}
+
 function TestimonialsAdmin({ data, refresh }) {
   const { t } = useLanguage();
   return <GenericTableWithModal title={t("admin.menu.testimonials")} dataList={data?.testimonials||[]} refresh={refresh} endpoint="/admin/portfolio/testimonials"
@@ -1193,7 +1863,7 @@ function MessagesAdmin() {
       <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-2">{t("admin.messages.title")}</h2>
       
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
-        <TableHeader title={t("admin.messages.title")} subtitle={t("admin.messages.subtitle")} count={msgs.length} />
+        <TableHeader title={t("admin.messages.title")} subtitle={t("admin.messages.subtitle")} count={msgs.length} onExport={() => exportToCSV(filteredMsgs, msgColumns, "Iletisim_Mesajlari")} onRefresh={fetchMessages} />
         
         <div className="p-5">
           <TableToolbar 
@@ -1201,9 +1871,8 @@ function MessagesAdmin() {
           setSearchTerm={setSearchTerm}
           dateRange={dateRange}
           setDateRange={setDateRange}
-          onRefresh={fetchMessages}
-          onExport={() => exportToCSV(filteredMsgs, msgColumns, "Iletisim_Mesajlari")}
           recordCount={filteredMsgs.length}
+          totalCount={msgs.length}
         />
         <div className="border border-slate-200 rounded-lg overflow-hidden">
             <table className="w-full text-left border-collapse">
@@ -1297,7 +1966,7 @@ function SettingsAdmin({ data, refresh, adminName }) {
   );
 }
 
-function AboutAdmin({ data, refresh }) {
+function ProfileAdmin({ data, refresh }) {
   const { t } = useLanguage();
   const [formLang, setFormLang] = useState('tr');
   const [isTranslating, setIsTranslating] = useState(false);
@@ -1308,10 +1977,10 @@ function AboutAdmin({ data, refresh }) {
     title_en: data?.settings?.title_en || "",
     hero_subtitle: data?.settings?.hero_subtitle || "",
     hero_subtitle_en: data?.settings?.hero_subtitle_en || "",
-    about_markdown: data?.settings?.about_markdown || "",
-    about_markdown_en: data?.settings?.about_markdown_en || "",
     avatar_url: data?.settings?.avatar_url || "",
-    stats: data?.settings?.stats || []
+    contact_email: data?.settings?.contact_email || "",
+    github_url: data?.settings?.github_url || "",
+    linkedin_url: data?.settings?.linkedin_url || "",
   });
 
   const handleImageUpload = async (e) => {
@@ -1328,25 +1997,9 @@ function AboutAdmin({ data, refresh }) {
     }
   };
 
-  const handleAddStat = () => {
-    setFormData(prev => ({ ...prev, stats: [...(prev.stats || []), { value: "", label_tr: "", label_en: "" }] }));
-  };
-
-  const handleStatChange = (index, field, val) => {
-    const newStats = [...(formData.stats || [])];
-    newStats[index][field] = val;
-    setFormData(prev => ({ ...prev, stats: newStats }));
-  };
-
-  const handleRemoveStat = (index) => {
-    const newStats = [...(formData.stats || [])];
-    newStats.splice(index, 1);
-    setFormData(prev => ({ ...prev, stats: newStats }));
-  };
-
   const handleAutoTranslate = async () => {
     const extractedTexts = {};
-    const fieldsToTranslate = ["full_name", "title", "hero_subtitle", "about_markdown"];
+    const fieldsToTranslate = ["title", "hero_subtitle"];
     fieldsToTranslate.forEach(key => {
       if (formData[key] && typeof formData[key] === 'string') {
         extractedTexts[key] = formData[key];
@@ -1373,18 +2026,19 @@ function AboutAdmin({ data, refresh }) {
   
   const save = async () => {
     try {
-      await axiosInstance.post("/admin/portfolio/settings", formData);
-      toast.success(t("admin.about.saved"));
+      const mergedData = { ...data?.settings, ...formData };
+      await axiosInstance.post("/admin/portfolio/settings", mergedData);
+      toast.success("Profil başarıyla güncellendi.");
       refresh();
     } catch(e){ toast.error(t("admin.error.general")); }
   }
   
   return (
     <div className="w-full">
-      <h2 className="text-xl font-bold text-slate-800 mb-6">{t("admin.menu.about")}</h2>
+      <h2 className="text-xl font-bold text-slate-800 mb-6">{t("admin.menu.profile")}</h2>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="bg-slate-50 border-b border-slate-100 p-5 text-slate-800">
-          <h3 className="font-semibold text-sm">{t("admin.about.settings_title")}</h3>
+          <h3 className="font-semibold text-sm">Temel Profil Bilgileriniz</h3>
         </div>
         <div className="p-6 space-y-4">
           <div className="flex mb-4 border-b border-gray-600 justify-between items-center">
@@ -1402,7 +2056,9 @@ function AboutAdmin({ data, refresh }) {
               {isTranslating ? t("admin.modal.translating") : t("admin.modal.auto_translate")}
             </button>
           </div>
+          
           <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.fullname")}</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.full_name} onChange={e=>setFormData({...formData, full_name: e.target.value})} /></div>
+          
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.avatar_url")}</label>
             <div className="flex gap-2">
@@ -1411,21 +2067,125 @@ function AboutAdmin({ data, refresh }) {
               <label htmlFor="avatarUpload" className="whitespace-nowrap cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold text-sm transition-colors">{t("admin.about.choose_file")}</label>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className="block text-xs font-semibold text-slate-600 mb-1">E-posta</label><input type="email" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.contact_email} onChange={e=>setFormData({...formData, contact_email: e.target.value})} /></div>
+            <div><label className="block text-xs font-semibold text-slate-600 mb-1">GitHub URL</label><input type="url" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.github_url} onChange={e=>setFormData({...formData, github_url: e.target.value})} /></div>
+            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-600 mb-1">LinkedIn URL</label><input type="url" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.linkedin_url} onChange={e=>setFormData({...formData, linkedin_url: e.target.value})} /></div>
+          </div>
+
           {formLang === 'tr' ? (
             <>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.title")}</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} /></div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.hero_subtitle")}</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.hero_subtitle} onChange={e=>setFormData({...formData, hero_subtitle: e.target.value})} /></div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.about_markdown")}</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-purple-500 focus:outline-none" value={formData.about_markdown} onChange={e=>setFormData({...formData, about_markdown: e.target.value})}></textarea></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.title")} (Örn: Bilgisayar Mühendisi)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.title} onChange={e=>setFormData({...formData, title: e.target.value})} /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.hero_subtitle")} (Slogan)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.hero_subtitle} onChange={e=>setFormData({...formData, hero_subtitle: e.target.value})} /></div>
             </>
           ) : (
             <>
               <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.title")} (EN)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.title_en} onChange={e=>setFormData({...formData, title_en: e.target.value})} /></div>
               <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.hero_subtitle")} (EN)</label><input type="text" className="w-full border rounded-lg p-2 focus:border-purple-500 focus:outline-none" value={formData.hero_subtitle_en} onChange={e=>setFormData({...formData, hero_subtitle_en: e.target.value})} /></div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.about_markdown")} (EN)</label><textarea className="w-full border rounded-lg p-2 h-32 focus:border-purple-500 focus:outline-none" value={formData.about_markdown_en} onChange={e=>setFormData({...formData, about_markdown_en: e.target.value})}></textarea></div>
             </>
           )}
 
+          <button onClick={save} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">{t("admin.modal.save")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AboutAdmin({ data, refresh }) {
+  const { t } = useLanguage();
+  const [formLang, setFormLang] = useState('tr');
+  const [isTranslating, setIsTranslating] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    about_markdown: data?.settings?.about_markdown || "",
+    about_markdown_en: data?.settings?.about_markdown_en || "",
+    stats: data?.settings?.stats || []
+  });
+
+  const handleAddStat = () => {
+    setFormData(prev => ({ ...prev, stats: [...(prev.stats || []), { value: "", label_tr: "", label_en: "" }] }));
+  };
+
+  const handleStatChange = (index, field, val) => {
+    const newStats = [...(formData.stats || [])];
+    newStats[index][field] = val;
+    setFormData(prev => ({ ...prev, stats: newStats }));
+  };
+
+  const handleRemoveStat = (index) => {
+    const newStats = [...(formData.stats || [])];
+    newStats.splice(index, 1);
+    setFormData(prev => ({ ...prev, stats: newStats }));
+  };
+
+  const handleAutoTranslate = async () => {
+    const extractedTexts = {};
+    const fieldsToTranslate = ["about_markdown"];
+    fieldsToTranslate.forEach(key => {
+      if (formData[key] && typeof formData[key] === 'string') {
+        extractedTexts[key] = formData[key];
+      }
+    });
+
+    if (Object.keys(extractedTexts).length === 0) {
+      toast.info(t("admin.modal.auto_translate_empty"));
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const res = await axiosInstance.post("/translate", { texts: extractedTexts });
+      setFormData(prev => ({...prev, ...res.data}));
+      setFormLang('en');
+      toast.success(t("admin.modal.auto_translate_success"));
+    } catch(e) {
+      toast.error(t("admin.modal.auto_translate_error"));
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+  
+  const save = async () => {
+    try {
+      const mergedData = { ...data?.settings, ...formData };
+      await axiosInstance.post("/admin/portfolio/settings", mergedData);
+      toast.success("Hakkımda bilgileri başarıyla güncellendi.");
+      refresh();
+    } catch(e){ toast.error(t("admin.error.general")); }
+  }
+  
+  return (
+    <div className="w-full">
+      <h2 className="text-xl font-bold text-slate-800 mb-6">{t("admin.menu.about")}</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 border-b border-slate-100 p-5 text-slate-800">
+          <h3 className="font-semibold text-sm">Hakkımda Metni & İstatistikler</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="flex mb-4 border-b border-gray-600 justify-between items-center">
+            <div className="flex">
+              <button type="button" onClick={() => setFormLang('tr')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'tr' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400'}`}>{t("admin.modal.lang_tr")}</button>
+              <button type="button" onClick={() => setFormLang('en')} className={`px-4 py-2 text-sm font-semibold ${formLang === 'en' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400'}`}>{t("admin.modal.lang_en")}</button>
+            </div>
+            <button 
+              type="button" 
+              onClick={handleAutoTranslate} 
+              disabled={isTranslating}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-50 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              {isTranslating ? t("admin.modal.translating") : t("admin.modal.auto_translate")}
+            </button>
+          </div>
           
+          {formLang === 'tr' ? (
+            <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.about_markdown")}</label><textarea className="w-full border rounded-lg p-2 h-40 focus:border-purple-500 focus:outline-none" value={formData.about_markdown} onChange={e=>setFormData({...formData, about_markdown: e.target.value})}></textarea></div>
+          ) : (
+            <div><label className="block text-xs font-semibold text-slate-600 mb-1">{t("admin.about.about_markdown")} (EN)</label><textarea className="w-full border rounded-lg p-2 h-40 focus:border-purple-500 focus:outline-none" value={formData.about_markdown_en} onChange={e=>setFormData({...formData, about_markdown_en: e.target.value})}></textarea></div>
+          )}
+
           <div className="mt-8 border-t border-slate-200 pt-6">
             <div className="flex justify-between items-center mb-4">
               <h4 className="font-bold text-slate-700">{t("admin.about.stats")}</h4>
@@ -1442,6 +2202,56 @@ function AboutAdmin({ data, refresh }) {
           </div>
 
           <button onClick={save} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">{t("admin.modal.save")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SystemLogsAdmin() {
+  const { t } = useLanguage();
+  return (
+    <div className="w-full">
+      <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <Terminal className="w-6 h-6 text-purple-600" />
+        {t("admin.menu.system_logs")}
+      </h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 border-b border-slate-100 p-5 flex justify-between items-center">
+          <h3 className="font-semibold text-sm text-slate-800">Son Sistem Aktiviteleri</h3>
+          <button className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded hover:bg-purple-100 transition-colors">
+            Yenile
+          </button>
+        </div>
+        <div className="p-8 text-center text-slate-500 bg-slate-50/50">
+          <Terminal className="w-12 h-12 text-slate-300 mx-auto mb-3 opacity-50" />
+          <p className="font-semibold">Log kayıtları yükleniyor veya sistemde henüz kaydedilmiş bir log bulunmuyor.</p>
+          <p className="text-sm mt-1 text-slate-400">Geliştirme aşamasındadır.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SystemFeedbackAdmin() {
+  const { t } = useLanguage();
+  return (
+    <div className="w-full">
+      <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <Megaphone className="w-6 h-6 text-purple-600" />
+        {t("admin.menu.system_feedback")}
+      </h2>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 border-b border-slate-100 p-5 flex justify-between items-center">
+          <h3 className="font-semibold text-sm text-slate-800">Kullanıcı Geri Bildirimleri</h3>
+          <button className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded hover:bg-purple-100 transition-colors">
+            Yenile
+          </button>
+        </div>
+        <div className="p-8 text-center text-slate-500 bg-slate-50/50">
+          <Megaphone className="w-12 h-12 text-slate-300 mx-auto mb-3 opacity-50" />
+          <p className="font-semibold">Şu an için gösterilecek bir geri bildirim bulunmuyor.</p>
+          <p className="text-sm mt-1 text-slate-400">Geliştirme aşamasındadır.</p>
         </div>
       </div>
     </div>
