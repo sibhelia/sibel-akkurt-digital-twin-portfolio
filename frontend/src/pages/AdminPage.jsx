@@ -864,12 +864,12 @@ function KnowledgeManagementAdmin() {
             </div>
           </div>
           <div className="p-4 flex-1 flex flex-col">
-            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+            <p className="text-sm text-slate-600 mb-3 leading-relaxed">
               Kurumunuza ait PDF veya DOCX formatındaki belgeleri sisteme dahil ederek yapay zekayı kurum dilinde eğitebilirsiniz.
             </p>
             
             <div 
-              className={`flex-1 min-h-[160px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-6 transition-colors text-center relative ${dragActive ? "border-purple-400 bg-purple-50" : "border-slate-200 bg-slate-50 hover:bg-slate-100/50"}`}
+              className={`flex-1 min-h-[120px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-4 transition-colors text-center relative ${dragActive ? "border-purple-400 bg-purple-50" : "border-slate-200 bg-slate-50 hover:bg-slate-100/50"}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -882,10 +882,10 @@ function KnowledgeManagementAdmin() {
                 accept=".pdf,.docx,.md,.txt"
                 onChange={handleChange}
               />
-              <div className="w-12 h-12 bg-white shadow-sm rounded-xl flex items-center justify-center text-purple-600 mb-3 border border-purple-100">
-                <UploadCloud className="w-6 h-6" />
+              <div className="w-10 h-10 bg-white shadow-sm rounded-xl flex items-center justify-center text-purple-600 mb-2 border border-purple-100">
+                <UploadCloud className="w-5 h-5" />
               </div>
-              <p className="font-bold text-slate-700 tracking-wider mb-2">DOSYA SEÇİN VEYA BIRAKIN</p>
+              <p className="font-bold text-slate-700 tracking-wider mb-1 text-sm">DOSYA SEÇİN VEYA BIRAKIN</p>
               <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold">PDF, DOCX DESTEKLENİR</p>
             </div>
           </div>
@@ -913,27 +913,27 @@ function KnowledgeManagementAdmin() {
             </div>
           </div>
           <div className="p-4 flex-1 flex flex-col">
-            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+            <p className="text-sm text-slate-600 mb-3 leading-relaxed">
               Spesifik sorular için asistanın vereceği kesin ve kurumsal yanıtları buradan nokta atışı olarak tanımlayabilirsiniz.
             </p>
             
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">SORU / PROBLEM</label>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-1">SORU / PROBLEM</label>
                 <textarea 
                   placeholder="Kullanıcı asistanımıza ne sorabilir?"
                   value={qaForm.question}
                   onChange={e => setQaForm({...qaForm, question: e.target.value})}
-                  className="w-full h-20 p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400 transition-colors resize-none"
+                  className="w-full h-16 p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400 transition-colors resize-none"
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">KURUMSAL YANIT</label>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-1">KURUMSAL YANIT</label>
                 <textarea 
                   placeholder="Asistanın vermesi gereken en doğru yanıt nedir?"
                   value={qaForm.answer}
                   onChange={e => setQaForm({...qaForm, answer: e.target.value})}
-                  className="w-full h-24 p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400 transition-colors resize-none"
+                  className="w-full h-20 p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400/20 focus:border-purple-400 transition-colors resize-none"
                 />
               </div>
             </div>
@@ -1095,21 +1095,26 @@ function ChatbotAnalytics() {
 
   return (
     <div className="w-full relative">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide">
-          <Activity className="w-6 h-6 text-purple-600" />
-          Sorgu & Diyalog Analitiği
-        </h2>
-        <p className="text-sm text-slate-500 mt-1">Chatbot'a sorulan soruları, botun verdiği yanıtları ve oturum bazlı diyalog geçmişini yönetin.</p>
+      <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide">
+            <Activity className="w-6 h-6 text-purple-600" />
+            Sorgu & Diyalog Analitiği
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">Chatbot'a sorulan soruları, botun verdiği yanıtları ve oturum bazlı diyalog geçmişini yönetin.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={() => exportToCSV(filteredPairs, analyticsColumns, "ChatbotQA")} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-50 hover:text-purple-600 transition-colors flex items-center gap-2">
+            <Download className="w-4 h-4" />
+            DIŞA AKTAR
+          </button>
+          <button onClick={fetchMessages} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-50 hover:text-purple-600 transition-colors flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            YENİLE
+          </button>
+        </div>
       </div>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <TableHeader 
-          title="Mesajlar ve RAG Eğitimi" 
-          subtitle="Botun cevaplarını buradan düzeltip tekrar öğretebilirsiniz." 
-          count={qaPairs.length} 
-          onExport={() => exportToCSV(filteredPairs, analyticsColumns, "ChatbotQA")} 
-          onRefresh={fetchMessages} 
-        />
         <div className="p-5">
           <TableToolbar 
             searchTerm={searchTerm} 
@@ -1886,32 +1891,76 @@ function MessagesAdmin() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredMsgs.map((m, i) => (
-                  <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{i+1}</td>
-                    <td className="py-3 px-4 font-medium text-slate-700">{m.full_name}</td>
-                    <td className="py-3 px-4 text-slate-500">{m.email}</td>
-                    <td className="py-3 px-4 text-center">
-                      <button onClick={() => toggleRead(m.id)} className={`px-3 py-1 rounded-full text-[11px] font-bold border ${m.is_read ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-red-50 text-red-500 border-red-100'}`}>
-                        {m.is_read ? t("admin.messages.read") : t("admin.messages.unread")}
-                      </button>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex justify-center gap-1.5">
-                        <button onClick={() => setSelectedMsg(m)} className="w-7 h-7 rounded bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white flex items-center justify-center transition-colors">
-                          <Eye className="w-3.5 h-3.5" />
+                {(() => {
+                  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+                  const paginatedData = filteredMsgs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+                  return paginatedData.map((m, i) => (
+                    <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-4 text-slate-400 text-center text-xs font-medium">{startIdx + i + 1}</td>
+                      <td className="py-3 px-4 font-medium text-slate-700">{m.full_name}</td>
+                      <td className="py-3 px-4 text-slate-500">{m.email}</td>
+                      <td className="py-3 px-4 text-center">
+                        <button onClick={() => toggleRead(m.id)} className={`px-3 py-1 rounded-full text-[11px] font-bold border ${m.is_read ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-red-50 text-red-500 border-red-100'}`}>
+                          {m.is_read ? t("admin.messages.read") : t("admin.messages.unread")}
                         </button>
-                        <button onClick={() => deleteMsg(m.id)} className="w-7 h-7 rounded bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filteredMsgs.length === 0 && <tr><td colSpan="6" className="py-8 text-center text-slate-400">{t("admin.messages.no_messages")}</td></tr>}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex justify-center gap-1.5">
+                          <button onClick={() => setSelectedMsg(m)} className="w-7 h-7 rounded bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white flex items-center justify-center transition-colors">
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => deleteMsg(m.id)} className="w-7 h-7 rounded bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ));
+                })()}
+                {filteredMsgs.length === 0 && <tr><td colSpan="5" className="py-8 text-center text-slate-400">{t("admin.messages.no_messages")}</td></tr>}
               </tbody>
             </table>
           </div>
+          
+          {(() => {
+            const totalPages = Math.ceil(filteredMsgs.length / ITEMS_PER_PAGE);
+            if (totalPages <= 1) return null;
+            return (
+              <div className="flex items-center justify-between mt-4 px-1 border-t border-slate-100 pt-4">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  {t("admin.table.prev")}
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors ${
+                        currentPage === page
+                          ? "bg-purple-600 text-white shadow-sm"
+                          : "text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  {t("admin.table.next")}
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })()}
         </div>
       </div>
       
